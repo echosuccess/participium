@@ -17,6 +17,7 @@ async function main() {
         first_name: "Admin",
         last_name: "User",
         password: "hashedpassword123",
+        salt: "randomsalt123",
         role: "ADMINISTRATOR",
       },
       {
@@ -24,6 +25,7 @@ async function main() {
         first_name: "John",
         last_name: "Doe",
         password: "hashedpassword456",
+        salt: "randomsalt456",
         role: "CITIZEN",
       },
       {
@@ -31,6 +33,7 @@ async function main() {
         first_name: "Jane",
         last_name: "Smith",
         password: "hashedpassword789",
+        salt: "randomsalt789",
         role: "PUBLIC_RELATIONS",
       },
       {
@@ -38,6 +41,7 @@ async function main() {
         first_name: "Tech",
         last_name: "Office",
         password: "hashedpassword000",
+        salt: "randomsalt000",
         role: "TECHNICAL_OFFICE",
       },
     ],
