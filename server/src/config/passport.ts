@@ -1,20 +1,21 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { PublicUser, PrivateUser } from "../interfaces/User";
+import { toUserDTO, UserDTO } from "../interfaces/User";
+import type { User as PrismaUser } from "../../prisma/generated/client";
 import { verifyPassword } from "../services/passwordService";
 import { findByEmail } from "../services/userService";
 
 export function configurePassport() {
   passport.use(
-    new LocalStrategy({ usernameField: "email" }, async (email: string, password: string, done: (err: Error | null, user?: PublicUser | false) => void) => {
+    new LocalStrategy({ usernameField: "email" }, async (email: string, password: string, done: (err: Error | null, user?: UserDTO | false) => void) => {
       try {
-        const dbUser: PrivateUser | null = await findByEmail(email);
+        const dbUser: PrismaUser | null = await findByEmail(email);
         if (!dbUser) return done(null, false);
 
         const valid = await verifyPassword(dbUser, password);
         if (!valid) return done(null, false);
 
-        const publicUser = new PublicUser(dbUser.email, dbUser.firstName, dbUser.lastName, dbUser.role);
+        const publicUser = toUserDTO(dbUser);
         return done(null, publicUser);
       } catch (err) {
         return done(err as Error);
@@ -23,15 +24,15 @@ export function configurePassport() {
   );
 
   passport.serializeUser((user: unknown, done: (err: any, email?: string) => void) => {
-    const u = user as PublicUser;
+    const u = user as UserDTO;
     done(null, u.email);
   });
 
-  passport.deserializeUser(async (email: string, done: (err: Error | null, user?: PublicUser | false) => void) => {
+  passport.deserializeUser(async (email: string, done: (err: Error | null, user?: UserDTO | false) => void) => {
     try {
       const dbUser = await findByEmail(email);
       if (!dbUser) return done(null, false);
-      const publicUser = new PublicUser(dbUser.email, dbUser.firstName, dbUser.lastName, dbUser.role);
+      const publicUser = toUserDTO(dbUser);
       done(null, publicUser);
     } catch (err) {
       done(err as Error);

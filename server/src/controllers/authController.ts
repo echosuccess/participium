@@ -1,20 +1,28 @@
 import { Request, Response, NextFunction } from "express";
 import { authenticate, getSession } from "../services/authService";
+import { InvalidCredentialsError } from "../interfaces/errors/InvalidCredentialsError";
 
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const user = await authenticate(req);
 
-    req.logIn(user, (err?: unknown) => {
-      if (err) return next(err as Error);
-      return res.json({ message: "Logged in", user });
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      return res.json({ message: "Login successful", user });
     });
 
-  } catch (err: unknown) {
-    if (err instanceof Error && err.message.toLowerCase().includes("invalid")) {
-      return res.status(401).json({ message: err.message });
+  } catch (err) {
+    if (err instanceof InvalidCredentialsError) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Invalid username or password"
+      });
+    } else {
+      return res.status(500).json({
+        error: "InternalServerError",
+        message: "An internal server error occurred"
+      });
     }
-    return next(err as Error);
   }
 }
 

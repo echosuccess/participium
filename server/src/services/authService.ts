@@ -1,21 +1,21 @@
 import passport from "passport";
-import { PublicUser } from "../interfaces/User";
+import type { UserDTO } from "../interfaces/User";
 import { Request } from "express";
+import { InvalidCredentialsError } from "../interfaces/errors/InvalidCredentialsError";
 
-export async function authenticate(req: Request): Promise<PublicUser> {
+export async function authenticate(req: Request): Promise<UserDTO> {
   return new Promise((resolve, reject) => {
-    passport.authenticate("local", (err: Error | null, user?: PublicUser | false) => {
+    passport.authenticate("local", (err: Error | null, user?: UserDTO | false) => {
       if (err) return reject(err);
-      if (!user) return reject(new Error("Invalid credentials"));
-      resolve(new PublicUser(user.email, user.firstName, user.lastName, user.role));
+      if (!user) return reject(new InvalidCredentialsError());
+      resolve(user as UserDTO);
     })(req);
   });
 }
 
-export function getSession(req: Request): PublicUser | null {
+export function getSession(req: Request): UserDTO | null {
   if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-    const user = req.user as PublicUser;
-    return new PublicUser(user.email, user.firstName, user.lastName, user.role);
+    return req.user as UserDTO;
   }
   return null;
 }

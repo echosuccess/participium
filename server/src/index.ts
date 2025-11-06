@@ -1,6 +1,7 @@
 import express, { Express, Request, Response } from "express";
 import session from "express-session";
 import passport from "passport";
+import cors from "cors";
 import { configurePassport } from "./config/passport";
 import authRoutes from './routes/authRoutes';
 import { PrismaClient } from "../prisma/generated/client";
@@ -15,21 +16,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS middleware
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+}));
 
 // Session and Passport Middleware
 app.use(session({
   secret: "shhhhh... it's a secret!",
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: false
 }));
 configurePassport();
 app.use(passport.initialize());

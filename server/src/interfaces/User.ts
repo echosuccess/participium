@@ -1,37 +1,21 @@
-// Public DTO: no password information
-export class PublicUser {
-	email: string;
-	firstName: string;
-	lastName: string;
-	role: string;
+import type { User as PrismaUser } from "../../prisma/generated/client";
 
-	constructor(email: string, firstName: string, lastName: string, role: string) {
-		this.email = email;
-		this.firstName = firstName;
-		this.lastName = lastName;
-		this.role = role;
-	}
+export type UserDTO = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  telegramUsername: string | null;
+  emailNotificationsEnabled: boolean;
+};
+
+export function toUserDTO(u: PrismaUser): UserDTO {
+  return {
+    firstName: u.first_name,
+    lastName: u.last_name,
+    email: u.email,
+    role: String(u.role),
+    telegramUsername: u.telegram_username ?? null,
+    emailNotificationsEnabled: u.email_notifications_enabled ?? true,
+  };
 }
-
-// Private user stored in DB (includes hashed password + salt)
-export class PrivateUser {
-	id: number;
-	email: string;
-	firstName: string;
-	lastName: string;
-	password: string; // hashed password
-	salt: string;
-	role: string;
-
-	constructor(id: number, email: string, firstName: string, lastName: string, password: string, salt: string, role: string) {
-		this.id = id;
-		this.email = email;
-		this.firstName = firstName;
-		this.lastName = lastName;
-		this.password = password;
-		this.salt = salt;
-		this.role = role;
-	}
-}
-
-

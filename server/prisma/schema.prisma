@@ -20,6 +20,8 @@ model User {
   password String
   salt     String
   role Role @default(CITIZEN)
+  telegram_username String? 
+  email_notifications_enabled Boolean @default(true)
 }
 
 enum Role {
