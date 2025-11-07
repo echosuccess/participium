@@ -1,22 +1,77 @@
 import { useState } from 'react'
-import viteLogo from '/vite.svg'
 import './styles/App.css'
+import { useAuth } from './hooks/useAuth'
+import Header from './components/Header'
+import Home from './components/Home'
 import Login from './components/Login'
+import Signup from './components/Signup'
+
+type ViewType = 'home' | 'login' | 'signup'
 
 function App() {
-  const [user, setUser] = useState(null)
-  const [loggedIn, setLoggedIn] = useState(false)
+  const [currentView, setCurrentView] = useState<ViewType>('home')
+  const { user, isAuthenticated, loading, logout } = useAuth()
+
+  const handleShowLogin = () => setCurrentView('login')
+  const handleShowSignup = () => setCurrentView('signup')
+  const handleBackToHome = () => setCurrentView('home')
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      setCurrentView('home')
+    } catch (err) {
+      console.error('Logout failed:', err)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner">Loading...</div>
+      </div>
+    )
+  }
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'login':
+        return (
+          <div className="auth-page">
+            <div className="back-navigation">
+              <button onClick={handleBackToHome} className="back-btn">
+                ← Back to Home
+              </button>
+            </div>
+            <Login onLoginSuccess={handleBackToHome} />
+          </div>
+        )
+      case 'signup':
+        return <Signup onBackToHome={handleBackToHome} />
+      default:
+        return (
+          <Home 
+            isAuthenticated={isAuthenticated}
+            onShowLogin={handleShowLogin}
+            onShowSignup={handleShowSignup}
+          />
+        )
+    }
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-      </div>
-      <h1>Participium</h1>
-      <Login/>
-    </>
+    <div className={`app ${currentView !== 'signup' ? 'with-header' : ''}`}>
+      {currentView !== 'signup' && (
+        <Header
+          user={user}
+          isAuthenticated={isAuthenticated}
+          onShowLogin={handleShowLogin}
+          onShowSignup={handleShowSignup}
+          onLogout={handleLogout}
+        />
+      )}
+      {renderView()}
+    </div>
   )
 }
 
