@@ -32,7 +32,7 @@ export async function createMunicipalityUserController(req: Request, res: Respon
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         error: "BadRequest",
-        message: "Invalid role. Must be one of: PUBLIC_RELATIONS, ADMINISTRATOR, TECHNICAL_OFFICE"
+        message: "Invalid role. Allowed: PUBLIC_RELATIONS, ADMINISTRATOR, TECHNICAL_OFFICE"
       });
     }
 
@@ -82,7 +82,7 @@ export async function listMunicipalityUsersController(req: Request, res: Respons
     console.error("Error listing municipality users:", error);
     return res.status(500).json({
       error: "InternalServerError",
-      message: "Unable to retrieve users"
+      message: "Failed to retrieve users"
     });
   }
 }
@@ -94,7 +94,7 @@ export async function getMunicipalityUserController(req: Request, res: Response)
     if (isNaN(userId)) {
       return res.status(400).json({
         error: "BadRequest",
-        message: "Invalid user ID"
+        message: "Invalid user ID format"
       });
     }
 
@@ -114,7 +114,7 @@ export async function getMunicipalityUserController(req: Request, res: Response)
     console.error("Error getting municipality user:", error);
     return res.status(500).json({
       error: "InternalServerError",
-      message: "Unable to retrieve user details"
+      message: "Failed to retrieve user"
     });
   }
 }
@@ -127,7 +127,7 @@ export async function updateMunicipalityUserController(req: Request, res: Respon
     if (isNaN(userId)) {
       return res.status(400).json({
         error: "BadRequest",
-        message: "Invalid user ID"
+        message: "Invalid user ID format"
       });
     }
 
@@ -144,7 +144,7 @@ export async function updateMunicipalityUserController(req: Request, res: Respon
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         error: "BadRequest",
-        message: "Invalid role. Must be one of: PUBLIC_RELATIONS, ADMINISTRATOR, TECHNICAL_OFFICE"
+        message: "Invalid role. Allowed: PUBLIC_RELATIONS, ADMINISTRATOR, TECHNICAL_OFFICE"
       });
     }
 
@@ -163,7 +163,7 @@ export async function updateMunicipalityUserController(req: Request, res: Respon
       if (emailInUse) {
         return res.status(409).json({
           error: "Conflict",
-          message: "Email already in use by another user"
+          message: "Email already in use"
         });
       }
     }
@@ -195,7 +195,7 @@ export async function updateMunicipalityUserController(req: Request, res: Respon
     console.error("Error updating municipality user:", error);
     return res.status(500).json({
       error: "InternalServerError",
-      message: "Unable to update user"
+      message: "Failed to update user"
     });
   }
 }
@@ -207,7 +207,7 @@ export async function deleteMunicipalityUserController(req: Request, res: Respon
     if (isNaN(userId)) {
       return res.status(400).json({
         error: "BadRequest",
-        message: "Invalid user ID"
+        message: "Invalid user ID format"
       });
     }
 
@@ -226,7 +226,7 @@ export async function deleteMunicipalityUserController(req: Request, res: Respon
     console.error("Error deleting municipality user:", error);
     return res.status(500).json({
       error: "InternalServerError",
-      message: "Unable to delete user"
+      message: "Failed to delete user"
     });
   }
 }
