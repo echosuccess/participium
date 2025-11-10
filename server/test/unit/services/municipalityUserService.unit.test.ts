@@ -39,6 +39,9 @@ describe("municipalityUserService", () => {
 
     const res = await getAllMunicipalityUsers();
     expect(mockFindUsersByRoles).toHaveBeenCalled();
+    // ensure ADMINISTRATOR is excluded from the roles passed to findUsersByRoles
+    const calledArg = mockFindUsersByRoles.mock.calls[0][0] as any[];
+    expect(calledArg).not.toContain(Roles.ADMINISTRATOR);
     expect(res).toEqual(users);
   });
 
@@ -69,7 +72,7 @@ describe("municipalityUserService", () => {
   });
 
   it("deleteMunicipalityUser should delete when exists and return true", async () => {
-    const existing = { id: 5, role: Roles.ADMINISTRATOR } as any;
+    const existing = { id: 5, role: Roles.PUBLIC_RELATIONS } as any;
     mockFindById.mockResolvedValue(existing);
     mockDeleteUser.mockResolvedValue(true as any);
 

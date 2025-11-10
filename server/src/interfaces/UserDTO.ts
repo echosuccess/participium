@@ -36,7 +36,6 @@ export function toUserDTO(u: PrismaUser): UserDTO {
 
 export const MUNICIPALITY_ROLES: Role[] = [
   Roles.PUBLIC_RELATIONS,
-  Roles.ADMINISTRATOR,
   Roles.TECHNICAL_OFFICE,
 ];
 
