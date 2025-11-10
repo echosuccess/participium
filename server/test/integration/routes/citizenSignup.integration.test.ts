@@ -5,6 +5,9 @@ import { createTestUserData, createUserInDatabase, verifyPasswordIsHashed } from
 
 const app = createApp();
 
+// test suite for POST /api/citizen/signup
+// test the creation of a citizen user account
+
 describe('POST /api/citizen/signup', () => {
   // Clean database before each test
   beforeEach(async () => {

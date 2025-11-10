@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { signup } from "../../../src/controllers/signupController";
+import { signup } from "../../../src/controllers/citizenController";
 import { findByEmail, createUser } from "../../../src/services/userService";
 import { hashPassword } from "../../../src/services/passwordService";
 import { toUserDTO } from "../../../src/interfaces/UserDTO";
