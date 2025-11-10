@@ -1,7 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-
 generator client {
   provider = "prisma-client"
   output   = "./generated"
@@ -18,7 +17,10 @@ model User {
   first_name    String
   last_name String
   password String
+  salt     String
   role Role @default(CITIZEN)
+  telegram_username String? 
+  email_notifications_enabled Boolean @default(true)
 }
 
 enum Role {
