@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { createMunicipalityUser, listMunicipalityUsers, deleteMunicipalityUser } from '../api/api';
 import type { MunicipalityUserRequest, MunicipalityUserResponse } from '../../../shared/MunicipalityUserTypes';
-import { PersonPlus, Trash, People } from 'react-bootstrap-icons';
+import { PersonPlus, Trash, People, Back } from 'react-bootstrap-icons';
 import '../styles/AdminPanel.css';
 
 const INITIAL_FORM_STATE: MunicipalityUserRequest = {
@@ -13,6 +13,8 @@ const INITIAL_FORM_STATE: MunicipalityUserRequest = {
   password: '',
   role: 'PUBLIC_RELATIONS'
 };
+
+const MUNICIPALITY_ROLES = ['PUBLIC_RELATIONS', 'TECHNICAL_OFFICE'];
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -94,9 +96,6 @@ export default function AdminPanel() {
     if (showForm) resetForm();
   };
 
-  // TODO: PT03 - Uncomment this function when role display is re-enabled
-  // FIXME: Currently commented out to avoid unused variable warning in PT02
-  /*
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'PUBLIC_RELATIONS': return 'Public Relations';
@@ -104,7 +103,6 @@ export default function AdminPanel() {
       default: return role;
     }
   };
-  */
 
   return (
     <div className="admin-panel-container">
@@ -116,7 +114,7 @@ export default function AdminPanel() {
             className="add-user-btn"
             disabled={loading}
           >
-            <PersonPlus /> {showForm ? 'Cancel' : 'Add New User'}
+            {showForm ? <div>← Back</div> : <div><PersonPlus /> Add New User</div>}
           </button>
         </div>
 
@@ -179,9 +177,6 @@ export default function AdminPanel() {
               />
             </div>
 
-            {/* TODO: PT03 - Uncomment to enable role selection when implementing "assign roles" feature */}
-            {/* FIXME: Currently hidden for PT02 - users are created with PUBLIC_RELATIONS role by default */}
-            {/* 
             <div className="form-group">
               <label htmlFor="role">Role</label>
               <select
@@ -192,14 +187,13 @@ export default function AdminPanel() {
                 required
                 disabled={loading}
               >
-                */}
-            {/* FIXME: Qunado ci sarà la api che restituisce tutti i ruoli prendili da lì! */}
-            {/*
-                <option value="PUBLIC_RELATIONS">Public Relations</option>
-                <option value="TECHNICAL_OFFICE">Technical Office</option>
+                {MUNICIPALITY_ROLES.map(role => (
+                  <option key={role} value={role}>
+                    {getRoleLabel(role)}
+                  </option>
+                ))}
               </select>
             </div>
-            */}
 
             <button type="submit" className="submit-btn" disabled={loading}>
               {loading ? 'Creating...' : 'Create User'}
@@ -220,8 +214,7 @@ export default function AdminPanel() {
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
-                  {/* TODO: PT03 - Uncomment to show role column when implementing "assign roles" feature */}
-                  {/* <th>Role</th> */}
+                  <th>Role</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -230,8 +223,7 @@ export default function AdminPanel() {
                   <tr key={user.id}>
                     <td>{user.firstName} {user.lastName}</td>
                     <td>{user.email}</td>
-                    {/* TODO: PT03 - Uncomment to display user role */}
-                    {/* <td><span className="role-badge">{getRoleLabel(user.role)}</span></td> */}
+                    <td><span className="role-badge">{getRoleLabel(user.role)}</span></td>
                     <td>
                       <button 
                         onClick={() => handleDelete(user.id)}

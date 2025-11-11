@@ -52,7 +52,7 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
               disabled={loading}
             >
               {user?.role === 'ADMINISTRATOR' 
-                ? (loading ? 'Logging out...' : '← Logout') 
+                ? (loading ? 'Logging out...' : 'Logout') 
                 : '← Back to Home'}
             </button>
           ) : isAuthenticated && user ? (
