@@ -890,7 +890,13 @@ components:
 
     ErrorResponse:
       type: object
+      required:
+        - code
       properties:
+        code:
+          type: integer
+          description: HTTP status code of the error
+          example: 400
         error:
           type: string
           description: Error type (BadRequest, Unauthorized, Conflict, InternalServerError)
