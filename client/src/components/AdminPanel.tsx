@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { createMunicipalityUser, listMunicipalityUsers, deleteMunicipalityUser } from '../api/api';
 import type { MunicipalityUserRequest, MunicipalityUserResponse } from '../../../shared/MunicipalityUserTypes';
-import { PersonPlus, Trash, People, Back } from 'react-bootstrap-icons';
+import { PersonPlus, Trash, People } from 'react-bootstrap-icons';
+import { MUNICIPALITY_ROLES, getRoleLabel } from '../utils/roles';
 import '../styles/AdminPanel.css';
 
 const INITIAL_FORM_STATE: MunicipalityUserRequest = {
@@ -13,8 +14,6 @@ const INITIAL_FORM_STATE: MunicipalityUserRequest = {
   password: '',
   role: 'PUBLIC_RELATIONS'
 };
-
-const MUNICIPALITY_ROLES = ['PUBLIC_RELATIONS', 'TECHNICAL_OFFICE'];
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -96,13 +95,6 @@ export default function AdminPanel() {
     if (showForm) resetForm();
   };
 
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case 'PUBLIC_RELATIONS': return 'Public Relations';
-      case 'TECHNICAL_OFFICE': return 'Technical Office';
-      default: return role;
-    }
-  };
 
   return (
     <div className="admin-panel-container">

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import '../styles/Header.css';
 import { useAuth } from '../hooks/useAuth';
+import { MUNICIPALITY_ROLES, getRoleLabel } from '../utils/roles';
 import { PersonCircle } from 'react-bootstrap-icons';
 
 
@@ -58,6 +59,9 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
           ) : isAuthenticated && user ? (
             <div className="user-menu">
               <div className="user-profile">
+                {MUNICIPALITY_ROLES.includes(user.role) && (
+                  <div className="user-role-badge">{getRoleLabel(user.role as string)}</div>
+                )}
                 <div className="user-avatar"><PersonCircle /></div>
                 <div className="user-details">
                   <div className="user-name">{user.firstName}</div>
