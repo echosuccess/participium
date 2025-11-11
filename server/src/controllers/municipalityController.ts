@@ -239,3 +239,15 @@ export async function deleteMunicipalityUserController(req: Request, res: Respon
     });
   }
 }
+
+export async function listRolesController(req: Request, res: Response) {
+  try {
+    return res.status(200).json(MUNICIPALITY_ROLES);
+  } catch (error) {
+    console.error("Error listing roles:", error);
+    return res.status(500).json({
+      error: "InternalServerError",
+      message: "Failed to retrieve roles"
+    });
+  }
+}
