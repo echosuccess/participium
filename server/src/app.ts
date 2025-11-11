@@ -11,6 +11,7 @@ import { configurePassport } from "./config/passport";
 import authRoutes from "./routes/authRoutes";
 import citizenRoutes from "./routes/citizenRoutes";
 import adminRoutes from "./routes/adminRoutes";
+import reportRoutes from './routes/reportRoutes';
 
 export function createApp(): Express {
   const app: Express = express();
@@ -69,6 +70,7 @@ export function createApp(): Express {
   app.use(CONFIG.ROUTES.SESSION, authRoutes);
   app.use(CONFIG.ROUTES.CITIZEN, citizenRoutes);
   app.use(CONFIG.ROUTES.ADMIN, adminRoutes);
+  app.use(CONFIG.ROUTES.REPORT, reportRoutes);
 
   // This must always be the last middleware added
   // TODO: Add error handler middleware here when implemented
