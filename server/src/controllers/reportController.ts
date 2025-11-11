@@ -18,7 +18,7 @@ export const createReport = async (req: Request, res: Response) => {
             );
         }
 
-        //validate required fields myabe can move it to servcie
+        //validate required fields maybe can move it to service
         if(!title || !description || !category || latitude === undefined || longitude === undefined || !photos){
             return res.status(400).json({ 
                 error: 'Bad Request', message: 'Missing required fields' }
