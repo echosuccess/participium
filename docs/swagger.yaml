@@ -31,6 +31,8 @@ tags:
     description: Citizen registration operations
   - name: Administration
     description: Municipality user management operations (create, update, delete)
+  - name: Reports
+    description: Create and retrieve geolocated reports submitted by citizens
 
 paths:
   /session:
@@ -75,6 +77,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 400
                 error: "BadRequest"
                 message: "Already logged in"
         "401":
@@ -84,6 +87,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 401
                 error: "Unauthorized"
                 message: "Invalid username or password"
         "500":
@@ -93,6 +97,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 500
                 error: "InternalServerError"
                 message: "An unexpected error occurred"
 
@@ -130,6 +135,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 401
                 error: "Unauthorized"
                 message: "No valid session found"
 
@@ -161,6 +167,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 400
                 error: "BadRequest"
                 message: "Already logged out"
         "500":
@@ -170,6 +177,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 500
                 error: "InternalServerError"
                 message: "Logout failed"
 
@@ -207,6 +215,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 400
                 error: "BadRequest"
                 message: "Missing required fields: email, password"
         "409":
@@ -216,6 +225,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 409
                 error: "Conflict"
                 message: "Email already in use"
         "500":
@@ -225,6 +235,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 500
                 error: "InternalServerError"
                 message: "Unable to create user"
 
@@ -265,6 +276,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 400
                 error: "BadRequest"
                 message: "Missing required fields: firstName, lastName, email, password, role"
         "401":
@@ -274,6 +286,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 401
                 error: "Unauthorized"
                 message: "Authentication required"
         "403":
@@ -283,6 +296,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 403
                 error: "Forbidden"
                 message: "Administrator privileges required"
         "409":
@@ -292,6 +306,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 409
                 error: "Conflict"
                 message: "Email already in use"
         "500":
@@ -301,6 +316,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 500
                 error: "InternalServerError"
                 message: "Unable to create municipality user"
 
@@ -351,6 +367,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 401
                 error: "Unauthorized"
                 message: "Authentication required"
         "403":
@@ -360,6 +377,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 403
                 error: "Forbidden"
                 message: "Administrator privileges required"
         "500":
@@ -369,6 +387,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 500
                 error: "InternalServerError"
                 message: "Failed to retrieve users"
 
@@ -405,6 +424,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 400
                 error: "BadRequest"
                 message: "Invalid user ID format"
         "401":
@@ -414,6 +434,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 401
                 error: "Unauthorized"
                 message: "Authentication required"
         "403":
@@ -423,6 +444,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 403
                 error: "Forbidden"
                 message: "Administrator privileges required"
         "404":
@@ -432,6 +454,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 404
                 error: "NotFound"
                 message: "Municipality user not found"
         "500":
@@ -441,6 +464,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 500
                 error: "InternalServerError"
                 message: "Failed to retrieve user"
 
@@ -472,6 +496,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 400
                 error: "BadRequest"
                 message: "Invalid user ID format"
         "401":
@@ -481,6 +506,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 401
                 error: "Unauthorized"
                 message: "Authentication required"
         "403":
@@ -490,6 +516,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 403
                 error: "Forbidden"
                 message: "Administrator privileges required"
         "404":
@@ -499,6 +526,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 404
                 error: "NotFound"
                 message: "Municipality user not found"
         "500":
@@ -508,6 +536,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 500
                 error: "InternalServerError"
                 message: "Failed to delete user"
 
@@ -540,6 +569,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 401
                 error: "Unauthorized"
                 message: "Authentication required"
         "403":
@@ -549,6 +579,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 403
                 error: "Forbidden"
                 message: "Administrator privileges required"
         "500":
@@ -558,8 +589,227 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
+                code: 500
                 error: "InternalServerError"
                 message: "Failed to retrieve roles"
+
+  /reports:
+    post:
+      tags:
+        - Reports
+      summary: Create a new report with geolocation
+      description: |
+        Create a new citizen report tied to a geographic location (latitude/longitude in WGS84).
+        The frontend is expected to use an interactive map (OpenStreetMap-based, e.g. Leaflet.js) to allow the user
+        to pick a location; the selected coordinates (decimal degrees) must be provided in the request body.
+        Reports are associated with the authenticated user (session-based authentication).
+      operationId: createReport
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ReportCreateMultipart"
+            encoding:
+              photos:
+                contentType: image/jpeg, image/png
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportRequest"
+            example:
+              title: "Pothole on Via Roma"
+              description: "Large pothole near the pedestrian crossing, causing risk for cyclists."
+              category: ROADS_URBAN_FURNISHINGS
+              latitude: 45.070339
+              longitude: 7.686864
+              address: "Via Roma 1, Torino"
+              isAnonymous: false
+              photos:
+                - "https://cdn.example.com/reports/tmp/photo1.jpg"
+      responses:
+        "201":
+          description: Report created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  report:
+                    $ref: "#/components/schemas/ReportResponse"
+              example:
+                message: "Report created successfully"
+                report:
+                  id: 1024
+                  title: "Pothole on Via Roma"
+                  description: "Large pothole near the pedestrian crossing, causing risk for cyclists."
+                  category: ROADS_URBAN_FURNISHINGS
+                  latitude: 45.070339
+                  longitude: 7.686864
+                  isAnonymous: false
+                  status: PENDING_APPROVAL
+                  userId: 201
+                  user:
+                    id: 201
+                    firstName: Mario
+                    lastName: Rossi
+                    email: mario.rossi@example.com
+                    role: CITIZEN
+                    telegramUsername: null
+                    emailNotificationsEnabled: true
+                  messages:
+                    - id: 1
+                      content: "Initial report created by user"
+                      createdAt: "2025-11-11T10:12:34Z"
+                      senderId: 201
+                  rejectedReason: null
+                  photos:
+                    - id: 301
+                      url: "https://cdn.example.com/reports/1024/photo1.jpg"
+                      filename: "photo1.jpg"
+                  createdAt: "2025-11-11T10:12:34Z"
+                  updatedAt: "2025-11-11T10:12:34Z"
+        "400":
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 400
+                error: "Bad Request"
+                message: "Missing required fields"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "User not logged in"
+        "500":
+          description: Unable to create report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 500
+                error: "Internal Server Error"
+                message: "Unable to create report"
+
+    get:
+      tags:
+        - Reports
+      summary: List reports (optionally filtered by bounding box)
+      description: |
+        Retrieve a list of reports. Optionally filter by a bounding box using the `bbox` query parameter
+        in the format `minLon,minLat,maxLon,maxLat` (decimal degrees, WGS84). This is useful for map views
+        where the frontend requests only reports within the currently visible map area.
+        The `category` query parameter is also optional and can be combined with `bbox` to request
+        reports of a given category inside the visible map area (e.g. `?bbox=7.66,45.06,7.70,45.08&category=PUBLIC_LIGHTING`).
+      operationId: listReports
+      parameters:
+        - name: bbox
+          in: query
+          required: false
+          description: Bounding box filter `minLon,minLat,maxLon,maxLat`
+          schema:
+            type: string
+            example: "7.66,45.06,7.70,45.08"
+        - name: category
+          in: query
+          required: false
+          description: Filter reports by category (use one of the ReportCategory values). Optional and combinable with `bbox`.
+          schema:
+            $ref: "#/components/schemas/ReportCategory"
+          example: ROADS_URBAN_FURNISHINGS
+      responses:
+        "200":
+          description: Array of reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportResponse"
+              example:
+                - id: 1024
+                  title: "Pothole on Via Roma"
+                  description: "Large pothole near the pedestrian crossing, causing risk for cyclists."
+                  category: ROADS_URBAN_FURNISHINGS
+                  latitude: 45.070339
+                  longitude: 7.686864
+                  isAnonymous: false
+                  status: PENDING_APPROVAL
+                  userId: 201
+                  user:
+                    id: 201
+                    firstName: Mario
+                    lastName: Rossi
+                    email: mario.rossi@example.com
+                    role: CITIZEN
+                    telegramUsername: null
+                    emailNotificationsEnabled: true
+                  messages:
+                    - id: 1
+                      content: "Initial report created by user"
+                      createdAt: "2025-11-11T10:12:34Z"
+                      senderId: 201
+                  rejectedReason: null
+                  photos:
+                    - id: 301
+                      url: "https://cdn.example.com/reports/1024/photo1.jpg"
+                      filename: "photo1.jpg"
+                  createdAt: "2025-11-11T10:12:34Z"
+                  updatedAt: "2025-11-11T10:12:34Z"
+                - id: 1025
+                  title: "Broken street light"
+                  description: "Street light not working"
+                  category: PUBLIC_LIGHTING
+                  latitude: 45.071000
+                  longitude: 7.687500
+                  isAnonymous: false
+                  status: RESOLVED
+                  userId: 202
+                  user:
+                    id: 202
+                    firstName: Maria
+                    lastName: Bianchi
+                    email: maria.bianchi@example.com
+                    role: CITIZEN
+                    telegramUsername: null
+                    emailNotificationsEnabled: true
+                  messages: []
+                  rejectedReason: null
+                  photos: []
+                  createdAt: "2025-11-10T09:00:00Z"
+                  updatedAt: "2025-11-12T08:00:00Z"
+        "400":
+          description: Invalid query parameters (e.g. malformed bbox)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 400
+                error: "BadRequest"
+                message: "Invalid bbox parameter. Expected format: minLon,minLat,maxLon,maxLat"
+        "500":
+          description: Unable to retrieve reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 500
+                error: "InternalServerError"
+                message: "Error during report retrieval"
 
 components:
   securitySchemes:
@@ -677,6 +927,11 @@ components:
     UserInfo:
       type: object
       properties:
+        id:
+          type: integer
+          format: int64
+          description: User ID
+          example: 201
         firstName:
           type: string
           example: Mario
@@ -753,39 +1008,7 @@ components:
         role:
           $ref: "#/components/schemas/MunicipalityRole"
 
-    MunicipalityUserUpdateRequest:
-      type: object
-      description: |
-        Partial municipality user update. At least one of the fields must be present in the body.
-        Fields not present will be left unchanged. Password, if provided, will be hashed server-side.
-      properties:
-        firstName:
-          type: string
-          minLength: 1
-          maxLength: 50
-          description: Municipality user's first name
-          example: Giuseppe
-        lastName:
-          type: string
-          minLength: 1
-          maxLength: 50
-          description: Municipality user's last name
-          example: Verdi
-        email:
-          type: string
-          format: email
-          maxLength: 100
-          description: Valid email address (must be unique)
-          example: giuseppe.verdi@comune.torino.it
-        password:
-          type: string
-          minLength: 8
-          maxLength: 100
-          format: password
-          description: New password (minimum 8 characters). If provided, it will be hashed server-side and not returned in the response.
-          example: NewPassword123!
-        role:
-          $ref: "#/components/schemas/MunicipalityRole"
+   
 
     MunicipalityUserResponse:
       type: object
