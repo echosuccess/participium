@@ -23,7 +23,7 @@ type CreateReportData = Omit<
 };
 
 export async function createReport(data: CreateReportData) {
-  //here there should be validation for the photos
+  //here ther should be validation for the photos
 
   const newReport = await prisma.report.create({
     data: {

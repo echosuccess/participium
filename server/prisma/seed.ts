@@ -5,51 +5,12 @@ import { hashPassword } from "../src/services/passwordService";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Starting database seed...");
+  console.log("🌱 Starting database seed...");
 
-  // Clear existing data
+  // Clear existing users
   await prisma.user.deleteMany();
 
-  //insert example users
-  await prisma.user.createMany({
-    data: [
-      {
-        email: "admin@participium.com",
-        first_name: "Admin",
-        last_name: "User",
-        password: "hashedpassword123",
-        role: "ADMINISTRATOR",
-      },
-      {
-        email: "citizen@participium.com",
-        first_name: "John",
-        last_name: "Doe",
-        password: "hashedpassword456",
-        role: "CITIZEN",
-      },
-      {
-        email: "pr@participium.com",
-        first_name: "Jane",
-        last_name: "Smith",
-        password: "hashedpassword789",
-        role: "PUBLIC_RELATIONS",
-      },
-      {
-        email: "tech@participium.com",
-        first_name: "Tech",
-        last_name: "Office",
-        password: "hashedpassword000",
-        role: "TECHNICAL_OFFICE",
-      },
-    ],
-  });
-
-  console.log("\nDatabase seed completed successfully!");
-  console.log("\nSummary:");
-  console.log("- Created 4 sample users with different roles");
-  await prisma.user.deleteMany();
-
-  // users to insert (plain passwords)
+  // Users to insert (plain passwords)
   const users = [
     {
       email: "admin@participium.com",
@@ -62,8 +23,8 @@ async function main() {
     },
     {
       email: "citizen@participium.com",
-      first_name: "John",
-      last_name: "Doe",
+      first_name: "Mario",
+      last_name: "Rossi",
       password: "citizenpass",
       role: "CITIZEN",
       telegram_username: null,
@@ -71,8 +32,8 @@ async function main() {
     },
     {
       email: "pr@participium.com",
-      first_name: "Jane",
-      last_name: "Smith",
+      first_name: "Public",
+      last_name: "Relations",
       password: "prpass",
       role: "PUBLIC_RELATIONS",
       telegram_username: null,
@@ -80,7 +41,7 @@ async function main() {
     },
     {
       email: "tech@participium.com",
-      first_name: "Tech",
+      first_name: "Technical",
       last_name: "Office",
       password: "techpass",
       role: "TECHNICAL_OFFICE",
@@ -89,6 +50,7 @@ async function main() {
     },
   ];
 
+  // Hash passwords and insert users
   for (const u of users) {
     const { hashedPassword, salt } = await hashPassword(u.password);
     await prisma.user.create({
@@ -103,16 +65,22 @@ async function main() {
         email_notifications_enabled: u.email_notifications_enabled
       },
     });
+    console.log(`✅ Created user: ${u.email}`);
   }
 
-  console.log("\nDatabase seed completed successfully!");
-  console.log("\nSummary:");
-  console.log(`- Created ${users.length} sample users with hashed passwords`);
+  console.log("\n✅ Database seed completed successfully!");
+  console.log(`\nCreated ${users.length} sample users with hashed passwords`);
+  console.log("\n📋 Test credentials:");
+  console.log("  Admin: admin@participium.com / admin123");
+  console.log("  Citizen: citizen@participium.com / citizen123");
+  console.log("  PR: pr@participium.com / pr123");
+  console.log("  Tech: tech@participium.com / tech123");
 }
 
 main()
   .catch((e) => {
-    console.error("Error during seed:", e);
+    console.error("❌ Error during seed:", e);
+    process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
