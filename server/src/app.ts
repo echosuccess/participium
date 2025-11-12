@@ -1,0 +1,61 @@
+import "dotenv/config";
+import express, { Express } from "express";
+import session from "express-session";
+import passport from "passport";
+import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
+import path from "path";
+import { CONFIG } from "./config/constants";
+import { configurePassport } from "./config/passport";
+import { errorHandler } from "./middlewares/errorMiddleware";
+import rootRoutes from "./routes/rootRoutes";
+import authRoutes from "./routes/authRoutes";
+import citizenRoutes from "./routes/citizenRoutes";
+import adminRoutes from "./routes/adminRoutes";
+import reportRoutes from "./routes/reportRoutes";
+
+export function createApp(): Express {
+  const app: Express = express();
+
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+
+  app.use(
+    cors({
+      origin: CONFIG.CORS.ORIGIN,
+      credentials: CONFIG.CORS.CREDENTIALS,
+      methods: CONFIG.CORS.METHODS,
+    })
+  );
+
+  app.use(
+    session({
+      secret: CONFIG.SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+    })
+  );
+
+  configurePassport();
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  const swaggerPath = path.join(__dirname, "..", CONFIG.SWAGGER_FILE_PATH);
+  app.use(
+    CONFIG.ROUTES.SWAGGER,
+    swaggerUi.serve,
+    swaggerUi.setup(YAML.load(swaggerPath))
+  );
+
+  app.use(CONFIG.ROUTES.ROOT, rootRoutes);
+  app.use(CONFIG.ROUTES.SESSION, authRoutes);
+  app.use(CONFIG.ROUTES.CITIZEN, citizenRoutes);
+  app.use(CONFIG.ROUTES.ADMIN, adminRoutes);
+  app.use(CONFIG.ROUTES.REPORTS, reportRoutes);
+
+  app.use(errorHandler);
+
+  return app;
+}
+
