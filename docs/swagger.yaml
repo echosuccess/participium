@@ -31,6 +31,8 @@ tags:
     description: Citizen registration operations
   - name: Administration
     description: Municipality user management operations (create, update, delete)
+  - name: Reports
+    description: Create and retrieve geolocated reports submitted by citizens
 
 paths:
   /session:
@@ -95,6 +97,225 @@ paths:
               example:
                 error: "InternalServerError"
                 message: "An unexpected error occurred"
+
+  /reports:
+    post:
+      tags:
+        - Reports
+      summary: Create a new report with geolocation
+      description: |
+        Create a new citizen report tied to a geographic location (latitude/longitude in WGS84).
+        The frontend is expected to use an interactive map (OpenStreetMap-based, e.g. Leaflet.js) to allow the user
+        to pick a location; the selected coordinates (decimal degrees) must be provided in the request body.
+        Reports are associated with the authenticated user (session-based authentication).
+      operationId: createReport
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ReportCreateMultipart"
+            encoding:
+              photos:
+                contentType: image/jpeg, image/png
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportRequest"
+            example:
+              title: "Pothole on Via Roma"
+              description: "Large pothole near the pedestrian crossing, causing risk for cyclists."
+              category: ROAD
+              latitude: 45.070339
+              longitude: 7.686864
+              address: "Via Roma 1, Torino"
+              anonymous: false
+      responses:
+        "201":
+          description: Report created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportResponse"
+              example:
+                id: 1024
+                title: "Pothole on Via Roma"
+                description: "Large pothole near the pedestrian crossing, causing risk for cyclists."
+                location:
+                  latitude: 45.070339
+                  longitude: 7.686864
+                address: "Via Roma 1, Torino"
+                photos:
+                  - https://cdn.example.com/reports/1024/photo1.jpg
+                category: ROADS_AND_URBAN_FURNISHINGS
+                anonymous: false
+                createdBy:
+                  email: mario.rossi@example.com
+                  name: Mario Rossi
+                status: OPEN
+        "400":
+          description: Missing or invalid fields (e.g. coordinates missing or out-of-range)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 400
+                error: "BadRequest"
+                message: "Missing or invalid fields (e.g. coordinates missing or out-of-range)"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "413":
+          description: Payload too large (uploaded photos exceed allowed size)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 413
+                error: "PayloadTooLarge"
+                message: "Uploaded photos exceed the maximum allowed size"
+        "415":
+          description: Unsupported media type for uploaded photos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 415
+                error: "UnsupportedMediaType"
+                message: "Photos must be image files (image/jpeg, image/png)"
+        "500":
+          description: Unable to create report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 500
+                error: "InternalServerError"
+                message: "Unable to create report"
+
+    get:
+      tags:
+        - Reports
+      summary: List reports (optionally filtered by bounding box)
+      description: |
+        Retrieve a list of reports. Optionally filter by a bounding box using the `bbox` query parameter
+        in the format `minLon,minLat,maxLon,maxLat` (decimal degrees, WGS84). This is useful for map views
+        where the frontend requests only reports within the currently visible map area.
+        The `category` query parameter is also optional and can be combined with `bbox` to request
+        reports of a given category inside the visible map area (e.g. `?bbox=7.66,45.06,7.70,45.08&category=PUBLIC_LIGHTING`).
+      operationId: listReports
+      parameters:
+        - name: bbox
+          in: query
+          required: false
+          description: Bounding box filter `minLon,minLat,maxLon,maxLat`
+          schema:
+            type: string
+            example: "7.66,45.06,7.70,45.08"
+        - name: category
+          in: query
+          required: false
+          description: Filter reports by category (use one of the ReportCategory values). Optional and combinable with `bbox`.
+          schema:
+            $ref: "#/components/schemas/ReportCategory"
+          example: ROADS_AND_URBAN_FURNISHINGS
+      responses:
+        "200":
+          description: Array of reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportSummary"
+              example:
+                - id: 1024
+                  title: "Pothole on Via Roma"
+                  location:
+                    latitude: 45.070339
+                    longitude: 7.686864
+                  category: ROADS_AND_URBAN_FURNISHINGS
+                  status: OPEN
+                - id: 1025
+                  title: "Broken street light"
+                  location:
+                    latitude: 45.071000
+                    longitude: 7.687500
+                  category: PUBLIC_LIGHTING
+                  status: RESOLVED
+        "400":
+          description: Invalid query parameters (e.g. malformed bbox)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 400
+                error: "BadRequest"
+                message: "Invalid bbox parameter. Expected format: minLon,minLat,maxLon,maxLat"
+        "500":
+          description: Unable to retrieve reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 500
+                error: "InternalServerError"
+                message: "Unable to retrieve reports"
+  /reports/{reportId}:
+    get:
+      tags:
+        - Reports
+      summary: Get a single report by id
+      description: Retrieve detailed information for a single report, including precise location coordinates.
+      operationId: getReport
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Report details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportResponse"
+        "400":
+          description: Invalid report id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 400
+                error: "BadRequest"
+                message: "Invalid report id"
+        "404":
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                error: "NotFound"
+                message: "Report not found"
 
   /session/current:
     get:
@@ -677,6 +898,10 @@ components:
     UserInfo:
       type: object
       properties:
+        id:
+          type: integer
+          format: int64
+          example: 201
         firstName:
           type: string
           example: Mario
@@ -714,7 +939,7 @@ components:
         message:
           type: string
           description: Human-readable error message
-          example: "Missing required fields: email, password"
+          example: "Human-readable description of the error"
 
     MunicipalityUserRequest:
       type: object
@@ -836,6 +1061,227 @@ components:
         role:
           $ref: "#/components/schemas/MunicipalityRole"
       description: Payload to assign or update a municipality user's role
+
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+          description: Latitude in decimal degrees (WGS84)
+          example: 45.070339
+        longitude:
+          type: number
+          format: double
+          description: Longitude in decimal degrees (WGS84)
+          example: 7.686864
+
+    ReportRequest:
+      type: object
+      required:
+        - title
+        - description
+        - category
+        - latitude
+        - longitude
+        - photos
+      properties:
+        title:
+          type: string
+          description: Short title for the report
+          example: "Pothole on Via Roma"
+        description:
+          type: string
+          description: Detailed description of the issue
+          example: "Large pothole near the pedestrian crossing, causing risk for cyclists."
+        latitude:
+          $ref: "#/components/schemas/Location/properties/latitude"
+        longitude:
+          $ref: "#/components/schemas/Location/properties/longitude"
+        address:
+          type: string
+          nullable: true
+          description: Optional human-readable address for the location
+          example: "Via Roma 1, Torino"
+        photos:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uri
+          description: Array of URLs to uploaded photos (at least one required)
+        category:
+          $ref: "#/components/schemas/ReportCategory"
+        isAnonymous:
+          type: boolean
+          description: Whether the report should be publicly anonymous
+          example: false
+
+    ReportCreateMultipart:
+      type: object
+      required:
+        - title
+        - description
+        - category
+        - latitude
+        - longitude
+        - photos
+      properties:
+        title:
+          type: string
+          example: "Pothole on Via Roma"
+        description:
+          type: string
+          example: "Large pothole near the pedestrian crossing, causing risk for cyclists."
+        category:
+          $ref: "#/components/schemas/ReportCategory"
+        latitude:
+          $ref: "#/components/schemas/Location/properties/latitude"
+        longitude:
+          $ref: "#/components/schemas/Location/properties/longitude"
+        address:
+          type: string
+          nullable: true
+        isAnonymous:
+          type: boolean
+          example: false
+        photos:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items:
+            type: string
+            format: binary
+          description: Up to 3 photo files (image/*)
+
+    ReportSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1024
+        title:
+          type: string
+          example: "Pothole on Via Roma"
+        latitude:
+          $ref: "#/components/schemas/Location/properties/latitude"
+        longitude:
+          $ref: "#/components/schemas/Location/properties/longitude"
+        category:
+          $ref: "#/components/schemas/ReportCategory"
+        status:
+          $ref: "#/components/schemas/ReportStatus"
+
+    ReportPhoto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 301
+        url:
+          type: string
+          format: uri
+          example: "https://cdn.example.com/reports/1024/photo1.jpg"
+        filename:
+          type: string
+          example: "photo1.jpg"
+
+    ReportMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        content:
+          type: string
+          example: "Initial report created by user"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:12:34Z"
+        senderId:
+          type: integer
+          format: int64
+          example: 201
+
+    ReportResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1024
+        title:
+          type: string
+          example: "Pothole on Via Roma"
+        description:
+          type: string
+          example: "Large pothole near the pedestrian crossing, causing risk for cyclists."
+        category:
+          $ref: "#/components/schemas/ReportCategory"
+        latitude:
+          $ref: "#/components/schemas/Location/properties/latitude"
+        longitude:
+          $ref: "#/components/schemas/Location/properties/longitude"
+        isAnonymous:
+          type: boolean
+          example: false
+        status:
+          $ref: "#/components/schemas/ReportStatus"
+        userId:
+          type: integer
+          format: int64
+          example: 201
+        user:
+          $ref: "#/components/schemas/UserInfo"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportMessage"
+        rejectedReason:
+          type: string
+          nullable: true
+          example: null
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportPhoto"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:12:34Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-11-11T10:12:34Z"
+
+    ReportStatus:
+      type: string
+      enum:
+        - PENDING_APPROVAL
+        - ASSIGNED
+        - IN_PROGRESS
+        - SUSPENDED
+        - REJECTED
+        - RESOLVED
+      example: PENDING_APPROVAL
+    ReportCategory:
+      type: string
+      description: Category of the reported problem
+      enum:
+        - WATER_SUPPLY_DRINKING_WATER
+        - ARCHITECTURAL_BARRIERS
+        - SEWER_SYSTEM
+        - PUBLIC_LIGHTING
+        - WASTE
+        - ROAD_SIGNS_TRAFFIC_LIGHTS
+        - ROADS_URBAN_FURNISHINGS
+        - PUBLIC_GREEN_AREAS_PLAYGROUNDS
+        - OTHER
+      example: ROADS_URBAN_FURNISHINGS
 
 # Security requirements for protected endpoints
 security:
