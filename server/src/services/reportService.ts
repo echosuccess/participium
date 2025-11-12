@@ -13,7 +13,7 @@ type PhotoInput = {
 };
 
 
-//new type where we exclude fields that will not be provided by the useer
+//new type where we exclude fields that will not be provided by the user
 type CreateReportData = 
 Omit<ReportDTO, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'messages' | 'user' | 'rejectedReason'> & {
     userId: number; //add userId to link report to user
@@ -23,7 +23,7 @@ Omit<ReportDTO, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'messages' | 'user
 
 
 export async function createReport(data: CreateReportData) {
-  //here ther should be validation for the photos
+  //here there should be validation for the photos
 
   const newReport = await prisma.report.create({
     data: {

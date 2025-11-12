@@ -19,6 +19,7 @@ export const CONFIG = {
     SESSION: "/api/session",
     CITIZEN: "/api/citizen",
     ADMIN: "/api/admin",
+    REPORT: "/api",
     SWAGGER: "/api-docs",
   },
 
