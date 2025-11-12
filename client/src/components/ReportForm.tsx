@@ -19,7 +19,7 @@ export default function ReportForm() {
   const [selectedLocation, setSelectedLocation] = useState<
     [number, number] | null
   >(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (
@@ -39,6 +39,45 @@ export default function ReportForm() {
   const handleLocationSelect = (lat: number, lng: number) => {
     setSelectedLocation([lat, lng]);
     setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+
+    // Generate mock address based on coordinates (deterministic)
+    const torinoStreets = [
+      "Via Roma",
+      "Via Garibaldi",
+      "Via Po",
+      "Corso Vittorio Emanuele II",
+      "Via Pietro Micca",
+      "Via Lagrange",
+      "Via Nizza",
+      "Via Cernaia",
+      "Via San Secondo",
+      "Via della Rocca",
+      "Via XX Settembre",
+      "Via Madama Cristina",
+      "Corso Francia",
+      "Via Sacchi",
+      "Via Verdi",
+      "Via Rossini",
+      "Piazza Castello",
+      "Piazza San Carlo",
+      "Via Monte di Pietà",
+      "Via Dora Grossa",
+      "Corso Regina Margherita",
+      "Via Principe Amedeo",
+      "Via Carlo Alberto",
+      "Via Sant'Ottavio",
+      "Via della Misericordia",
+      "Via Stampatori",
+    ];
+
+    // Use coordinates to deterministically select a street
+    const streetIndex =
+      Math.abs(Math.floor((lat + lng) * 100)) % torinoStreets.length;
+    const selectedStreet = torinoStreets[streetIndex];
+    const streetNumber = Math.floor(Math.abs(lat * 100) % 200) + 1;
+    const mockAddress = `${selectedStreet} ${streetNumber}, 10100 Torino TO, Italy`;
+
+    setSelectedAddress(mockAddress);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,7 +91,6 @@ export default function ReportForm() {
       return;
     }
 
-    setLoading(true);
     setError(null);
 
     // Simulate API call
@@ -189,10 +227,13 @@ export default function ReportForm() {
 
                   {selectedLocation && (
                     <div className="coordinates-row">
-                      <h4>Selected Coordinates</h4>
+                      <h4>Selected Location</h4>
                       <div className="coordinates-display">
-                        {selectedLocation[0].toFixed(6)},{" "}
-                        {selectedLocation[1].toFixed(6)}
+                        <div className="coordinates-text">
+                          <GeoAlt /> {selectedLocation[0].toFixed(6)},{" "}
+                          {selectedLocation[1].toFixed(6)}
+                        </div>
+                        <div className="address-text">📍 {selectedAddress}</div>
                       </div>
                     </div>
                   )}
@@ -204,10 +245,10 @@ export default function ReportForm() {
               <Button
                 type="submit"
                 className="btn-submit-custom"
-                disabled={loading || !selectedLocation}
+                disabled={!selectedLocation}
                 onClick={handleSubmit}
               >
-                {loading ? "Submitting..." : "Submit Report"}
+                Submit Report
               </Button>
             </div>
           </div>
