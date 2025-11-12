@@ -1,4 +1,4 @@
-import { prisma } from "../index";
+import { prisma } from "../utils/prismaClient";
 import {
   ReportCategory as PrismaReportCategory,
   ReportStatus as PrismaReportStatus,
