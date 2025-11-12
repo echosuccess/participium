@@ -1,5 +1,3 @@
-import { ReportStatus } from "../../../shared/ReportTypes";
-
 export const CONFIG = {
   // Server
   PORT: process.env.PORT || 4000,
