@@ -4,9 +4,15 @@ import L from "leaflet";
 // Torino coordinates fallback
 const TURIN: [number, number] = [45.0703, 7.6869];
 
-export default function MapView() {
+interface MapViewProps {
+  onLocationSelect?: (lat: number, lng: number) => void;
+  selectedLocation?: [number, number] | null;
+}
+
+export default function MapView({ onLocationSelect, selectedLocation }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
   const [center, setCenter] = useState<[number, number]>(TURIN);
   const [hasTileError, setHasTileError] = useState(false);
 
@@ -42,6 +48,21 @@ export default function MapView() {
       setHasTileError(true);
     });
 
+    // Add click event to select location
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+      if (markerRef.current) {
+        map.removeLayer(markerRef.current);
+      }
+      markerRef.current = L.marker([lat, lng]).addTo(map);
+      onLocationSelect?.(lat, lng);
+    });
+
+    // Add initial marker if selectedLocation is provided
+    if (selectedLocation) {
+      markerRef.current = L.marker(selectedLocation).addTo(map);
+    }
+
     mapInstanceRef.current = map;
 
     return () => {
@@ -58,6 +79,17 @@ export default function MapView() {
       mapInstanceRef.current.setView(center);
     }
   }, [center]);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    if (markerRef.current) {
+      mapInstanceRef.current.removeLayer(markerRef.current);
+      markerRef.current = null;
+    }
+    if (selectedLocation) {
+      markerRef.current = L.marker(selectedLocation).addTo(mapInstanceRef.current);
+    }
+  }, [selectedLocation]);
 
   return (
     <>

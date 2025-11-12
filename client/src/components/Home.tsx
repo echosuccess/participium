@@ -18,7 +18,11 @@ export default function Home() {
   }, [isAuthenticated, user, navigate]);
 
   const handleAddReport = () => {
-    setShowAuthModal(true);
+    if (isAuthenticated) {
+      navigate("/report/new");
+    } else {
+      setShowAuthModal(true);
+    }
   };
 
   const handleModalLogin = () => {

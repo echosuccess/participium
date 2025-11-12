@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
-import { createMunicipalityUser, listMunicipalityUsers, deleteMunicipalityUser } from '../api/api';
+import { createMunicipalityUser, listMunicipalityUsers } from '../api/api';
 import type { MunicipalityUserRequest, MunicipalityUserResponse } from '../../../shared/MunicipalityUserTypes';
 import { PersonPlus, Trash, People } from 'react-bootstrap-icons';
 import { MUNICIPALITY_ROLES, getRoleLabel } from '../utils/roles';
@@ -75,13 +75,14 @@ export default function AdminPanel() {
     }
   };
 
-  const handleDelete = async (userId: number) => {
+  const handleDelete = async (_userId: number) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
 
     try {
       setLoading(true);
       setError('');
-      await deleteMunicipalityUser(userId);
+      // await deleteMunicipalityUser(userId); // TODO: implement when backend is ready
+      alert('User deleted (mock)');
       await loadUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete user');

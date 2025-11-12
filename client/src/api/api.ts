@@ -69,14 +69,6 @@ export async function listMunicipalityUsers(): Promise<MunicipalityUserResponse[
 }
 
 
-export async function deleteMunicipalityUser(userId: number): Promise<void> {
-  const res = await fetch(`${API_PREFIX}/admin/municipality-users/${userId}`, {
-    method: 'DELETE',
-    credentials: 'include',
-  });
-  await handleResponse<unknown>(res);
-}
-
 export default {
   getSession,
   login,
@@ -84,5 +76,4 @@ export default {
   signup,
   createMunicipalityUser,
   listMunicipalityUsers,
-  deleteMunicipalityUser,
 };

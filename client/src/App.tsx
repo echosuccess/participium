@@ -6,6 +6,7 @@ import Home from './components/Home'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import AdminPanel from './components/AdminPanel'
+import ReportForm from './components/ReportForm'
 
 function App() {
   const { loading } = useAuth()
@@ -27,6 +28,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/report/new" element={<ReportForm />} />
       </Routes>
     </div>
   )
