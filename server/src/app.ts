@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express, { Express, Request, Response } from "express";
+import express, { Express } from "express";
 import session from "express-session";
 import passport from "passport";
 import cors from "cors";
@@ -8,10 +8,11 @@ import YAML from "yamljs";
 import path from "path";
 import { CONFIG } from "./config/constants";
 import { configurePassport } from "./config/passport";
+import rootRoutes from "./routes/rootRoutes";
 import authRoutes from "./routes/authRoutes";
 import citizenRoutes from "./routes/citizenRoutes";
 import adminRoutes from "./routes/adminRoutes";
-import reportRoutes from './routes/reportRoutes';
+import reportRoutes from "./routes/reportRoutes";
 
 export function createApp(): Express {
   const app: Express = express();
@@ -51,22 +52,8 @@ export function createApp(): Express {
     swaggerUi.setup(YAML.load(swaggerPath))
   );
 
-  // Root endpoint
-  app.get(CONFIG.ROUTES.ROOT, (req: Request, res: Response) => {
-    res.json({
-      message: CONFIG.API.NAME,
-      version: CONFIG.API.VERSION,
-      description: CONFIG.API.DESCRIPTION,
-      endpoints: {
-        auth: CONFIG.ROUTES.SESSION,
-        citizens: CONFIG.ROUTES.CITIZEN,
-        admin: CONFIG.ROUTES.ADMIN,
-        docs: CONFIG.ROUTES.SWAGGER,
-      },
-    });
-  });
-
   // API Routes
+  app.use(CONFIG.ROUTES.ROOT, rootRoutes);
   app.use(CONFIG.ROUTES.SESSION, authRoutes);
   app.use(CONFIG.ROUTES.CITIZEN, citizenRoutes);
   app.use(CONFIG.ROUTES.ADMIN, adminRoutes);
