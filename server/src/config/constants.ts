@@ -1,4 +1,4 @@
-import { ReportStatus } from "../interfaces/ReportDTO";
+import { ReportStatus } from "../../../shared/ReportTypes";
 
 export const CONFIG = {
   // Server

@@ -3,7 +3,8 @@ import { useNavigate } from "react-router";
 import { Button, Container, Row, Col, Alert } from "react-bootstrap";
 import { GeoAlt, FileText, Tag, Eye } from "react-bootstrap-icons";
 import MapView from "./MapView";
-import type { ReportCategory } from "../../../shared/ReportTypes";
+import type { ReportCategory, ReportPhoto } from "../../../shared/ReportTypes";
+import { createReport } from "../api/api";
 import "../styles/ReportForm.css";
 
 export default function ReportForm() {
@@ -15,6 +16,7 @@ export default function ReportForm() {
     latitude: 0,
     longitude: 0,
     isAnonymous: false,
+    photos: [] as ReportPhoto[]
   });
   const [selectedLocation, setSelectedLocation] = useState<
     [number, number] | null
@@ -53,19 +55,24 @@ export default function ReportForm() {
 
     setError(null);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Report submitted:", {
+    try{
+      const reportData ={
         title: formData.title,
         description: formData.description,
-        category: formData.category,
         latitude: formData.latitude,
         longitude: formData.longitude,
         isAnonymous: formData.isAnonymous,
-      });
-      alert("Report submitted successfully! (This is a mock)");
+        photos: formData.photos,
+        category: formData.category,
+      }
+      await createReport(reportData);
       navigate("/");
-    }, 1000);
+    }catch(err: any){
+      console.error("Error submitting report:", err);
+      setError(
+        err?.message || "An error occurred while submitting the report."
+      );
+    }
   };
 
   return (

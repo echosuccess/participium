@@ -4,7 +4,10 @@ import {
   getApprovedReports as getApprovedReportsService,
 } from "../services/reportService";
 import { UserDTO } from "../interfaces/UserDTO";
-import { ReportCategory } from "../interfaces/ReportDTO";
+import { 
+  ReportCategory,
+  CreateReportRequest
+ } from "../../../shared/ReportTypes";
 
 export const createReport = async (req: Request, res: Response) => {
   try {
@@ -16,7 +19,7 @@ export const createReport = async (req: Request, res: Response) => {
       longitude,
       isAnonymous,
       photos,
-    } = req.body;
+    } = req.body as CreateReportRequest;
     const user = req.user as UserDTO & { id: number }; //need to get the userId
 
     //citizen must be logged in to create a report
@@ -49,7 +52,7 @@ export const createReport = async (req: Request, res: Response) => {
       latitude,
       longitude,
       isAnonymous,
-      photos,
+      photos: photos,
       userId: user.id,
     };
 
@@ -57,7 +60,7 @@ export const createReport = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       message: "Report created successfully",
-      report: newReport,
+      id: newReport.id,
     });
   } catch (err) {
     console.error("Error creating report", err);

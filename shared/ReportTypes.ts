@@ -4,10 +4,10 @@ export type ReportCategory =
   | "SEWER_SYSTEM"
   | "PUBLIC_LIGHTING"
   | "WASTE"
-  | "ROAD_MAINTENANCE"
-  | "GREEN_AREAS"
-  | "PUBLIC_TRANSPORT"
-  | "OTHER";
+  | "ROAD_SIGNS_AND_TRAFFIC_LIGHTS"
+  | "ROADS_AND_URBAN_FURNISHINGS"
+  | "PUBLIC_GREEN_AREAS_AND_PLAYGROUNDS"
+  | "OTHER"; 
 
 export interface CreateReportRequest {
   title: string;
@@ -16,9 +16,26 @@ export interface CreateReportRequest {
   latitude: number;
   longitude: number;
   isAnonymous: boolean;
+  photos: ReportPhoto[];
 }
+
+export interface ReportPhoto {
+  id: number;
+  url: string;
+  filename: string;
+};
 
 export interface CreateReportResponse {
   id: number;
   message: string;
 }
+
+export type ReportStatus =
+"PENDING_APPROVAL"
+| "ASSIGNED"
+| "IN_PROGRESS"
+| "SUSPENDED"
+| "REJECTED"
+| "RESOLVED"
+
+    

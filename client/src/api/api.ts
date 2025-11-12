@@ -7,6 +7,10 @@ import type {
   MunicipalityUserRequest,
   MunicipalityUserResponse,
 } from "../../../shared/MunicipalityUserTypes";
+import type { 
+  CreateReportRequest,
+  CreateReportResponse 
+} from "../../../shared/ReportTypes";
 
 const API_PREFIX = "/api";
 
@@ -84,6 +88,45 @@ export async function listMunicipalityUsers(): Promise<
   return handleResponse<MunicipalityUserResponse[]>(res);
 }
 
+//types for REPORT API
+
+export type ReportFormData = CreateReportRequest; //type sent to server
+
+//type received from server
+//this type is not in the shared folder because it's only used client-side
+export interface Report {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  status: string;
+  latitude: number;
+  longitude: number;
+}
+
+//REPORT API functions
+
+export async function createReport(
+  reportData: ReportFormData
+): Promise<CreateReportResponse> { 
+  const res = await fetch(`${API_PREFIX}/reports`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(reportData),
+  });
+  return handleResponse<CreateReportResponse>(res); 
+}
+
+
+export async function getReports(): Promise<Report[]> {
+  const res = await fetch(`${API_PREFIX}/reports`, {
+    method: "GET",
+    credentials: "include",
+  });
+  return handleResponse<Report[]>(res);
+}
+
 export default {
   getSession,
   login,
@@ -91,4 +134,6 @@ export default {
   signup,
   createMunicipalityUser,
   listMunicipalityUsers,
+  createReport,
+  getReports,
 };

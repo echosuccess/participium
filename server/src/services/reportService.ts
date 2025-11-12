@@ -4,11 +4,7 @@ import {
   ReportStatus as PrismaReportStatus,
 } from "../../prisma/generated/client";
 import { ReportDTO } from "../interfaces/ReportDTO";
-
-type PhotoInput = {
-  url: string;
-  filename: string;
-};
+import { ReportPhoto } from "../../../shared/ReportTypes";
 
 //new type where we exclude fields that will not be provided by the useer
 type CreateReportData = Omit<
@@ -22,7 +18,7 @@ type CreateReportData = Omit<
   | "rejectedReason"
 > & {
   userId: number; //add userId to link report to user
-  photos: PhotoInput[];
+  photos: ReportPhoto[];
   //here we can add photos handling later
 };
 
