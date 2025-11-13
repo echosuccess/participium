@@ -89,13 +89,14 @@ sections:
 ## ASSESSMENT
 
 - What did go wrong in the sprint?
-    - The assignment of tasks for each story lacked a clear logic and was rather arbitrary. At times, two or three group members were working intensively while the others were stuck, having to wait for the previous tasks to be completed.
+    - The major problems encountered during the sprint where due to tasks assignment. We can solve this problem with a better task definition during sprint planning and also assigning the same person to small backend tasks of the same story, in order to reduce waiting times
 
 - What caused your errors in estimation (if any)?
-    - The major estimation errors occurred in the _Code Review_ tasks, which took longer than expected mainly due to miscommunication between the back-end and front-end developers.
+    - The major overstimation errors are bound to uncategorized decision tasks (architecture design, technologies choice, etc) and DB updates tasks. The former where due to the fact that many decisions where almost directly inherited from the previous project. The latter, instead, where caused by the fact that in some stories a DB update was not really required.
+    Finally, we have to start every task from the swagger and pay more attention on implementing only things that actually belongs to our stories.
 
 - What lessons did you learn (both positive and negative) in this sprint?
-    - We realized that sprint meetings should not be underestimated, as they play a crucial role in keeping the team aligned and avoiding misunderstandings.
+    - We realized that we need to improve task descriptions during sprint planning, but overall our time estimation was quite precise.
 
 - Which improvement goals set in the previous retrospective were you able to achieve? 
     - First sprint, no previous set goals
@@ -106,8 +107,8 @@ sections:
 - Improvement goals for the next sprint and how to achieve them (technical tasks, team coordination, etc.)
 
   > Propose one or two
-  - Improve team coordination to ensure a more balanced distribution of work and smoother task transitions.
-  - Enhance team communication by providing more precise and complete information during discussions.
+  - Improve task definition and description during sprint planning in orderd to a better understanding of the work to do.
+  - Always start development of stories from swagger in order to improve team alignment.
 
 - One thing you are proud of as a Team!!
-  - We always maintained a positive and respectful attitude, even when facing challenges or issues with the project.
+  - We kept an excellent level of communication, always updating each other on the status of the project and giving feedback on others work
