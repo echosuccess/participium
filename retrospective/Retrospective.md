@@ -64,25 +64,25 @@ sections:
 ## QUALITY MEASURES 
 
 - Unit Testing:
-  - Total hours estimated: 4h (stories 1 & 2), 2h (story 3, not done)
-  - Total hours spent: 3h 56m (stories 1 & 2), 0h (story 3, not done)
-  - Nr of automated unit test cases : 212
+  - Total hours estimated: 6h (stories 1, 2, 3 & 4 done)
+  - Total hours spent: 5h (stories 1, 2, 3 & 4 done)
+  - Nr of automated unit test cases : 189
   - Coverage (Jest report):
-    - Statements: 25.92 %
-    - Branches: 11.86 %
-    - Functions: 16.14 %
-    - Lines: 74.45 %
+    - Statements: 93.68 %
+    - Branches: 91.35 %
+    - Functions: 88.15 %
+    - Lines: 93.48 %
 - E2E testing:
-  - Total hours estimated: 0h
-  - Total hours spent: 0h
-  - Nr of test cases: 0
+  - Total hours estimated: 1h 30m
+  - Total hours spent: 1h 30m
+  - Nr of test cases: 41
 - Integration testing:
-  - Total hours estimated: 4h (stories 1 & 2), 2h (story 3, not done) 
-  - Total hours spent: 4h 30m (stories 1 & 2), 0h (story 3, not done)
-  - Nr of test cases: 26
+  - Total hours estimated: 6h (stories 1, 2, 3 & 4 done)
+  - Total hours spent: 6h 30m (stories 1, 2, 3 & 4 done)
+  - Nr of test cases: 64
 - Code review 
-  - Total hours estimated: 7h (stories 1 & 2), 2h (story 3, not done) 
-  - Total hours spent: 11h 40m (stories 1 & 2), 0h (story 3, not done)
+  - Total hours estimated: 10h (stories 1, 2, 3 & 4 done)
+  - Total hours spent: 9h 45m (stories 1, 2, 3 & 4 done)
   
 
 
