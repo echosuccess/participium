@@ -1,5 +1,4 @@
 import { Routes, Route, useLocation } from "react-router";
-import "./styles/App.css";
 import { useAuth } from "./hooks/useAuth";
 import { LoadingSpinner } from "./components/ui";
 import Header from "./components/Header";
@@ -14,14 +13,14 @@ function App() {
 
   if (loading) {
     return (
-      <div className="loading-container">
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
         <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className={`app with-header`}>
+    <div>
       <Header showBackToHome={location.pathname !== "/"} />
       <Routes>
         <Route path="/" element={<HomePage />} />

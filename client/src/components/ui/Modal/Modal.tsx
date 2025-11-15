@@ -1,5 +1,5 @@
-import type { ReactNode, MouseEvent } from "react";
-import "./Modal.css";
+import { Modal as BSModal } from 'react-bootstrap';
+import type { ReactNode } from "react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -9,23 +9,10 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, children, className = "" }: ModalProps) {
-  if (!isOpen) return null;
-
-  const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   return (
-    <div className="modal-backdrop" onClick={handleBackdropClick}>
-      <div className={`modal-content ${className}`}>
-        <button className="modal-close" onClick={onClose} aria-label="Close modal">
-          ×
-        </button>
-        {children}
-      </div>
-    </div>
+    <BSModal show={isOpen} onHide={onClose} centered className={className}>
+      {children}
+    </BSModal>
   );
 }
 
@@ -36,10 +23,12 @@ interface ModalHeaderProps {
 
 export function ModalHeader({ children, icon }: ModalHeaderProps) {
   return (
-    <div className="modal-header">
-      {icon && <div className="modal-icon">{icon}</div>}
-      <h2>{children}</h2>
-    </div>
+    <BSModal.Header closeButton>
+      <BSModal.Title>
+        {icon && <span className="me-2">{icon}</span>}
+        {children}
+      </BSModal.Title>
+    </BSModal.Header>
   );
 }
 
@@ -48,7 +37,7 @@ interface ModalBodyProps {
 }
 
 export function ModalBody({ children }: ModalBodyProps) {
-  return <div className="modal-body">{children}</div>;
+  return <BSModal.Body>{children}</BSModal.Body>;
 }
 
 interface ModalFooterProps {
@@ -56,5 +45,5 @@ interface ModalFooterProps {
 }
 
 export function ModalFooter({ children }: ModalFooterProps) {
-  return <div className="modal-footer">{children}</div>;
+  return <BSModal.Footer>{children}</BSModal.Footer>;
 }

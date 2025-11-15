@@ -65,29 +65,35 @@ export function HomePage() {
 
   return (
     <>
-      <div className="home-container">
-        <main className="main-content">
-          <div className="map-section">
-            <div className="map-placeholder">
-              <div className="map-header">
-                <h2>Interactive Map</h2>
-                <p>Municipality territory view</p>
+      <div style={{ height: '100vh', background: 'var(--bg)', overflow: 'hidden', paddingTop: '80px', boxSizing: 'border-box' }}>
+        <main style={{ height: '100%', display: 'flex' }}>
+          {/* Map Section */}
+          <div style={{ flex: 1, minWidth: 0, background: 'var(--surface)', borderRight: '1px solid rgba(34, 49, 63, 0.06)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '2rem' }}>
+              <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                <h2 style={{ color: 'var(--text)', fontSize: '1.8rem', margin: '0 0 0.5rem 0', fontWeight: 700 }}>Interactive Map</h2>
+                <p style={{ color: '#666', margin: 0, fontSize: '1rem' }}>Municipality territory view</p>
               </div>
-              <div className="map-content">
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <MapView reports={reports} selectedReportId={selectedReportId} />
               </div>
             </div>
           </div>
 
-          <div className="reports-section">
-            <div className="reports-header">
-              <h3>Recent Reports</h3>
-              <span className="reports-count">{reports.length}</span>
+          {/* Reports Sidebar */}
+          <div style={{ width: '350px', minWidth: '350px', maxWidth: '350px', background: 'var(--surface)', display: 'flex', flexDirection: 'column', height: '100%', boxShadow: '-2px 0 16px rgba(34, 49, 63, 0.04)' }}>
+            {/* Reports Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 1.5rem 1rem 1.5rem', borderBottom: '2px solid #f8f9fa', background: '#fdfdfd' }}>
+              <h3 style={{ color: 'var(--text)', margin: 0, fontSize: '1.3rem', fontWeight: 700 }}>Recent Reports</h3>
+              <span style={{ background: 'var(--text)', color: 'var(--surface)', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, minWidth: '20px', textAlign: 'center' }}>
+                {reports.length}
+              </span>
             </div>
 
-            <div className="reports-content">
+            {/* Reports List */}
+            <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto' }}>
               {reports.length > 0 ? (
-                <div className="reports-list">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                   {reports.map((report) => (
                     <ReportCard
                       key={report.id}
@@ -98,39 +104,44 @@ export function HomePage() {
                   ))}
                 </div>
               ) : (
-                <div className="reports-placeholder">
-                  <div className="placeholder-icon">
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: '#adb5bd', padding: '2rem 1rem' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>
                     <Clipboard />
                   </div>
-                  <p>No reports yet</p>
-                  <small>Reports will appear here once submitted by citizens.</small>
+                  <p style={{ fontSize: '1.1rem', margin: '0 0 0.5rem 0', color: '#6c757d', fontWeight: 500 }}>No reports yet</p>
+                  <small style={{ fontSize: '0.9rem', lineHeight: 1.4, color: '#adb5bd' }}>Reports will appear here once submitted by citizens.</small>
                 </div>
               )}
             </div>
 
-            <div className="add-report-section">
+            {/* Add Report Button */}
+            <div style={{ padding: '1.5rem', borderTop: '1px solid #f8f9fa', background: '#fdfdfd' }}>
               {(!isAuthenticated || user?.role === "CITIZEN") && (
                 <Button onClick={handleAddReport} variant="primary" fullWidth>
-                  <span className="btn-icon">
-                    <Pencil />
-                  </span>
+                  <Pencil className="me-2" />
                   Select a location
                 </Button>
               )}
 
               {!isAuthenticated && (
-                <p className="auth-reminder">
-                  <small>
-                    You need to{" "}
-                    <button onClick={() => navigate("/login")} className="link-btn">
-                      login
-                    </button>{" "}
-                    or{" "}
-                    <button onClick={() => navigate("/signup")} className="link-btn">
-                      sign up
-                    </button>{" "}
-                    to submit reports
-                  </small>
+                <p className="text-center text-muted mb-0 mt-3" style={{ fontSize: '0.85rem' }}>
+                  You need to{" "}
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="btn btn-link p-0"
+                    style={{ color: 'var(--primary)', textDecoration: 'underline', fontSize: 'inherit' }}
+                  >
+                    login
+                  </button>{" "}
+                  or{" "}
+                  <button
+                    onClick={() => navigate("/signup")}
+                    className="btn btn-link p-0"
+                    style={{ color: 'var(--primary)', textDecoration: 'underline', fontSize: 'inherit' }}
+                  >
+                    sign up
+                  </button>{" "}
+                  to submit reports
                 </p>
               )}
             </div>

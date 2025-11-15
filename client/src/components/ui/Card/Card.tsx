@@ -1,5 +1,5 @@
+import { Card as BSCard } from 'react-bootstrap';
 import type { ReactNode } from "react";
-import "./Card.css";
 
 interface CardProps {
   children: ReactNode;
@@ -7,7 +7,7 @@ interface CardProps {
 }
 
 export function Card({ children, className = "" }: CardProps) {
-  return <div className={`card ${className}`}>{children}</div>;
+  return <BSCard className={className}>{children}</BSCard>;
 }
 
 interface CardHeaderProps {
@@ -16,7 +16,7 @@ interface CardHeaderProps {
 }
 
 export function CardHeader({ children, className = "" }: CardHeaderProps) {
-  return <div className={`card-header ${className}`}>{children}</div>;
+  return <BSCard.Header className={className}>{children}</BSCard.Header>;
 }
 
 interface CardBodyProps {
@@ -25,5 +25,5 @@ interface CardBodyProps {
 }
 
 export function CardBody({ children, className = "" }: CardBodyProps) {
-  return <div className={`card-body ${className}`}>{children}</div>;
+  return <BSCard.Body className={className}>{children}</BSCard.Body>;
 }

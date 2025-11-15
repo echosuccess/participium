@@ -1,12 +1,13 @@
 import { useState } from "react";
-import type { InputHTMLAttributes } from "react";
+import { Form, InputGroup } from 'react-bootstrap';
+import type { FormControlProps } from 'react-bootstrap';
 import { EyeFill, EyeSlashFill } from "react-bootstrap-icons";
-import "./Input.css";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<FormControlProps, 'type'> {
   label?: string;
   error?: string;
   helperText?: string;
+  type?: string;
 }
 
 export function Input({
@@ -25,34 +26,44 @@ export function Input({
   const inputId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
   return (
-    <div className={`input-wrapper ${className}`}>
-      {label && (
-        <label htmlFor={inputId} className="input-label">
-          {label}
-        </label>
-      )}
-      <div className="input-container">
-        <input
-          id={inputId}
-          type={inputType}
-          className={`input-field ${error ? "input-field--error" : ""} ${isPassword ? "input-field--password" : ""}`}
-          {...props}
-        />
-        {isPassword && (
-          <button
-            type="button"
-            className="password-toggle"
+    <Form.Group className={className}>
+      {label && <Form.Label htmlFor={inputId}>{label}</Form.Label>}
+      {isPassword ? (
+        <InputGroup>
+          <Form.Control
+            id={inputId}
+            type={inputType}
+            isInvalid={!!error}
+            {...props}
+          />
+          <InputGroup.Text
             onClick={() => setShowPassword(!showPassword)}
-            tabIndex={-1}
+            style={{
+              cursor: 'pointer',
+              backgroundColor: 'white',
+              borderLeft: 'none',
+              color: 'var(--primary)'
+            }}
           >
             {showPassword ? <EyeSlashFill /> : <EyeFill />}
-          </button>
-        )}
-      </div>
-      {error && <div className="input-error">{error}</div>}
-      {helperText && !error && (
-        <div className="input-helper">{helperText}</div>
+          </InputGroup.Text>
+        </InputGroup>
+      ) : (
+        <Form.Control
+          id={inputId}
+          type={inputType}
+          isInvalid={!!error}
+          {...props}
+        />
       )}
-    </div>
+      {error && (
+        <Form.Control.Feedback type="invalid" style={{ display: 'block' }}>
+          {error}
+        </Form.Control.Feedback>
+      )}
+      {helperText && !error && (
+        <Form.Text className="text-muted">{helperText}</Form.Text>
+      )}
+    </Form.Group>
   );
 }
