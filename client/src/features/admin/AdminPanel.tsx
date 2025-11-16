@@ -92,8 +92,9 @@ export default function AdminPanel() {
   const isLoading = loadingState === "loading";
 
   return (
-    <Container className="py-4" style={{ minHeight: 'calc(100vh - 80px)' }}>
-      <Card>
+    <div style={{ paddingTop: '100px', minHeight: '100vh', background: 'var(--bg)' }}>
+      <Container className="py-4">
+        <Card>
         <CardHeader>
           <div className="d-flex justify-content-between align-items-center">
             <h2 className="mb-0" style={{ color: 'var(--text)', fontWeight: 700 }}>
@@ -239,5 +240,6 @@ export default function AdminPanel() {
         </CardBody>
       </Card>
     </Container>
+    </div>
   );
 }
