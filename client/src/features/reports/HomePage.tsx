@@ -7,7 +7,6 @@ import { AuthRequiredModal } from "../auth/AuthRequiredModal";
 import { ReportCard } from "./ReportCard";
 import MapView from "../../components/MapView";
 import type { Report } from "../../types";
-import "./HomePage.css";
 
 export function HomePage() {
   const navigate = useNavigate();

@@ -4,7 +4,6 @@ import { useAuth, useForm, useLoadingState } from "../../hooks";
 import { Button, Input } from "../../components/ui";
 import { LoginValidator } from "../../validators/LoginValidator";
 import type { LoginFormData } from "../../../../shared/LoginTypes";
-import "./LoginPage.css";
 
 export function LoginPage() {
   const navigate = useNavigate();

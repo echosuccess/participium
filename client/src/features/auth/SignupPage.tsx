@@ -5,7 +5,6 @@ import { useAuth, useForm } from "../../hooks";
 import { Button, Input } from "../../components/ui";
 import { SignupValidator } from "../../validators/SignupValidator";
 import type { SignupFormData } from "../../../../shared/SignupTypes";
-import "./SignupPage.css";
 
 export function SignupPage() {
   const navigate = useNavigate();

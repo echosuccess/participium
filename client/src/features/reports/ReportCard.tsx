@@ -1,6 +1,5 @@
 import { Badge } from 'react-bootstrap';
 import type { Report } from "../../types";
-import "./ReportCard.css";
 
 interface ReportCardProps {
   report: Report;

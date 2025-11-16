@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Container, Table, Form, Alert, Badge } from 'react-bootstrap';
 import { useNavigate } from "react-router";
 import { useAuth, useForm, useLoadingState } from "../../hooks";
 import { Button, Input, Card, CardHeader, CardBody } from "../../components/ui";
@@ -6,7 +7,6 @@ import { createMunicipalityUser, listMunicipalityUsers, deleteMunicipalityUser }
 import type { MunicipalityUserRequest, MunicipalityUserResponse } from "../../types";
 import { PersonPlus, Trash, People } from "react-bootstrap-icons";
 import { MUNICIPALITY_ROLES, getRoleLabel } from "../../utils/roles";
-import "./AdminPanel.css";
 
 const INITIAL_FORM_STATE: MunicipalityUserRequest = {
   firstName: "",
@@ -90,46 +90,54 @@ export function AdminPanel() {
   const isLoading = loadingState === "loading";
 
   return (
-    <div className="admin-panel-container">
-      <Card className="admin-panel-card">
+    <Container className="py-4" style={{ minHeight: 'calc(100vh - 80px)' }}>
+      <Card>
         <CardHeader>
-          <div className="admin-header">
-            <h2>
-              <People /> Municipality Users
+          <div className="d-flex justify-content-between align-items-center">
+            <h2 className="mb-0" style={{ color: 'var(--text)', fontWeight: 700 }}>
+              <People className="me-2" /> Municipality Users
             </h2>
             <Button onClick={toggleForm} variant={showForm ? "secondary" : "primary"} disabled={isLoading}>
-              {showForm ? "← Back" : <><PersonPlus /> Add New User</>}
+              {showForm ? "← Back" : <><PersonPlus className="me-2" /> Add New User</>}
             </Button>
           </div>
         </CardHeader>
 
         <CardBody>
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <Alert variant="danger" dismissible onClose={() => setError("")}>
+              {error}
+            </Alert>
+          )}
 
           {showForm && (
-            <form onSubmit={form.handleSubmit} className="user-form">
-              <div className="form-row">
-                <Input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  label="First Name"
-                  value={form.values.firstName}
-                  onChange={form.handleChange}
-                  disabled={form.isSubmitting}
-                  required
-                />
+            <form onSubmit={form.handleSubmit} className="mb-4">
+              <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                  <Input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    label="First Name"
+                    value={form.values.firstName}
+                    onChange={form.handleChange}
+                    disabled={form.isSubmitting}
+                    required
+                  />
+                </div>
 
-                <Input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  label="Last Name"
-                  value={form.values.lastName}
-                  onChange={form.handleChange}
-                  disabled={form.isSubmitting}
-                  required
-                />
+                <div className="col-md-6">
+                  <Input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    label="Last Name"
+                    value={form.values.lastName}
+                    onChange={form.handleChange}
+                    disabled={form.isSubmitting}
+                    required
+                  />
+                </div>
               </div>
 
               <Input
@@ -141,6 +149,7 @@ export function AdminPanel() {
                 onChange={form.handleChange}
                 disabled={form.isSubmitting}
                 required
+                className="mb-3"
               />
 
               <Input
@@ -153,26 +162,26 @@ export function AdminPanel() {
                 disabled={form.isSubmitting}
                 minLength={8}
                 required
+                className="mb-3"
               />
 
-              <div className="form-group">
-                <label htmlFor="role">Role</label>
-                <select
+              <Form.Group className="mb-4">
+                <Form.Label htmlFor="role">Role</Form.Label>
+                <Form.Select
                   id="role"
                   name="role"
                   value={form.values.role}
                   onChange={form.handleChange}
                   disabled={form.isSubmitting}
                   required
-                  className="form-select"
                 >
                   {MUNICIPALITY_ROLES.map((role) => (
                     <option key={role} value={role}>
                       {getRoleLabel(role)}
                     </option>
                   ))}
-                </select>
-              </div>
+                </Form.Select>
+              </Form.Group>
 
               <Button type="submit" variant="primary" fullWidth disabled={form.isSubmitting} isLoading={form.isSubmitting}>
                 {form.isSubmitting ? "Creating..." : "Create User"}
@@ -180,15 +189,17 @@ export function AdminPanel() {
             </form>
           )}
 
-          <div className="users-list">
-            <h3>Registered Municipality Users ({users.length})</h3>
+          <div>
+            <h3 className="mb-3" style={{ color: 'var(--text)', fontSize: '1.3rem', fontWeight: 600 }}>
+              Registered Municipality Users ({users.length})
+            </h3>
 
             {isLoading && users.length === 0 ? (
-              <div className="loading-message">Loading users...</div>
+              <div className="text-center text-muted py-5">Loading users...</div>
             ) : users.length === 0 ? (
-              <div className="empty-message">No municipality users yet</div>
+              <div className="text-center text-muted py-5">No municipality users yet</div>
             ) : (
-              <table className="users-table">
+              <Table striped hover responsive>
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -205,21 +216,26 @@ export function AdminPanel() {
                       </td>
                       <td>{user.email}</td>
                       <td>
-                        <span className="role-badge">{getRoleLabel(user.role)}</span>
+                        <Badge bg="secondary">{getRoleLabel(user.role)}</Badge>
                       </td>
                       <td>
-                        <button onClick={() => handleDelete(user.id)} className="delete-btn" disabled={isLoading} title="Delete user">
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="btn btn-sm btn-outline-danger"
+                          disabled={isLoading}
+                          title="Delete user"
+                        >
                           <Trash />
                         </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </Table>
             )}
           </div>
         </CardBody>
       </Card>
-    </div>
+    </Container>
   );
 }
