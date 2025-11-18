@@ -21,7 +21,7 @@ function App() {
   }
 
   return (
-    <div>
+    <div style={{ minHeight: '100vh' }}>
       <Header showBackToHome={location.pathname !== "/"} />
       <Routes>
         <Route path="/" element={<HomePage />} />

@@ -41,7 +41,14 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
     background: 'linear-gradient(135deg, color-mix(in srgb, var(--navbar-accent) 85%, var(--primary) 15%) 0%, color-mix(in srgb, var(--navbar-accent) 60%, var(--stone) 40%) 60%), repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 8px)',
     boxShadow: '0 6px 30px rgba(0, 0, 0, 0.12)',
     backdropFilter: 'saturate(120%) blur(2px)',
-    height: '80px',
+    minHeight: '70px',
+    paddingBottom: '1rem',
+  };
+
+  const buttonStyle = {
+    padding: '0.375rem 1rem',
+    fontSize: '0.875rem',
+    whiteSpace: 'nowrap' as const,
   };
 
   const userAvatarStyle = {
@@ -71,72 +78,94 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
 
   return (
     <Navbar 
-      fixed="top" 
-      expand="md" 
+      sticky="top" 
+      expand="lg" 
       style={navbarStyle}
     >
-      <Container fluid className="px-4" style={{ maxWidth: '1200px', height: '100%' }}>
+      <Container fluid className="px-3 px-md-4" style={{ maxWidth: '1200px' }}>
         <Navbar.Brand className="text-white">
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 700 }}>Participium</h1>
-            <span style={{ fontSize: '0.9rem', opacity: 0.9, fontWeight: 400 }}>
+            <h1 className="mb-0" style={{ fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', fontWeight: 700 }}>
+              Participium
+            </h1>
+            <span className="d-none d-sm-inline" style={{ fontSize: '0.9rem', opacity: 0.9, fontWeight: 400 }}>
               Digital Citizen Participation
             </span>
           </div>
         </Navbar.Brand>
         
-        <Nav className="ms-auto align-items-center">
-          {showBackToHome ? (
-            <Button 
-              onClick={handleBackHome}
-              disabled={loading}
-              variant="light"
-              size="sm"
-              className="fw-semibold"
-              style={{ color: 'var(--primary)' }}
-            >
-              {user?.role === 'ADMINISTRATOR' 
-                ? (loading ? 'Logging out...' : 'Logout') 
-                : '← Back to Home'}
-            </Button>
-          ) : isAuthenticated && user ? (
-            <div className="d-flex align-items-center gap-3">
-              {MUNICIPALITY_ROLES.includes(user.role) && (
-                <Badge 
-                  bg="dark" 
-                  className="bg-opacity-25"
-                  style={{ fontSize: '0.9rem', padding: '4px 8px' }}
-                >
-                  {getRoleLabel(user.role as string)}
-                </Badge>
-              )}
-              <div style={userAvatarStyle}><PersonCircle /></div>
-              <div className="d-flex flex-column me-4">
-                <div style={userNameStyle}>{user.firstName}</div>
-                <div style={userSurnameStyle}>{user.lastName}</div>
-              </div>
+        <Navbar.Toggle aria-controls="navbar-nav" className="border-0" style={{ color: 'white' }}>
+          <span style={{ color: 'white', fontSize: '1.5rem' }}>☰</span>
+        </Navbar.Toggle>
+
+        <Navbar.Collapse id="navbar-nav">
+          <Nav className="ms-auto align-items-lg-center mt-3 mt-lg-0">
+            {showBackToHome ? (
               <Button 
-                onClick={handleLogout}
+                onClick={handleBackHome}
                 disabled={loading}
                 variant="light"
                 size="sm"
                 className="fw-semibold"
-                style={{ color: 'var(--primary)' }}
+                style={{ ...buttonStyle, color: 'var(--primary)' }}
               >
-                {loading ? 'Logging out...' : 'Logout'}
+                {user?.role === 'ADMINISTRATOR' 
+                  ? (loading ? 'Logging out...' : 'Logout') 
+                  : '← Back to Home'}
               </Button>
-            </div>
-          ) : (
-            <div className="d-flex gap-2">
-              <Button onClick={handleGoToLogin} variant="light" size="sm" className="fw-semibold" style={{ color: 'var(--primary)' }}>
-                Login
-              </Button>
-              <Button onClick={handleGoToSignup} variant="light" size="sm" className="fw-semibold" style={{ color: 'var(--primary)' }}>
-                Sign Up
-              </Button>
-            </div>
-          )}
-        </Nav>
+            ) : isAuthenticated && user ? (
+              <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2">
+                {MUNICIPALITY_ROLES.includes(user.role) && (
+                  <Badge 
+                    bg="dark" 
+                    className="bg-opacity-25"
+                    style={{ fontSize: '0.9rem', padding: '4px 8px' }}
+                  >
+                    {getRoleLabel(user.role as string)}
+                  </Badge>
+                )}
+                <div className="d-flex align-items-center gap-2 gap-lg-3">
+                  <div style={userAvatarStyle}><PersonCircle /></div>
+                  <div className="d-flex flex-column">
+                    <div style={userNameStyle}>{user.firstName}</div>
+                    <div style={userSurnameStyle}>{user.lastName}</div>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleLogout}
+                  disabled={loading}
+                  variant="light"
+                  size="sm"
+                  className="fw-semibold"
+                  style={{ ...buttonStyle, color: 'var(--primary)' }}
+                >
+                  {loading ? 'Logging out...' : 'Logout'}
+                </Button>
+              </div>
+            ) : (
+              <div className="d-flex flex-column flex-sm-row gap-2">
+                <Button 
+                  onClick={handleGoToLogin} 
+                  variant="light" 
+                  size="sm" 
+                  className="fw-semibold" 
+                  style={{ ...buttonStyle, color: 'var(--primary)' }}
+                >
+                  Login
+                </Button>
+                <Button 
+                  onClick={handleGoToSignup} 
+                  variant="light" 
+                  size="sm" 
+                  className="fw-semibold" 
+                  style={{ ...buttonStyle, color: 'var(--primary)' }}
+                >
+                  Sign Up
+                </Button>
+              </div>
+            )}
+          </Nav>
+        </Navbar.Collapse>
       </Container>
     </Navbar>
   );
