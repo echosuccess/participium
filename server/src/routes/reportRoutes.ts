@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createReport, getReports } from '../controllers/reportController';
-import { isLoggedIn } from '../middleware/routeProtection';
-import { upload } from '../middleware/uploadsMiddleware';
+import { isLoggedIn } from '../middlewares/routeProtection';
+import { upload } from '../middlewares/uploadsMiddleware';
 
 const router = Router();
 

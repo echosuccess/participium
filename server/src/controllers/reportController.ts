@@ -5,9 +5,9 @@ import {
 } from "../services/reportService";
 import { UserDTO } from "../interfaces/UserDTO";
 import { 
-  ReportCategory,
-  CreateReportRequest
+  ReportCategory
  } from "../../../shared/ReportTypes";
+ import { calculateAddress } from "../utils/addressGeoCoding";
 
 export const createReport = async (req: Request, res: Response) => {
   try {
@@ -52,12 +52,18 @@ export const createReport = async (req: Request, res: Response) => {
       url: `/uploads/${file.filename}`
     })) : [];
 
+    const parsedLatitude = parseFloat(latitude);
+    const parsedLongitude = parseFloat(longitude);
+
+    const address = await calculateAddress(parsedLatitude, parsedLongitude);
+
     const reportData = {
       title,
       description,
       category: category as ReportCategory,
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
+      latitude: parsedLatitude,
+      longitude: parsedLongitude,
+      address,
       isAnonymous: isAnonymous === "true",
       photos: photoData,
       userId: user.id,
