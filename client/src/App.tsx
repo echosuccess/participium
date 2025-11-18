@@ -1,11 +1,11 @@
 import { Routes, Route, useLocation } from "react-router";
-import "./styles/App.css";
 import { useAuth } from "./hooks/useAuth";
+import LoadingSpinner from "./components/ui/LoadingSpinner.tsx";
 import Header from "./components/Header";
-import Home from "./components/Home";
-import Login from "./components/Login";
-import Signup from "./components/Signup";
-import AdminPanel from "./components/AdminPanel";
+import HomePage from "./features/reports/HomePage.tsx";
+import LoginPage from "./features/auth/LoginPage.tsx";
+import SignupPage from "./features/auth/SignupPage.tsx";
+import AdminPanel from "./features/admin/AdminPanel.tsx";
 import ReportForm from "./components/ReportForm";
 
 function App() {
@@ -14,19 +14,19 @@ function App() {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">Loading...</div>
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className={`app with-header`}>
+    <div>
       <Header showBackToHome={location.pathname !== "/"} />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/report/new" element={<ReportForm />} />
       </Routes>
