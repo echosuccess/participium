@@ -28,19 +28,83 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: var(--primary);
-  text-decoration: inherit;
+/* Override Bootstrap primary color with custom palette */
+.btn-primary {
+  --bs-btn-bg: var(--primary) !important;
+  --bs-btn-border-color: var(--primary) !important;
+  --bs-btn-hover-bg: var(--primary-dark) !important;
+  --bs-btn-hover-border-color: var(--primary-dark) !important;
+  --bs-btn-active-bg: var(--primary-dark) !important;
+  --bs-btn-active-border-color: var(--primary-dark) !important;
+  --bs-btn-disabled-bg: var(--primary) !important;
+  --bs-btn-disabled-border-color: var(--primary) !important;
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
 }
-a:hover {
-  color: color-mix(in srgb, var(--primary) 80%, black 20%);
+
+.btn-primary:hover {
+  background-color: var(--primary-dark) !important;
+  border-color: var(--primary-dark) !important;
+}
+
+.btn-primary:active,
+.btn-primary:focus {
+  background-color: var(--primary-dark) !important;
+  border-color: var(--primary-dark) !important;
+  box-shadow: 0 0 0 0.25rem rgba(200, 110, 98, 0.25) !important;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--primary);
+  --bs-btn-border-color: var(--primary);
+  --bs-btn-hover-bg: var(--primary);
+  --bs-btn-hover-border-color: var(--primary);
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: white !important;
+}
+
+.text-primary {
+  color: var(--primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--primary) !important;
+}
+
+.badge.bg-success {
+  background-color: #10b981 !important;
+}
+
+.badge.bg-warning {
+  background-color: #f59e0b !important;
+}
+
+.badge.bg-info {
+  background-color: #3b82f6 !important;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+a {
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--primary-dark);
 }
 
 h1 {
@@ -48,67 +112,14 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  transition: border-color 0.25s, transform 0.12s;
-  box-shadow: 0 1px 4px rgba(34,49,63,0.06);
-}
-button:hover {
-  border-color: color-mix(in srgb, var(--primary) 60%, black 10%);
-  transform: translateY(-1px);
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 0.25rem rgba(200, 110, 98, 0.25) !important;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: var(--text);
-    background-color: var(--bg);
-  }
-  a:hover {
-    color: color-mix(in srgb, var(--primary) 70%, black 10%);
-  }
-  button {
-    background-color: var(--surface);
-  }
-}
-
-/* Override focus/active outlines: remove default black ring and use Torino blue */
-button:focus,
-button:focus-visible,
-.header-btn:focus,
-.link-btn:focus,
-.link-modal-btn:focus,
-.modal-close-btn:focus,
-.modal-btn:focus,
-.add-report-btn:focus,
-.login-btn:focus,
-.signup-btn:focus {
-  outline: none;
-  border-color: var(--primary);
-  /* focus ring matching primary tone */
-  box-shadow: 0 0 0 4px rgba(200,110,98,0.12);
-}
-
-button:active,
-.header-btn:active,
-.link-btn:active,
-.link-modal-btn:active,
-.modal-close-btn:active,
-.modal-btn:active,
-.add-report-btn:active,
-.login-btn:active,
-.signup-btn:active {
-  border-color: var(--primary);
-  box-shadow: none;
+/* Modal backdrop with blur effect */
+.modal-backdrop-blur {
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
