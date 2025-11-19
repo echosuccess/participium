@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router';
 import { Navbar, Container, Nav, Button, Badge } from 'react-bootstrap';
 import { useAuth } from '../hooks/useAuth';
 import { MUNICIPALITY_ROLES, getRoleLabel } from '../utils/roles';
-import { PersonCircle } from 'react-bootstrap-icons';
+import { PersonCircle, ArrowLeft } from 'react-bootstrap-icons';
 
 
 interface HeaderProps {
@@ -12,8 +12,15 @@ interface HeaderProps {
 
 export default function Header({ showBackToHome = false }: HeaderProps) {
   const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Chiudi il menu quando cambi pagina
+  useEffect(() => {
+    setExpanded(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     setLoading(true);
@@ -79,24 +86,45 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
   return (
     <Navbar 
       sticky="top" 
-      expand="lg" 
+      expand="lg"
+      expanded={expanded}
+      onToggle={setExpanded}
       style={navbarStyle}
     >
       <Container fluid className="px-3 px-md-4" style={{ maxWidth: '1200px' }}>
-        <Navbar.Brand className="text-white">
-          <div>
-            <h1 className="mb-0" style={{ fontSize: 'clamp(1.2rem, 4vw, 1.8rem)', fontWeight: 700 }}>
-              Participium
-            </h1>
-            <span className="d-none d-sm-inline" style={{ fontSize: '0.9rem', opacity: 0.9, fontWeight: 400 }}>
-              Digital Citizen Participation
-            </span>
-          </div>
-        </Navbar.Brand>
+        <div className="d-flex align-items-center justify-content-between w-100" style={{ minHeight: '70px' }}>
+          <Navbar.Brand className="text-white mb-0">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <h1 className="mb-0" style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', fontWeight: 700, lineHeight: 1.1 }}>
+                Participium
+              </h1>
+              <span style={{ fontSize: 'clamp(0.7rem, 2.5vw, 0.9rem)', opacity: 0.9, fontWeight: 400, lineHeight: 1.2 }}>
+                Digital Citizen Participation
+              </span>
+            </div>
+          </Navbar.Brand>
         
-        <Navbar.Toggle aria-controls="navbar-nav" className="border-0" style={{ color: 'white' }}>
-          <span style={{ color: 'white', fontSize: '1.5rem' }}>☰</span>
-        </Navbar.Toggle>
+          {showBackToHome ? (
+            <button
+              onClick={handleBackHome}
+              disabled={loading}
+              className="d-lg-none border-0 bg-transparent d-flex align-items-center justify-content-center"
+              style={{ 
+                color: 'white', 
+                fontSize: '1.5rem',
+                padding: '0.5rem',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.6 : 1,
+              }}
+            >
+              <ArrowLeft size={24} />
+            </button>
+          ) : (
+            <Navbar.Toggle aria-controls="navbar-nav" className="d-lg-none border-0 d-flex align-items-center justify-content-center" style={{ color: 'white', padding: '0.5rem' }}>
+              <span style={{ color: 'white', fontSize: '1.5rem', lineHeight: 1 }}>☰</span>
+            </Navbar.Toggle>
+          )}
+        </div>
 
         <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto align-items-lg-center mt-3 mt-lg-0">
@@ -106,7 +134,7 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
                 disabled={loading}
                 variant="light"
                 size="sm"
-                className="fw-semibold"
+                className="fw-semibold d-none d-lg-block"
                 style={{ ...buttonStyle, color: 'var(--primary)' }}
               >
                 {user?.role === 'ADMINISTRATOR' 

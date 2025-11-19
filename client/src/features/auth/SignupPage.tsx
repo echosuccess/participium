@@ -58,7 +58,7 @@ export default function SignupPage() {
   if (success) {
     return (
       <div className="signup-fullscreen">
-        <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: 'calc(100vh - 80px)' }}>
+        <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: 'calc(100vh - 80px)', paddingTop: '2rem', paddingBottom: '2rem' }}>
           <div style={{
             background: 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(20px)',
@@ -89,7 +89,7 @@ export default function SignupPage() {
 
   return (
     <div className="signup-fullscreen">
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: 'calc(100vh - 80px)' }}>
+      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: 'calc(100vh - 80px)', paddingTop: '2rem', paddingBottom: '2rem' }}>
         <div style={{
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
