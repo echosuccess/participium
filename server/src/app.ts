@@ -14,6 +14,7 @@ import authRoutes from "./routes/authRoutes";
 import citizenRoutes from "./routes/citizenRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import reportRoutes from "./routes/reportRoutes";
+import { ApiValidationMiddleware } from "./middleware/validationMiddlewere";
 
 export function createApp(): Express {
   const app: Express = express();
@@ -40,13 +41,14 @@ export function createApp(): Express {
   configurePassport();
   app.use(passport.initialize());
   app.use(passport.session());
-
-  const swaggerPath = path.join(__dirname, "..", CONFIG.SWAGGER_FILE_PATH);
+  
   app.use(
     CONFIG.ROUTES.SWAGGER,
     swaggerUi.serve,
-    swaggerUi.setup(YAML.load(swaggerPath))
+    swaggerUi.setup(YAML.load(CONFIG.SWAGGER_FILE_PATH))
   );
+
+  app.use(ApiValidationMiddleware);
 
   app.use(CONFIG.ROUTES.ROOT, rootRoutes);
   app.use(CONFIG.ROUTES.SESSION, authRoutes);
