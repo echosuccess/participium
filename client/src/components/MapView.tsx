@@ -95,7 +95,7 @@ export default function MapView({
   const [showBoundaryAlert, setShowBoundaryAlert] = useState(false);
 
   useEffect(() => {
-    fetch("/turin-boundary.geojson") 
+    fetch("/turin-boundary3.geojson") 
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch GeoJSON");
