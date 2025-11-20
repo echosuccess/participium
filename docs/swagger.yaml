@@ -709,11 +709,24 @@ paths:
     get:
       tags:
         - Reports
-      summary: List reports (optionally filtered by bounding box)
+      summary: Get all approved reports for map visualization
       description: |
-        Retrieve a list of reports. Optionally filter by a bounding box using the `bbox` query parameter
-        in the format `minLon,minLat,maxLon,maxLat` (decimal degrees, WGS84). This is useful for map views
-        where the frontend requests only reports within the currently visible map area.
+        Retrieve all approved reports for display on an interactive map. This endpoint returns only reports 
+        that have been approved by public relations officers and are in one of the following statuses:
+        - ASSIGNED (approved and assigned to technical staff)
+        - IN_PROGRESS (being worked on)
+        - RESOLVED (completed)
+        
+        Reports with status PENDING_APPROVAL or REJECTED are NOT included in the response.
+        
+        This endpoint is designed for citizen-facing map views where users can see all active and resolved 
+        issues in their area. The response includes reporter information (name or "anonymous" flag), location 
+        coordinates, and other details needed for map markers and popups.
+        
+        Optionally filter by a bounding box using the `bbox` query parameter in the format 
+        `minLon,minLat,maxLon,maxLat` (decimal degrees, WGS84). This is useful for map views where the 
+        frontend requests only reports within the currently visible map area.
+        
         The `category` query parameter is also optional and can be combined with `bbox` to request
         reports of a given category inside the visible map area (e.g. `?bbox=7.66,45.06,7.70,45.08&category=PUBLIC_LIGHTING`).
       operationId: listReports
@@ -780,8 +793,8 @@ paths:
                   category: PUBLIC_LIGHTING
                   latitude: 45.071000
                   longitude: 7.687500
-                  isAnonymous: false
-                  status: RESOLVED
+                  isAnonymous: true
+                  status: IN_PROGRESS
                   userId: 202
                   assignedTo: 306
                   user:
