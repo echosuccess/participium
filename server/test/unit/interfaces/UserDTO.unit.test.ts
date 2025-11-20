@@ -1,25 +1,47 @@
 import { toMunicipalityUserDTO, Roles } from "../../../src/interfaces/UserDTO";
 
-describe('UserDTO', () => {
-  describe('toMunicipalityUserDTO', () => {
-    it('maps user to municipality DTO correctly', () => {
-      const user = { id: 5, first_name: 'John', last_name: 'Doe', email: 'j@d.com', role: Roles.PUBLIC_RELATIONS } as any;
+describe("UserDTO", () => {
+  describe("toMunicipalityUserDTO", () => {
+    it("maps user to municipality DTO correctly", () => {
+      const user = {
+        id: 5,
+        first_name: "John",
+        last_name: "Doe",
+        email: "j@d.com",
+        role: Roles.PUBLIC_RELATIONS,
+      } as any;
       const dto = toMunicipalityUserDTO(user);
-      expect(dto).toMatchObject({ id: 5, firstName: 'John', lastName: 'Doe', email: 'j@d.com', role: Roles.PUBLIC_RELATIONS });
+      expect(dto).toMatchObject({
+        id: 5,
+        firstName: "John",
+        lastName: "Doe",
+        email: "j@d.com",
+        role: Roles.PUBLIC_RELATIONS,
+      });
     });
 
-    it('handles missing optional fields gracefully', () => {
-      const user = { id: 6, email: 'x@y.com', role: Roles.TECHNICAL_OFFICE } as any;
+    it("handles missing optional fields gracefully", () => {
+      const user = {
+        id: 6,
+        email: "x@y.com",
+        role: Roles.MUNICIPAL_BUILDING_MAINTENANCE,
+      } as any;
       const dto = toMunicipalityUserDTO(user);
       expect(dto.id).toBe(6);
-      expect(dto.email).toBe('x@y.com');
-      expect(dto.role).toBe(Roles.TECHNICAL_OFFICE);
+      expect(dto.email).toBe("x@y.com");
+      expect(dto.role).toBe(Roles.MUNICIPAL_BUILDING_MAINTENANCE);
     });
 
-    it('handles invalid role in municipality DTO', () => {
-      const user = { id: 7, first_name: 'Jane', last_name: 'Doe', email: 'jane@example.com', role: 'INVALID_ROLE' } as any;
+    it("handles invalid role in municipality DTO", () => {
+      const user = {
+        id: 7,
+        first_name: "Jane",
+        last_name: "Doe",
+        email: "jane@example.com",
+        role: "INVALID_ROLE",
+      } as any;
       const dto = toMunicipalityUserDTO(user);
-      expect(dto.role).toBe('INVALID_ROLE');
+      expect(dto.role).toBe("INVALID_ROLE");
     });
   });
 });

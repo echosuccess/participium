@@ -11,6 +11,7 @@ info:
 
     Available municipality roles:
     - ADMINISTRATOR: System administrator with full privileges
+    - PUBLIC_RELATIONS: Public relations officer for citizen communication
     - CULTURE_EVENTS_TOURISM_SPORTS: Culture, events, tourism and sports
     - LOCAL_PUBLIC_SERVICES: Local public services
     - EDUCATION_SERVICES: Education services
@@ -569,22 +570,22 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/MunicipalityRole"
-              example: 
-                 - CITIZEN
-                 - ADMINISTRATOR
-                 - CULTURE_EVENTS_TOURISM_SPORTS
-                 - LOCAL_PUBLIC_SERVICES
-                 - EDUCATION_SERVICES
-                 - PUBLIC_RESIDENTIAL_HOUSING
-                 - INFORMATION_SYSTEMS
-                 - MUNICIPAL_BUILDING_MAINTENANCE
-                 - PRIVATE_BUILDINGS
-                 - INFRASTRUCTURES
-                 - GREENSPACES_AND_ANIMAL_PROTECTION
-                 - WASTE_MANAGEMENT
-                 - ROAD_MAINTENANCE
-                 - CIVIL_PROTECTION
-              
+              example:
+                - ADMINISTRATOR
+                - PUBLIC_RELATIONS
+                - CULTURE_EVENTS_TOURISM_SPORTS
+                - LOCAL_PUBLIC_SERVICES
+                - EDUCATION_SERVICES
+                - PUBLIC_RESIDENTIAL_HOUSING
+                - INFORMATION_SYSTEMS
+                - MUNICIPAL_BUILDING_MAINTENANCE
+                - PRIVATE_BUILDINGS
+                - INFRASTRUCTURES
+                - GREENSPACES_AND_ANIMAL_PROTECTION
+                - WASTE_MANAGEMENT
+                - ROAD_MAINTENANCE
+                - CIVIL_PROTECTION
+
         "401":
           description: Not authenticated
           content:
@@ -1031,8 +1032,6 @@ components:
         role:
           $ref: "#/components/schemas/MunicipalityRole"
 
-   
-
     MunicipalityUserResponse:
       type: object
       properties:
@@ -1060,6 +1059,7 @@ components:
         roles defined for internal municipality staff in the database schema.
       enum:
         - ADMINISTRATOR
+        - PUBLIC_RELATIONS
         - CULTURE_EVENTS_TOURISM_SPORTS
         - LOCAL_PUBLIC_SERVICES
         - EDUCATION_SERVICES
@@ -1081,6 +1081,7 @@ components:
       enum:
         - CITIZEN
         - ADMINISTRATOR
+        - PUBLIC_RELATIONS
         - CULTURE_EVENTS_TOURISM_SPORTS
         - LOCAL_PUBLIC_SERVICES
         - EDUCATION_SERVICES
