@@ -9,7 +9,7 @@ import {
   Form,
   Card,
 } from "react-bootstrap";
-import { GeoAlt, FileText, Tag, Eye, Camera, X } from "react-bootstrap-icons";
+import { GeoAlt, FileText, Tag, Camera, X } from "react-bootstrap-icons";
 import MapView from "./MapView";
 import type { ReportCategory, ReportPhoto } from "../../../shared/ReportTypes";
 import { createReport } from "../api/api";
@@ -194,8 +194,8 @@ export default function ReportForm() {
 
           <Card.Body className="p-4 p-md-5">
             <Form onSubmit={handleSubmit} noValidate>
-              <Row>
-                <Col lg={6}>
+              <Row className="justify-content-center">
+                <Col lg={8}>
                   <div className="mb-4">
                     <h3 style={sectionTitleStyle}>
                       <Tag /> Report Details
@@ -420,8 +420,8 @@ export default function ReportForm() {
                 </Col>
 
                 {/* Location Section */}
-                <Col lg={12}>
-                  <div className="mb-4">
+                <Col lg={8}>
+                  <div className="mb-4 mt-4">
                     <h3 style={sectionTitleStyle}>
                       <GeoAlt /> Location Selection
                     </h3>
@@ -430,7 +430,7 @@ export default function ReportForm() {
                       issue.
                     </p>
 
-                    <div style={{ height: "600px", ...mapContainerStyle }}>
+                    <div style={{ height: 'clamp(400px, 60vh, 600px)', ...mapContainerStyle }}>
                       <MapView
                         onLocationSelect={handleLocationSelect}
                         selectedLocation={selectedLocation}

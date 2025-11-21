@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { User } from "../../prisma/generated/client";
 import { UnauthorizedError, ForbiddenError } from "../utils";
+import { User } from "@prisma/client";
 
 export function isLoggedIn(req: Request & { isAuthenticated?: () => boolean }, res: Response, next: NextFunction) {
   if (req.isAuthenticated && req.isAuthenticated()) return next();
