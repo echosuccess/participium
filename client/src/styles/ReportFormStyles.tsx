@@ -89,7 +89,7 @@ export const divStyle: CSSProperties = {
   minHeight: "100vh",
   background: "var(--bg)",
   padding: "2rem 0",
-  paddingTop: "100px",
+  paddingTop: "30px",
 };
 
 export const h2Style: CSSProperties = {
@@ -157,7 +157,7 @@ export const mapDivStyle: CSSProperties = {
 };
 
 export const submitButtonStyle: CSSProperties = {
-  background: "linear-gradient(135deg, var(--primary) 0%, var(--stone) 100%)",
+  background: "var(--primary)",
   border: "none",
   borderRadius: "50px",
   padding: "1rem 3rem",
@@ -165,7 +165,6 @@ export const submitButtonStyle: CSSProperties = {
   fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: "1px",
-  boxShadow: "0 8px 25px rgba(200, 110, 98, 0.3)",
   transition: "transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease",
 };
 

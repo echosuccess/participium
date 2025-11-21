@@ -194,8 +194,8 @@ export default function ReportForm() {
 
           <Card.Body className="p-4 p-md-5">
             <Form onSubmit={handleSubmit} noValidate>
-              <Row>
-                <Col lg={6}>
+              <Row className="justify-content-center">
+                <Col lg={8}>
                   <div className="mb-4">
                     <h3 style={sectionTitleStyle}>
                       <Tag /> Report Details
@@ -420,8 +420,8 @@ export default function ReportForm() {
                 </Col>
 
                 {/* Location Section */}
-                <Col lg={12}>
-                  <div className="mb-4">
+                <Col lg={8}>
+                  <div className="mb-4 mt-4">
                     <h3 style={sectionTitleStyle}>
                       <GeoAlt /> Location Selection
                     </h3>
