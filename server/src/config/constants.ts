@@ -1,3 +1,5 @@
+import path from "path";
+
 export const CONFIG = {
   // Server
   PORT: process.env.PORT || 4000,
@@ -24,7 +26,7 @@ export const CONFIG = {
   },
 
   // Swagger
-  SWAGGER_FILE_PATH: "../docs/swagger.yaml",
+  SWAGGER_FILE_PATH: path.resolve(__dirname, "../../../docs/swagger.yaml"),
 
   // API Info
   API: {
