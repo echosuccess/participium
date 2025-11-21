@@ -2,8 +2,12 @@ import { prisma } from "../utils/prismaClient";
 import {
   ReportCategory as PrismaReportCategory,
   ReportStatus as PrismaReportStatus,
+<<<<<<< HEAD
   Role as PrismaRole,
 } from "../../prisma/generated/client";
+=======
+} from "@prisma/client";
+>>>>>>> story#5/dev
 import { ReportDTO } from "../interfaces/ReportDTO";
 import { ReportPhoto, RejectReportRequest } from "../../../shared/ReportTypes";
 
@@ -17,10 +21,11 @@ type CreateReportData = Omit<
   | "messages"
   | "user"
   | "rejectedReason"
+  | "address"
 > & {
   userId: number; //add userId to link report to user
   photos: ReportPhoto[];
-  //here we can add photos handling later
+  address?: string;
 };
 
 export async function createReport(data: CreateReportData) {
@@ -33,6 +38,7 @@ export async function createReport(data: CreateReportData) {
       category: data.category as PrismaReportCategory,
       latitude: data.latitude,
       longitude: data.longitude,
+      address: data.address || null,
       isAnonymous: data.isAnonymous,
       status: PrismaReportStatus.PENDING, //new reports are pending municipality approval
       userId: data.userId,
@@ -52,6 +58,7 @@ export async function createReport(data: CreateReportData) {
   return newReport;
 }
 
+<<<<<<< HEAD
 //get reports based on status filter (for public and PUBLIC_RELATIONS)
 export async function getReports(statusFilter?: PrismaReportStatus, userRole?: PrismaRole) {
   // Only PUBLIC_RELATIONS can see PENDING
@@ -74,6 +81,20 @@ export async function getReports(statusFilter?: PrismaReportStatus, userRole?: P
 
   return prisma.report.findMany({
     where: whereClause,
+=======
+export async function getApprovedReports(category?: PrismaReportCategory) {
+  return prisma.report.findMany({
+    where: {
+      status: {
+        in: [
+          PrismaReportStatus.ASSIGNED,
+          PrismaReportStatus.IN_PROGRESS,
+          PrismaReportStatus.RESOLVED,
+        ],
+      },
+      ...(category && { category }),
+    },
+>>>>>>> story#5/dev
     include: {
       user: true,
       assignedTo: true,
@@ -83,9 +104,11 @@ export async function getReports(statusFilter?: PrismaReportStatus, userRole?: P
           user: true,
         },
       },
+      photos: true,
     },
     orderBy: {
       createdAt: "desc",
+<<<<<<< HEAD
     },
   });
 }
@@ -197,6 +220,8 @@ export async function getTechnicalOfficeUsers() {
       first_name: true,
       last_name: true,
       email: true,
+=======
+>>>>>>> story#5/dev
     },
   });
 }

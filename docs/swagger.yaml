@@ -1286,8 +1286,7 @@ components:
         user:
           allOf:
             - $ref: "#/components/schemas/UserInfo"
-          description: User information (only present when authenticated is true)
-          nullable: true
+          description: User information
 
     UserInfo:
       type: object
@@ -1424,19 +1423,15 @@ components:
           $ref: "#/components/schemas/MunicipalityRole"
       description: Payload to assign or update a municipality user's role
 
-    Location:
-      type: object
-      properties:
-        latitude:
-          type: number
-          format: double
-          description: Latitude in decimal degrees (WGS84)
-          example: 45.070339
-        longitude:
-          type: number
-          format: double
-          description: Longitude in decimal degrees (WGS84)
-          example: 7.686864
+    Latitude:
+      type: string
+      description: Latitude in decimal degrees (WGS84)
+      example: 45.070339
+
+    Longitude:
+      type: string
+      description: Longitude in decimal degrees (WGS84)
+      example: 7.686864
 
     ReportRequest:
       type: object
@@ -1459,9 +1454,9 @@ components:
         category:
           $ref: "#/components/schemas/ReportCategory"
         latitude:
-          $ref: "#/components/schemas/Location/properties/latitude"
+          $ref: "#/components/schemas/Latitude"
         longitude:
-          $ref: "#/components/schemas/Location/properties/longitude"
+          $ref: "#/components/schemas/Longitude"
         address:
           type: string
           nullable: true
@@ -1487,9 +1482,9 @@ components:
           type: string
           example: "Pothole on Via Roma"
         latitude:
-          $ref: "#/components/schemas/Location/properties/latitude"
+          $ref: "#/components/schemas/Latitude"
         longitude:
-          $ref: "#/components/schemas/Location/properties/longitude"
+          $ref: "#/components/schemas/Longitude"
         category:
           $ref: "#/components/schemas/ReportCategory"
         status:
@@ -1545,9 +1540,9 @@ components:
         category:
           $ref: "#/components/schemas/ReportCategory"
         latitude:
-          $ref: "#/components/schemas/Location/properties/latitude"
+          $ref: "#/components/schemas/Latitude"
         longitude:
-          $ref: "#/components/schemas/Location/properties/longitude"
+          $ref: "#/components/schemas/Longitude"
         status:
           $ref: "#/components/schemas/ReportStatus"
         user:
@@ -1597,6 +1592,7 @@ components:
         - PUBLIC_GREEN_AREAS_PLAYGROUNDS
         - OTHER
       example: ROADS_URBAN_FURNISHINGS
+<<<<<<< HEAD
 
     RejectReportRequest:
       type: object
@@ -1613,3 +1609,5 @@ components:
 # Security requirements for protected endpoints
 security:
   - SessionAuth: []
+=======
+>>>>>>> story#5/dev

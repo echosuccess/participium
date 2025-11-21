@@ -82,19 +82,23 @@ interface MapViewProps {
 export default function MapView({
   onLocationSelect,
   selectedLocation,
-  reports = [],
-  selectedReportId,
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
-  const reportMarkersRef = useRef<L.Marker[]>([]);
   const [center, setCenter] = useState<[number, number]>(TURIN);
   const [hasTileError, setHasTileError] = useState(false);
   const [turinData, setTurinData] = useState<any | null>(null);
+<<<<<<< HEAD
 
   useEffect(() => {
     fetch("/turin-boundary.geojson") 
+=======
+  const [showBoundaryAlert, setShowBoundaryAlert] = useState(false);
+
+  useEffect(() => {
+    fetch("/turin-boundary3.geojson") 
+>>>>>>> story#5/dev
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch GeoJSON");
@@ -148,15 +152,37 @@ export default function MapView({
       properties: {},
     };
 
+<<<<<<< HEAD
     L.geoJSON(maskGeoJSON, {
+=======
+    const maskLayer =L.geoJSON(maskGeoJSON, {
+>>>>>>> story#5/dev
       style: {
         fillColor: "#000",
         fillOpacity: 0.35,
         stroke: false,
+<<<<<<< HEAD
         interactive: false,
       },
     }).addTo(map);
 
+=======
+        interactive: true,
+      },
+    }).addTo(map);
+
+    maskLayer.on("click", (e: L.LeafletMouseEvent) => {
+      L.DomEvent.stopPropagation(e);
+      if (onLocationSelect){
+        setShowBoundaryAlert(true);
+
+        setTimeout(() => {
+          setShowBoundaryAlert(false);
+        }, 3000);
+      }
+    });
+
+>>>>>>> story#5/dev
     const turinLayer = L.geoJSON(turinData as any, {
       style: {
         color: "var(--primary, #C86E62)",
@@ -317,13 +343,40 @@ export default function MapView({
   */
 
   return (
-    <>
+    <div style={{ position: "relative", height: "100%", width: "100%" }}>
+      {/*alert bootstrap cudtom*/}
+      {showBoundaryAlert && (
+        <div
+          className="alert alert-warning shadow-sm"
+          role="alert"
+          style={{
+            position: "absolute",
+            top: "20px",          
+            left: "50%",           
+            transform: "translateX(-50%)",
+            zIndex: 9999,          
+            width: "auto",
+            minWidth: "300px",
+            textAlign: "center",
+            opacity: 0.95
+          }}
+        >
+          <strong>Warning!</strong> Please select a point within Turin.
+          {/* Close button for manual dismissal (optional) */}
+          <button 
+            type="button" 
+            className="btn-close float-end ms-2" 
+            aria-label="Close"
+            onClick={() => setShowBoundaryAlert(false)}
+          ></button>
+        </div>
+      )}
       {hasTileError && (
         <div style={{ padding: "1rem", color: "crimson" }}>
           Unable to load map tiles — showing coordinates only.
         </div>
       )}
       <div ref={mapRef} className="leaflet-map" />
-    </>
+      </div>
   );
 }
