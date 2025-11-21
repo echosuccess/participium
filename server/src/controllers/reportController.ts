@@ -7,18 +7,6 @@ import { calculateAddress } from "../utils/addressFinder";
 import minioClient, { BUCKET_NAME } from "../utils/minioClient";
 import { BadRequestError, UnauthorizedError, ForbiddenError } from "../utils";
 
-const VALID_CATEGORIES: ReportCategory[] = [
-  "WATER_SUPPLY_DRINKING_WATER",
-  "ARCHITECTURAL_BARRIERS",
-  "SEWER_SYSTEM",
-  "PUBLIC_LIGHTING",
-  "WASTE",
-  "ROAD_SIGNS_TRAFFIC_LIGHTS",
-  "ROADS_URBAN_FURNISHINGS",
-  "PUBLIC_GREEN_AREAS_PLAYGROUNDS",
-  "OTHER"
-];
-
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
@@ -55,6 +43,7 @@ export async function createReport(req: Request, res: Response): Promise<void> {
     const parsedLatitude = parseFloat(latitude);
     const parsedLongitude = parseFloat(longitude);
 
+    // Probably the validator do altready this check
     if (isNaN(parsedLatitude) || isNaN(parsedLongitude)) {
       throw new BadRequestError("Invalid coordinates format");
     }
@@ -105,8 +94,8 @@ export async function createReport(req: Request, res: Response): Promise<void> {
 export async function getReports(req: Request, res: Response): Promise<void> {
   const { category } = req.query;
 
-  if (category && !VALID_CATEGORIES.includes(category as ReportCategory)) {
-    throw new BadRequestError(`Invalid category. Allowed: ${VALID_CATEGORIES.join(", ")}`);
+  if (category && !Object.values(ReportCategory).includes(category as ReportCategory)) {
+    throw new BadRequestError(`Invalid category. Allowed: ${Object.values(ReportCategory).join(", ")}`);
   }
 
   const reports = await getApprovedReportsService(category as ReportCategory | undefined);
