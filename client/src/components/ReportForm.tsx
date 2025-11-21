@@ -430,7 +430,7 @@ export default function ReportForm() {
                       issue.
                     </p>
 
-                    <div style={{ height: "600px", ...mapContainerStyle }}>
+                    <div style={{ height: 'clamp(400px, 60vh, 600px)', ...mapContainerStyle }}>
                       <MapView
                         onLocationSelect={handleLocationSelect}
                         selectedLocation={selectedLocation}
