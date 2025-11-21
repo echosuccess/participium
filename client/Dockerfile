@@ -18,31 +18,25 @@ COPY client/ .
 # Build the application
 RUN npm run build
 
-# Stage 2: Production with nginx
-FROM nginx:alpine
+# Stage 2: Production with serve
+FROM node:18-alpine
 
-# Install Node.js for serving (optional, nginx will serve static files)
+WORKDIR /app
+
+# Install serve globally
+RUN npm install -g serve
+
 # Copy built files from builder
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy custom nginx configuration
-COPY docker/nginx/client.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist ./dist
 
 # Create non-root user
-RUN addgroup -g 1001 -S nginx && \
-    adduser -S nginx -u 1001 || true
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
-# Change ownership
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d
+RUN chown -R nodejs:nodejs /app
 
-RUN touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid
-
-USER nginx
+USER nodejs
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["serve", "-s", "dist", "-l", "80"]

@@ -11,6 +11,7 @@ npm-debug.log
 coverage
 .nyc_output
 dist
+prisma/generated
 test
 *.test.ts
 *.spec.ts

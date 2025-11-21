@@ -2,7 +2,7 @@ import { prisma } from "../utils/prismaClient";
 import {
   ReportCategory as PrismaReportCategory,
   ReportStatus as PrismaReportStatus,
-} from "../../prisma/generated/client";
+} from "@prisma/client";
 import { ReportDTO } from "../interfaces/ReportDTO";
 import { ReportPhoto } from "../../../shared/ReportTypes";
 

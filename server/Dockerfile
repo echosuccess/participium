@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Copy package files
 COPY server/package*.json ./
+COPY server/tsconfig.json ./
 COPY server/prisma ./prisma/
 
 # Install dependencies
@@ -17,10 +18,13 @@ RUN npx prisma generate
 COPY shared/ /shared/
 
 # Copy source code
-COPY server/ .
+COPY server/src ./src
 
 # Build TypeScript
 RUN npm run build
+
+# Verify build output
+RUN ls -la dist/
 
 # Stage 2: Production
 FROM node:18-alpine
@@ -46,6 +50,9 @@ COPY shared/ /shared/
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
+# Copy documentation
+COPY docs/ ./dist/docs/
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
@@ -63,4 +70,4 @@ ENV NODE_ENV=production
 ENTRYPOINT ["/sbin/tini", "--"]
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/app/src/index.js"]

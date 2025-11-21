@@ -31,7 +31,6 @@ dist
 build
 .cache
 *.md
-docs
 Dockerfile
 docker-compose*.yml
 .dockerignore
