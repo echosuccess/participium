@@ -43,16 +43,6 @@ export async function createReport(req: Request, res: Response): Promise<void> {
     const parsedLatitude = parseFloat(latitude);
     const parsedLongitude = parseFloat(longitude);
 
-    // Probably the validator do altready this check
-    if (isNaN(parsedLatitude) || isNaN(parsedLongitude)) {
-      throw new BadRequestError("Invalid coordinates format");
-    }
-
-    // TODO: Create a middleware for validating coordinates municipality of turin
-    if (parsedLatitude < 44.9 || parsedLatitude > 45.2 || parsedLongitude < 7.55 || parsedLongitude > 7.8) {
-      throw new BadRequestError("Coordinates outside Turin boundaries");
-    }
-
     const photoData = [];
     for (const photo of photos) {
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
