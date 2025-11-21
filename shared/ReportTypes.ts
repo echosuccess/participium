@@ -30,12 +30,16 @@ export interface CreateReportResponse {
   message: string;
 }
 
+export interface RejectReportRequest {
+  reason: string;
+}
+
 export type ReportStatus =
-"PENDING_APPROVAL"
-| "ASSIGNED"
+"PENDING"
+| "APPROVED"
+| "REJECTED"
 | "IN_PROGRESS"
 | "SUSPENDED"
-| "REJECTED"
 | "RESOLVED"
 
     

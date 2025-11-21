@@ -2,9 +2,10 @@ import { prisma } from "../utils/prismaClient";
 import {
   ReportCategory as PrismaReportCategory,
   ReportStatus as PrismaReportStatus,
+  Role as PrismaRole,
 } from "../../prisma/generated/client";
 import { ReportDTO } from "../interfaces/ReportDTO";
-import { ReportPhoto } from "../../../shared/ReportTypes";
+import { ReportPhoto, RejectReportRequest } from "../../../shared/ReportTypes";
 
 //new type where we exclude fields that will not be provided by the user
 type CreateReportData = Omit<
@@ -33,7 +34,7 @@ export async function createReport(data: CreateReportData) {
       latitude: data.latitude,
       longitude: data.longitude,
       isAnonymous: data.isAnonymous,
-      status: PrismaReportStatus.PENDING_APPROVAL, //new reports are always pending approval
+      status: PrismaReportStatus.PENDING, //new reports are pending municipality approval
       userId: data.userId,
       photos: {
         create: data.photos.map((photo) => ({
@@ -51,29 +52,151 @@ export async function createReport(data: CreateReportData) {
   return newReport;
 }
 
-//get reports only after being approved
-export async function getApprovedReports() {
+//get reports based on status filter (for public and PUBLIC_RELATIONS)
+export async function getReports(statusFilter?: PrismaReportStatus, userRole?: PrismaRole) {
+  // Only PUBLIC_RELATIONS can see PENDING
+  if (statusFilter === PrismaReportStatus.PENDING && userRole !== PrismaRole.PUBLIC_RELATIONS) {
+    throw new Error("Only public relations officers can view pending reports");
+  }
+
+  let whereClause: any = {};
+  
+  if (statusFilter) {
+    whereClause.status = statusFilter;
+  } else {
+    // Default: exclude PENDING for public/non-PUBLIC_RELATIONS users
+    if (!userRole || userRole !== PrismaRole.PUBLIC_RELATIONS) {
+      whereClause.status = {
+        not: PrismaReportStatus.PENDING,
+      };
+    }
+  }
+
   return prisma.report.findMany({
-    where: {
-      status: {
-        in: [
-          PrismaReportStatus.ASSIGNED,
-          PrismaReportStatus.IN_PROGRESS,
-          PrismaReportStatus.RESOLVED,
-        ],
-      },
-    },
+    where: whereClause,
     include: {
-      user: {
-        select: {
-          first_name: true,
-          last_name: true,
-          email: true,
+      user: true,
+      assignedTo: true,
+      photos: true,
+      messages: {
+        include: {
+          user: true,
         },
       },
     },
     orderBy: {
-      createdAt: "desc", //most recent first
+      createdAt: "desc",
+    },
+  });
+}
+
+// PT06: Approve a report (PUBLIC_RELATIONS only)
+export async function approveReport(reportId: number, approverId: number) {
+  // Check if report exists and is in PENDING status
+  const report = await prisma.report.findUnique({
+    where: { id: reportId },
+    include: { user: true },
+  });
+
+  if (!report) {
+    throw new Error("Report not found");
+  }
+
+  if (report.status !== PrismaReportStatus.PENDING) {
+    throw new Error("Report is not in PENDING status");
+  }
+
+  // Update report status to APPROVED and add approval message
+  const updatedReport = await prisma.report.update({
+    where: { id: reportId },
+    data: {
+      status: PrismaReportStatus.APPROVED,
+      messages: {
+        create: {
+          content: "Report approved by public relations officer",
+          senderId: approverId,
+        },
+      },
+    },
+    include: {
+      user: true,
+      assignedTo: true,
+      photos: true,
+      messages: {
+        include: {
+          user: true,
+        },
+      },
+    },
+  });
+
+  return updatedReport;
+}
+
+// PT06: Reject a report with reason (PUBLIC_RELATIONS only)
+export async function rejectReport(reportId: number, rejecterId: number, reason: string) {
+  // Validate reason
+  if (!reason || reason.trim().length === 0) {
+    throw new Error("Rejection reason is required");
+  }
+
+  if (reason.length > 500) {
+    throw new Error("Rejection reason must be less than 500 characters");
+  }
+
+  // Check if report exists and is in PENDING status
+  const report = await prisma.report.findUnique({
+    where: { id: reportId },
+    include: { user: true },
+  });
+
+  if (!report) {
+    throw new Error("Report not found");
+  }
+
+  if (report.status !== PrismaReportStatus.PENDING) {
+    throw new Error("Report is not in PENDING status");
+  }
+
+  // Update report status to REJECTED with reason and add rejection message
+  const updatedReport = await prisma.report.update({
+    where: { id: reportId },
+    data: {
+      status: PrismaReportStatus.REJECTED,
+      rejectionReason: reason,
+      messages: {
+        create: {
+          content: "Report rejected by public relations officer",
+          senderId: rejecterId,
+        },
+      },
+    },
+    include: {
+      user: true,
+      assignedTo: true,
+      photos: true,
+      messages: {
+        include: {
+          user: true,
+        },
+      },
+    },
+  });
+
+  return updatedReport;
+}
+
+// Helper function to get technical office users for assignment (for future use)
+export async function getTechnicalOfficeUsers() {
+  return prisma.user.findMany({
+    where: {
+      role: PrismaRole.TECHNICAL_OFFICE,
+    },
+    select: {
+      id: true,
+      first_name: true,
+      last_name: true,
+      email: true,
     },
   });
 }
