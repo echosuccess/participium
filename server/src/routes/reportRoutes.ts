@@ -1,11 +1,14 @@
 import { Router } from 'express';
+import { asyncHandler } from '../middlewares/errorMiddleware';
+import { requireCitizen } from '../middlewares/routeProtection';
 import { createReport, getReports } from '../controllers/reportController';
-import { isLoggedIn } from '../middlewares/routeProtection';
-import { upload } from '../middlewares/uploadsMiddleware';
 
 const router = Router();
 
-router.post('/', isLoggedIn, upload.array('photos', 3), createReport);
-router.get('/', isLoggedIn, getReports);
+// POST /api/reports
+router.post('/', requireCitizen, asyncHandler(createReport));
+
+// GET /api/reports
+router.get('/', asyncHandler(getReports));
 
 export default router;

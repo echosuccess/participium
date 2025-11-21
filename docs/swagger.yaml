@@ -1058,14 +1058,12 @@ components:
       description: Payload to assign or update a municipality user's role
 
     Latitude:
-      type: number
-      format: double
+      type: string
       description: Latitude in decimal degrees (WGS84)
       example: 45.070339
 
     Longitude:
-      type: number
-      format: double
+      type: string
       description: Longitude in decimal degrees (WGS84)
       example: 7.686864
 

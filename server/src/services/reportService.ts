@@ -52,8 +52,7 @@ export async function createReport(data: CreateReportData) {
   return newReport;
 }
 
-//get reports only after being approved
-export async function getApprovedReports() {
+export async function getApprovedReports(category?: PrismaReportCategory) {
   return prisma.report.findMany({
     where: {
       status: {
@@ -63,6 +62,7 @@ export async function getApprovedReports() {
           PrismaReportStatus.RESOLVED,
         ],
       },
+      ...(category && { category }),
     },
     include: {
       user: {
@@ -72,9 +72,10 @@ export async function getApprovedReports() {
           email: true,
         },
       },
+      photos: true,
     },
     orderBy: {
-      createdAt: "desc", //most recent first
+      createdAt: "desc",
     },
   });
 }

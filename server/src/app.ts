@@ -14,7 +14,7 @@ import authRoutes from "./routes/authRoutes";
 import citizenRoutes from "./routes/citizenRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import reportRoutes from "./routes/reportRoutes";
-import { ApiValidationMiddleware } from "./middleware/validationMiddlewere";
+import { ApiValidationMiddleware } from "./middlewares/validationMiddlewere";
 import { initMinio } from "./utils/minioClient";
 
 export function createApp(): Express {
