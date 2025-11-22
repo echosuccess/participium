@@ -89,16 +89,10 @@ export default function MapView({
   const [center, setCenter] = useState<[number, number]>(TURIN);
   const [hasTileError, setHasTileError] = useState(false);
   const [turinData, setTurinData] = useState<any | null>(null);
-<<<<<<< HEAD
-
-  useEffect(() => {
-    fetch("/turin-boundary.geojson") 
-=======
   const [showBoundaryAlert, setShowBoundaryAlert] = useState(false);
 
   useEffect(() => {
     fetch("/turin-boundary3.geojson") 
->>>>>>> story#5/dev
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch GeoJSON");
@@ -152,21 +146,11 @@ export default function MapView({
       properties: {},
     };
 
-<<<<<<< HEAD
-    L.geoJSON(maskGeoJSON, {
-=======
     const maskLayer =L.geoJSON(maskGeoJSON, {
->>>>>>> story#5/dev
       style: {
         fillColor: "#000",
         fillOpacity: 0.35,
         stroke: false,
-<<<<<<< HEAD
-        interactive: false,
-      },
-    }).addTo(map);
-
-=======
         interactive: true,
       },
     }).addTo(map);
@@ -182,7 +166,6 @@ export default function MapView({
       }
     });
 
->>>>>>> story#5/dev
     const turinLayer = L.geoJSON(turinData as any, {
       style: {
         color: "var(--primary, #C86E62)",
