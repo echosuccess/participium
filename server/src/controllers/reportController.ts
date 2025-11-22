@@ -20,6 +20,47 @@ export async function createReport(req: Request, res: Response): Promise<void> {
 
   const user = req.user as { id: number };
 
+  // Validate required fields
+  if (
+    !title ||
+    !description ||
+    !category ||
+    latitude === undefined ||
+    longitude === undefined
+  ) {
+    throw new BadRequestError("Missing required fields: title, description, category, latitude, longitude");
+  }
+
+  // Validate photos
+  if (!photos || photos.length === 0) {
+    throw new BadRequestError("At least one photo is required");
+  }
+
+  if (photos.length > 3) {
+    throw new BadRequestError("Maximum 3 photos allowed");
+  }
+
+  // Validate category
+  if (!Object.values(ReportCategory).includes(category as ReportCategory)) {
+    throw new BadRequestError(`Invalid category. Allowed values: ${Object.values(ReportCategory).join(", ")}`);
+  }
+
+  // Validate coordinates
+  const parsedLatitude = parseFloat(latitude);
+  const parsedLongitude = parseFloat(longitude);
+
+  if (isNaN(parsedLatitude) || isNaN(parsedLongitude)) {
+    throw new BadRequestError("Invalid coordinates: latitude and longitude must be valid numbers");
+  }
+
+  if (parsedLatitude < -90 || parsedLatitude > 90) {
+    throw new BadRequestError("Invalid latitude: must be between -90 and 90");
+  }
+
+  if (parsedLongitude < -180 || parsedLongitude > 180) {
+    throw new BadRequestError("Invalid longitude: must be between -180 and 180");
+  }
+
   const photoData = [];
 
   if (photos && photos.length > 0) {
@@ -47,9 +88,6 @@ export async function createReport(req: Request, res: Response): Promise<void> {
       });
     }
   }
-
-  const parsedLatitude = parseFloat(latitude);
-  const parsedLongitude = parseFloat(longitude);
 
   const address = await calculateAddress(parsedLatitude, parsedLongitude);
 
