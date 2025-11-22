@@ -1592,7 +1592,6 @@ components:
         - PUBLIC_GREEN_AREAS_PLAYGROUNDS
         - OTHER
       example: ROADS_URBAN_FURNISHINGS
-<<<<<<< HEAD
 
     RejectReportRequest:
       type: object
@@ -1609,5 +1608,3 @@ components:
 # Security requirements for protected endpoints
 security:
   - SessionAuth: []
-=======
->>>>>>> story#5/dev

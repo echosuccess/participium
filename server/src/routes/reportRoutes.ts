@@ -1,30 +1,29 @@
 import { Router } from 'express';
-<<<<<<< HEAD
-import { createReport, getReports, getPendingReports, approveReport, rejectReport } from '../controllers/reportController';
-import { isLoggedIn } from '../middleware/routeProtection';
-
-const router = Router();
-
-router.post('/', isLoggedIn, createReport);
-router.get('/', getReports); // Public access for homepage, shows only processed reports
-router.get('/pending', isLoggedIn, getPendingReports); // PUBLIC_RELATIONS only - get SUSPENDED reports
-
-// PT06 - Report approval endpoints (PUBLIC_RELATIONS role checked in controller)
-router.post('/:reportId/approve', isLoggedIn, approveReport);
-router.post('/:reportId/reject', isLoggedIn, rejectReport);
-=======
-import { asyncHandler } from '../middlewares/errorMiddleware';
-import { requireCitizen } from '../middlewares/routeProtection';
+import { requireCitizen, requirePublicRelations } from '../middlewares/routeProtection';
 import { validateTurinBoundaries } from '../middlewares/validateTurinBoundaries';
-import { createReport, getReports } from '../controllers/reportController';
+import { 
+  createReport, 
+  getReports, 
+  getPendingReports, 
+  approveReport, 
+  rejectReport 
+} from '../controllers/reportController';
 
 const router = Router();
 
-// POST /api/reports
-router.post('/', requireCitizen, validateTurinBoundaries, asyncHandler(createReport));
+// POST /api/reports - Create a new report (citizens only)
+router.post('/', requireCitizen, validateTurinBoundaries, createReport);
 
-// GET /api/reports
-router.get('/', asyncHandler(getReports));
->>>>>>> story#5/dev
+// GET /api/reports - Get approved reports (public access)
+router.get('/', getReports);
+
+// GET /api/reports/pending - Get pending reports for review
+router.get('/pending', requirePublicRelations, getPendingReports);
+
+// POST /api/reports/:reportId/approve - Approve a report
+router.post('/:reportId/approve', requirePublicRelations, approveReport);
+
+// POST /api/reports/:reportId/reject - Reject a report
+router.post('/:reportId/reject', requirePublicRelations, rejectReport);
 
 export default router;
