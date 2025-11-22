@@ -1097,12 +1097,15 @@ components:
           description: Optional human-readable address for the location
           example: "Via Roma 1, Torino"
         photos:
-          type: array
-          minItems: 1
-          maxItems: 3
-          items:
-            type: string
-            format: binary
+          oneOf:
+            - type: string
+              format: binary
+            - type: array
+              minItems: 1
+              maxItems: 3
+              items:
+                type: string
+                format: binary
           description: Up to 3 photo files (image/jpeg, image/png)
 
     ReportSummary:
@@ -1212,6 +1215,7 @@ components:
         - REJECTED
         - RESOLVED
       example: PENDING_APPROVAL
+    
     ReportCategory:
       type: string
       description: Category of the reported problem

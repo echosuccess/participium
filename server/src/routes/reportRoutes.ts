@@ -3,11 +3,12 @@ import { asyncHandler } from '../middlewares/errorMiddleware';
 import { requireCitizen } from '../middlewares/routeProtection';
 import { validateTurinBoundaries } from '../middlewares/validateTurinBoundaries';
 import { createReport, getReports } from '../controllers/reportController';
+import { upload } from '../middlewares/uploadsMiddleware';
 
 const router = Router();
 
 // POST /api/reports
-router.post('/', requireCitizen, validateTurinBoundaries, asyncHandler(createReport));
+router.post('/', requireCitizen, upload.array('photos', 3), validateTurinBoundaries, asyncHandler(createReport));
 
 // GET /api/reports
 router.get('/', asyncHandler(getReports));

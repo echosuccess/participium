@@ -1,83 +1,75 @@
 import { Request, Response } from "express";
-import multer from "multer";
 import path from "path";
 import { createReport as createReportService, getApprovedReports as getApprovedReportsService } from "../services/reportService";
 import { ReportCategory } from "../../../shared/ReportTypes";
 import { calculateAddress } from "../utils/addressFinder";
 import minioClient, { BUCKET_NAME } from "../utils/minioClient";
-import { BadRequestError, UnauthorizedError, ForbiddenError } from "../utils";
-
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = ["image/jpeg", "image/png"];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new BadRequestError("Only JPEG and PNG images are allowed"));
-    }
-  }
-}).array("photos", 3);
+import { BadRequestError } from "../utils";
 
 export async function createReport(req: Request, res: Response): Promise<void> {
-  upload(req, res, async (err) => {
-    if (err instanceof multer.MulterError) {
-      if (err.code === "LIMIT_FILE_SIZE") {
-        throw new BadRequestError("File size exceeds 5MB limit");
-      }
-      if (err.code === "LIMIT_UNEXPECTED_FILE") {
-        throw new BadRequestError("Maximum 3 photos allowed");
-      }
-      throw new BadRequestError(err.message);
-    }
-    if (err) { 
-      throw err;
-    }
+  const photos = req.files as Express.Multer.File[];
+  
+  const {
+    title,
+    description,
+    category,
+    latitude,
+    longitude,
+    isAnonymous,
+  } = req.body;
 
-    const user = req.user as { id: number };
-    const { title, description, category, latitude, longitude, isAnonymous } = req.body;
-    const photos = req.files as Express.Multer.File[];
-    
-    const parsedLatitude = parseFloat(latitude);
-    const parsedLongitude = parseFloat(longitude);
+  const user = req.user as { id: number };
 
-    const photoData = [];
+  const photoData = [];
+
+  if (photos && photos.length > 0) {
     for (const photo of photos) {
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
       const filename = uniqueSuffix + path.extname(photo.originalname);
 
-      await minioClient.putObject(BUCKET_NAME, filename, photo.buffer, photo.size, {
-        "Content-Type": photo.mimetype
-      });
+      await minioClient.putObject(
+        BUCKET_NAME,
+        filename,
+        photo.buffer,
+        photo.size,
+        { "Content-Type": photo.mimetype }
+      );
 
       const protocol = process.env.MINIO_USE_SSL === "true" ? "https" : "http";
       const host = process.env.MINIO_ENDPOINT || "localhost";
       const port = process.env.MINIO_PORT ? `:${process.env.MINIO_PORT}` : "";
       const url = `${protocol}://${host}${port}/${BUCKET_NAME}/${filename}`;
 
-      photoData.push({ id: 0, filename, url });
+      photoData.push({
+        id: 0,
+        filename: filename,
+        url: url,
+      });
     }
+  }
 
-    const address = await calculateAddress(parsedLatitude, parsedLongitude);
+  const parsedLatitude = parseFloat(latitude);
+  const parsedLongitude = parseFloat(longitude);
 
-    const newReport = await createReportService({
-      title,
-      description,
-      category: category as ReportCategory,
-      latitude: parsedLatitude,
-      longitude: parsedLongitude,
-      address,
-      isAnonymous: isAnonymous === "true",
-      photos: photoData,
-      userId: user.id
-    });
+  const address = await calculateAddress(parsedLatitude, parsedLongitude);
 
-    res.status(201).json({
-      message: "Report created successfully",
-      id: newReport.id
-    });
+  const reportData = {
+    title,
+    description,
+    category: category as ReportCategory,
+    latitude: parsedLatitude,
+    longitude: parsedLongitude,
+    address,
+    isAnonymous: isAnonymous === "true",
+    photos: photoData,
+    userId: user.id,
+  };
+
+  const newReport = await createReportService(reportData);
+
+  res.status(201).json({
+    message: "Report created successfully",
+    id: newReport.id,
   });
 }
 
