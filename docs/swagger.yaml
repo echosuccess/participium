@@ -1424,12 +1424,12 @@ components:
       description: Payload to assign or update a municipality user's role
 
     Latitude:
-      type: string
+      type: number
       description: Latitude in decimal degrees (WGS84)
       example: 45.070339
 
     Longitude:
-      type: string
+      type: number
       description: Longitude in decimal degrees (WGS84)
       example: 7.686864
 
@@ -1571,13 +1571,13 @@ components:
     ReportStatus:
       type: string
       enum:
-        - PENDING
-        - APPROVED
-        - REJECTED
+        - PENDING_APPROVAL
+        - ASSIGNED
         - IN_PROGRESS
         - SUSPENDED
+        - REJECTED
         - RESOLVED
-      example: PENDING
+      example: PENDING_APPROVAL
     ReportCategory:
       type: string
       description: Category of the reported problem
