@@ -35,7 +35,7 @@ export async function createReport(data: CreateReportData) {
       longitude: data.longitude,
       address: data.address || null,
       isAnonymous: data.isAnonymous,
-      status: ReportStatus.PENDING, //new reports are pending municipality approval
+      status: ReportStatus.PENDING_APPROVAL, //new reports are pending municipality approval
       userId: data.userId,
       photos: {
         create: data.photos.map((photo) => ({
@@ -57,7 +57,7 @@ export async function getApprovedReports(category?: ReportCategory) {
   return prisma.report.findMany({
     where: {
       status: {
-        in: [ReportStatus.APPROVED, ReportStatus.IN_PROGRESS, ReportStatus.RESOLVED],
+        in: [ReportStatus.ASSIGNED, ReportStatus.IN_PROGRESS, ReportStatus.RESOLVED],
       },
       ...(category && { category }),
     },
@@ -80,7 +80,7 @@ export async function getApprovedReports(category?: ReportCategory) {
 export async function getPendingReports() {
   return prisma.report.findMany({
     where: {
-      status: ReportStatus.PENDING,
+      status: ReportStatus.PENDING_APPROVAL,
     },
     include: {
       user: true,
@@ -99,7 +99,7 @@ export async function getPendingReports() {
 
 // Approve a report (PUBLIC_RELATIONS only)
 export async function approveReport(reportId: number, approverId: number) {
-  // Check if report exists and is in PENDING status
+  // Check if report exists and is in PENDING_APPROVAL status
   const report = await prisma.report.findUnique({
     where: { id: reportId },
     include: { user: true },
@@ -109,15 +109,15 @@ export async function approveReport(reportId: number, approverId: number) {
     throw new NotFoundError("Report not found");
   }
 
-  if (report.status !== ReportStatus.PENDING) {
-    throw new BadRequestError("Report is not in PENDING status");
+  if (report.status !== ReportStatus.PENDING_APPROVAL) {
+    throw new BadRequestError("Report is not in PENDING_APPROVAL status");
   }
 
-  // Update report status to APPROVED and add approval message
+  // Update report status to ASSIGNED and add approval message
   const updatedReport = await prisma.report.update({
     where: { id: reportId },
     data: {
-      status: ReportStatus.APPROVED,
+      status: ReportStatus.ASSIGNED,
       messages: {
         create: {
           content: "Report approved by public relations officer",
@@ -150,7 +150,7 @@ export async function rejectReport(reportId: number, rejecterId: number, reason:
     throw new UnprocessableEntityError("Rejection reason must be less than 500 characters");
   }
 
-  // Check if report exists and is in PENDING status
+  // Check if report exists and is in PENDING_APPROVAL status
   const report = await prisma.report.findUnique({
     where: { id: reportId },
     include: { user: true },
@@ -160,8 +160,8 @@ export async function rejectReport(reportId: number, rejecterId: number, reason:
     throw new NotFoundError("Report not found");
   }
 
-  if (report.status !== ReportStatus.PENDING) {
-    throw new BadRequestError("Report is not in PENDING status");
+  if (report.status !== ReportStatus.PENDING_APPROVAL) {
+    throw new BadRequestError("Report is not in PENDING_APPROVAL status");
   }
 
   // Update report status to REJECTED with reason and add rejection message

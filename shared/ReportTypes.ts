@@ -11,8 +11,8 @@ export enum ReportCategory {
 }
 
 export enum ReportStatus {
-  PENDING = "PENDING",
-  APPROVED = "APPROVED",
+  PENDING_APPROVAL = "PENDING_APPROVAL",
+  ASSIGNED = "ASSIGNED",
   REJECTED = "REJECTED",
   IN_PROGRESS = "IN_PROGRESS",
   SUSPENDED = "SUSPENDED",

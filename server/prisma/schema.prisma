@@ -21,7 +21,6 @@ model User {
   role Role @default(CITIZEN)
   reports Report[]
   messages ReportMessage[]
-  assignedReports Report[] @relation("AssignedReports")
   telegram_username String? 
   email_notifications_enabled Boolean @default(true)
 }
@@ -42,7 +41,7 @@ model Report {
   longitude     Float
   address       String?
   isAnonymous   Boolean @default(false)
-  status        ReportStatus @default(PENDING)
+  status        ReportStatus @default(PENDING_APPROVAL)
   user          User     @relation(fields: [userId], references: [id])
   userId        Int
   photos        ReportPhoto[]
@@ -50,8 +49,8 @@ model Report {
   rejectionReason String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  assignedTo    User?    @relation("AssignedReports", fields: [assignedToId], references: [id])
-  assignedToId  Int?
+  /* assignedTo    User?    @relation("AssignedReports", fields: [assignedToId], references: [id])
+  assignedToId  Int? */
 }
 
 enum ReportCategory {
@@ -67,11 +66,11 @@ enum ReportCategory {
 }
 
 enum ReportStatus {
-  PENDING
-  APPROVED
-  REJECTED
+  PENDING_APPROVAL
+  ASSIGNED
   IN_PROGRESS
   SUSPENDED
+  REJECTED
   RESOLVED
 }
 
