@@ -1,4 +1,7 @@
-import { createReport, getApprovedReports } from "../../../src/services/reportService";
+import {
+  createReport,
+  getApprovedReports,
+} from "../../../src/services/reportService";
 import { ReportCategory } from "../../../../shared/ReportTypes";
 
 // Mock the Prisma client
@@ -32,9 +35,9 @@ describe("reportService", () => {
         {
           id: 1,
           url: "https://example.com/photo.jpg",
-          filename: "streetlight.jpg"
-        }
-      ]
+          filename: "streetlight.jpg",
+        },
+      ],
     };
 
     it("should create a report with valid data", async () => {
@@ -55,9 +58,9 @@ describe("reportService", () => {
             id: 1,
             url: "https://example.com/photo.jpg",
             filename: "streetlight.jpg",
-            reportId: 1
-          }
-        ]
+            reportId: 1,
+          },
+        ],
       };
 
       mockCreate.mockResolvedValue(mockCreatedReport);
@@ -66,6 +69,7 @@ describe("reportService", () => {
 
       expect(mockCreate).toHaveBeenCalledWith({
         data: {
+          address: null,
           title: validReportData.title,
           description: validReportData.description,
           category: validReportData.category,
@@ -78,9 +82,9 @@ describe("reportService", () => {
             create: [
               {
                 url: "https://example.com/photo.jpg",
-                filename: "streetlight.jpg"
-              }
-            ]
+                filename: "streetlight.jpg",
+              },
+            ],
           },
         },
         include: {
@@ -95,7 +99,7 @@ describe("reportService", () => {
     it("should create anonymous report", async () => {
       const anonymousReportData = {
         ...validReportData,
-        isAnonymous: true
+        isAnonymous: true,
       };
 
       const mockCreatedReport = {
@@ -110,7 +114,7 @@ describe("reportService", () => {
           last_name: "Doe",
           email: "john.doe@example.com",
         },
-        photos: []
+        photos: [],
       };
 
       mockCreate.mockResolvedValue(mockCreatedReport);
@@ -119,6 +123,7 @@ describe("reportService", () => {
 
       expect(mockCreate).toHaveBeenCalledWith({
         data: {
+          address: null,
           title: anonymousReportData.title,
           description: anonymousReportData.description,
           category: anonymousReportData.category,
@@ -131,9 +136,9 @@ describe("reportService", () => {
             create: [
               {
                 url: "https://example.com/photo.jpg",
-                filename: "streetlight.jpg"
-              }
-            ]
+                filename: "streetlight.jpg",
+              },
+            ],
           },
         },
         include: {
@@ -152,14 +157,14 @@ describe("reportService", () => {
           {
             id: 1,
             url: "https://example.com/photo1.jpg",
-            filename: "photo1.jpg"
+            filename: "photo1.jpg",
           },
           {
             id: 2,
             url: "https://example.com/photo2.jpg",
-            filename: "photo2.jpg"
-          }
-        ]
+            filename: "photo2.jpg",
+          },
+        ],
       };
 
       const mockCreatedReport = {
@@ -179,15 +184,15 @@ describe("reportService", () => {
             id: 1,
             url: "https://example.com/photo1.jpg",
             filename: "photo1.jpg",
-            reportId: 1
+            reportId: 1,
           },
           {
             id: 2,
             url: "https://example.com/photo2.jpg",
             filename: "photo2.jpg",
-            reportId: 1
-          }
-        ]
+            reportId: 1,
+          },
+        ],
       };
 
       mockCreate.mockResolvedValue(mockCreatedReport);
@@ -196,6 +201,7 @@ describe("reportService", () => {
 
       expect(mockCreate).toHaveBeenCalledWith({
         data: {
+          address: null,
           title: reportWithMultiplePhotos.title,
           description: reportWithMultiplePhotos.description,
           category: reportWithMultiplePhotos.category,
@@ -208,13 +214,13 @@ describe("reportService", () => {
             create: [
               {
                 url: "https://example.com/photo1.jpg",
-                filename: "photo1.jpg"
+                filename: "photo1.jpg",
               },
               {
                 url: "https://example.com/photo2.jpg",
-                filename: "photo2.jpg"
-              }
-            ]
+                filename: "photo2.jpg",
+              },
+            ],
           },
         },
         include: {
@@ -230,7 +236,7 @@ describe("reportService", () => {
       const turinReportData = {
         ...validReportData,
         latitude: 45.0703,
-        longitude: 7.6869
+        longitude: 7.6869,
       };
 
       const mockCreatedReport = {
@@ -240,7 +246,7 @@ describe("reportService", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         user: { id: 1 },
-        photos: []
+        photos: [],
       };
 
       mockCreate.mockResolvedValue(mockCreatedReport);
@@ -251,8 +257,8 @@ describe("reportService", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             latitude: 45.0703,
-            longitude: 7.6869
-          })
+            longitude: 7.6869,
+          }),
         })
       );
 
@@ -262,20 +268,20 @@ describe("reportService", () => {
     it("should create report with different categories", async () => {
       const categories = [
         "WATER_SUPPLY_DRINKING_WATER",
-        "ARCHITECTURAL_BARRIERS", 
+        "ARCHITECTURAL_BARRIERS",
         "SEWER_SYSTEM",
         "PUBLIC_LIGHTING",
         "WASTE",
         "ROAD_SIGNS_TRAFFIC_LIGHTS",
         "ROADS_URBAN_FURNISHINGS",
         "PUBLIC_GREEN_AREAS_PLAYGROUNDS",
-        "OTHER"
+        "OTHER",
       ];
 
       for (const category of categories) {
         const reportWithCategory = {
           ...validReportData,
-          category: category as any
+          category: category as any,
         };
 
         const mockCreatedReport = {
@@ -285,7 +291,7 @@ describe("reportService", () => {
           createdAt: new Date(),
           updatedAt: new Date(),
           user: { id: 1 },
-          photos: []
+          photos: [],
         };
 
         mockCreate.mockResolvedValue(mockCreatedReport);
@@ -295,8 +301,8 @@ describe("reportService", () => {
         expect(mockCreate).toHaveBeenCalledWith(
           expect.objectContaining({
             data: expect.objectContaining({
-              category: category
-            })
+              category: category,
+            }),
           })
         );
 
@@ -316,17 +322,17 @@ describe("reportService", () => {
     it("should create report with boundary coordinates", async () => {
       // Test coordinate ai limiti
       const boundaryTests = [
-        { latitude: -90, longitude: -180 },   // Limite sud-ovest
-        { latitude: 90, longitude: 180 },     // Limite nord-est  
-        { latitude: 0, longitude: 0 },        // Equatore e meridiano di Greenwich
-        { latitude: 45.1, longitude: 7.7 },  // Coordinate vicino a Torino
+        { latitude: -90, longitude: -180 }, // Limite sud-ovest
+        { latitude: 90, longitude: 180 }, // Limite nord-est
+        { latitude: 0, longitude: 0 }, // Equatore e meridiano di Greenwich
+        { latitude: 45.1, longitude: 7.7 }, // Coordinate vicino a Torino
       ];
 
       for (const coords of boundaryTests) {
         const reportWithBoundaryCoords = {
           ...validReportData,
           latitude: coords.latitude,
-          longitude: coords.longitude
+          longitude: coords.longitude,
         };
 
         const mockCreatedReport = {
@@ -336,7 +342,7 @@ describe("reportService", () => {
           createdAt: new Date(),
           updatedAt: new Date(),
           user: { id: 1 },
-          photos: []
+          photos: [],
         };
 
         mockCreate.mockResolvedValue(mockCreatedReport);
@@ -347,8 +353,8 @@ describe("reportService", () => {
           expect.objectContaining({
             data: expect.objectContaining({
               latitude: coords.latitude,
-              longitude: coords.longitude
-            })
+              longitude: coords.longitude,
+            }),
           })
         );
 
@@ -372,8 +378,8 @@ describe("reportService", () => {
           user: {
             first_name: "John",
             last_name: "Doe",
-            email: "john.doe@example.com"
-          }
+            email: "john.doe@example.com",
+          },
         },
         {
           id: 2,
@@ -381,15 +387,15 @@ describe("reportService", () => {
           description: "Older issue",
           category: "ROADS_AND_URBAN_FURNISHINGS",
           latitude: 45.0704,
-          longitude: 7.6870,
+          longitude: 7.687,
           status: "IN_PROGRESS",
           createdAt: new Date("2023-11-01"),
           user: {
             first_name: "Jane",
             last_name: "Smith",
-            email: "jane.smith@example.com"
-          }
-        }
+            email: "jane.smith@example.com",
+          },
+        },
       ];
 
       mockFindMany.mockResolvedValue(mockReports);
@@ -399,25 +405,17 @@ describe("reportService", () => {
       expect(mockFindMany).toHaveBeenCalledWith({
         where: {
           status: {
-            in: [
-              "ASSIGNED",
-              "IN_PROGRESS", 
-              "RESOLVED"
-            ]
-          }
+            in: ["ASSIGNED", "IN_PROGRESS", "RESOLVED"],
+          },
         },
         include: {
-          user: {
-            select: {
-              first_name: true,
-              last_name: true,
-              email: true,
-            }
-          }
+          user: true,
+          photos: true,
+          messages: { include: { user: true } },
         },
         orderBy: {
-          createdAt: "desc"
-        }
+          createdAt: "desc",
+        },
       });
 
       expect(result).toEqual(mockReports);
@@ -437,18 +435,30 @@ describe("reportService", () => {
         {
           id: 1,
           status: "ASSIGNED",
-          user: { first_name: "John", last_name: "Doe", email: "john@example.com" }
+          user: {
+            first_name: "John",
+            last_name: "Doe",
+            email: "john@example.com",
+          },
         },
         {
           id: 2,
           status: "IN_PROGRESS",
-          user: { first_name: "Jane", last_name: "Smith", email: "jane@example.com" }
+          user: {
+            first_name: "Jane",
+            last_name: "Smith",
+            email: "jane@example.com",
+          },
         },
         {
           id: 3,
           status: "RESOLVED",
-          user: { first_name: "Bob", last_name: "Johnson", email: "bob@example.com" }
-        }
+          user: {
+            first_name: "Bob",
+            last_name: "Johnson",
+            email: "bob@example.com",
+          },
+        },
       ];
 
       mockFindMany.mockResolvedValue(mockApprovedReports);
@@ -459,21 +469,17 @@ describe("reportService", () => {
       expect(mockFindMany).toHaveBeenCalledWith({
         where: {
           status: {
-            in: ["ASSIGNED", "IN_PROGRESS", "RESOLVED"]
-          }
+            in: ["ASSIGNED", "IN_PROGRESS", "RESOLVED"],
+          },
         },
         include: {
-          user: {
-            select: {
-              first_name: true,
-              last_name: true,
-              email: true,
-            }
-          }
+          user: true,
+          photos: true,
+          messages: { include: { user: true } },
         },
         orderBy: {
-          createdAt: "desc"
-        }
+          createdAt: "desc",
+        },
       });
 
       expect(result).toEqual(mockApprovedReports);
@@ -501,9 +507,9 @@ describe("reportService", () => {
           user: {
             first_name: "John",
             last_name: "Doe",
-            email: "john.doe@example.com"
-          }
-        }
+            email: "john.doe@example.com",
+          },
+        },
       ];
 
       mockFindMany.mockResolvedValue(mockReports);
@@ -513,7 +519,7 @@ describe("reportService", () => {
       expect(result[0].user).toEqual({
         first_name: "John",
         last_name: "Doe",
-        email: "john.doe@example.com"
+        email: "john.doe@example.com",
       });
     });
 
@@ -525,8 +531,8 @@ describe("reportService", () => {
       expect(mockFindMany).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: {
-            createdAt: "desc"
-          }
+            createdAt: "desc",
+          },
         })
       );
     });

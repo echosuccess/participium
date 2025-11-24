@@ -11,7 +11,7 @@ import { Roles } from "../../../src/interfaces/UserDTO";
 var mockPrisma: any;
 
 // Mock PrismaClient
-jest.mock("../../../prisma/generated/client", () => {
+jest.mock("@prisma/client", () => {
   mockPrisma = {
     user: {
       findUnique: jest.fn(),
@@ -259,7 +259,10 @@ describe("userService", () => {
       const updateData = {
         email_notifications_enabled: false,
       };
-      const mockUpdatedUser = { id: 1, email_notifications_enabled: false } as any;
+      const mockUpdatedUser = {
+        id: 1,
+        email_notifications_enabled: false,
+      } as any;
       mockPrisma.user.update.mockResolvedValue(mockUpdatedUser);
 
       await updateUser(1, updateData);
@@ -332,7 +335,10 @@ describe("userService", () => {
       ] as any;
       mockPrisma.user.findMany.mockResolvedValue(mockUsers);
 
-      const result = await findUsersByRoles([Roles.ADMINISTRATOR, Roles.PUBLIC_RELATIONS]);
+      const result = await findUsersByRoles([
+        Roles.ADMINISTRATOR,
+        Roles.PUBLIC_RELATIONS,
+      ]);
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
         where: {
