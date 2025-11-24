@@ -7,12 +7,16 @@ import { ReportCategory } from "../../../../shared/ReportTypes";
 // Mock the Prisma client
 const mockCreate = jest.fn();
 const mockFindMany = jest.fn();
+const mockFindUnique = jest.fn();
+const mockUpdate = jest.fn();
 
 jest.mock("../../../src/utils/prismaClient", () => ({
   prisma: {
     report: {
       create: (...args: any[]) => mockCreate(...args),
       findMany: (...args: any[]) => mockFindMany(...args),
+      findUnique: (...args: any[]) => mockFindUnique(...args),
+      update: (...args: any[]) => mockUpdate(...args),
     },
   },
 }));
@@ -535,6 +539,164 @@ describe("reportService", () => {
           },
         })
       );
+    });
+  });
+
+  describe("approveReport", () => {
+    const reportId = 42;
+    const approverId = 7;
+
+    afterEach(() => jest.clearAllMocks());
+
+    it("should throw NotFoundError when report does not exist", async () => {
+      mockFindUnique.mockResolvedValue(null);
+      const { approveReport } = require("../../../src/services/reportService");
+      await expect(approveReport(reportId, approverId)).rejects.toThrow(
+        "Report not found"
+      );
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: reportId },
+        include: { user: true },
+      });
+    });
+
+    it("should throw BadRequestError when report status is not PENDING_APPROVAL", async () => {
+      mockFindUnique.mockResolvedValue({ id: reportId, status: "ASSIGNED" });
+      const { approveReport } = require("../../../src/services/reportService");
+      await expect(approveReport(reportId, approverId)).rejects.toThrow(
+        "Report is not in PENDING_APPROVAL status"
+      );
+    });
+
+    it("should update report to ASSIGNED and add approval message", async () => {
+      const existing = { id: reportId, status: "PENDING_APPROVAL" };
+      const updated = {
+        id: reportId,
+        status: "ASSIGNED",
+        messages: [
+          {
+            id: 1,
+            content: "Report approved by public relations officer",
+            senderId: approverId,
+          },
+        ],
+        user: { id: 2 },
+        photos: [],
+      };
+
+      mockFindUnique.mockResolvedValue(existing);
+      mockUpdate.mockResolvedValue(updated);
+
+      const { approveReport } = require("../../../src/services/reportService");
+      const result = await approveReport(reportId, approverId);
+
+      expect(mockFindUnique).toHaveBeenCalled();
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: reportId },
+        data: {
+          status: "ASSIGNED",
+          messages: {
+            create: {
+              content: "Report approved by public relations officer",
+              senderId: approverId,
+            },
+          },
+        },
+        include: {
+          user: true,
+          photos: true,
+          messages: { include: { user: true } },
+        },
+      });
+
+      expect(result).toEqual(updated);
+    });
+  });
+
+  describe("rejectReport", () => {
+    const reportId = 43;
+    const rejecterId = 8;
+
+    afterEach(() => jest.clearAllMocks());
+
+    it("should reject when reason is empty", async () => {
+      const { rejectReport } = require("../../../src/services/reportService");
+      await expect(rejectReport(reportId, rejecterId, "")).rejects.toThrow(
+        "Rejection reason is required"
+      );
+    });
+
+    it("should reject when reason is too long", async () => {
+      const longReason = "a".repeat(501);
+      const { rejectReport } = require("../../../src/services/reportService");
+      await expect(
+        rejectReport(reportId, rejecterId, longReason)
+      ).rejects.toThrow("Rejection reason must be less than 500 characters");
+    });
+
+    it("should throw NotFoundError when report does not exist", async () => {
+      mockFindUnique.mockResolvedValue(null);
+      const { rejectReport } = require("../../../src/services/reportService");
+      await expect(
+        rejectReport(reportId, rejecterId, "Invalid report")
+      ).rejects.toThrow("Report not found");
+    });
+
+    it("should throw BadRequestError when report status is not PENDING_APPROVAL", async () => {
+      mockFindUnique.mockResolvedValue({ id: reportId, status: "ASSIGNED" });
+      const { rejectReport } = require("../../../src/services/reportService");
+      await expect(
+        rejectReport(reportId, rejecterId, "Reason")
+      ).rejects.toThrow("Report is not in PENDING_APPROVAL status");
+    });
+
+    it("should update report to REJECTED and set rejectionReason", async () => {
+      const existing = { id: reportId, status: "PENDING_APPROVAL" };
+      const updated = {
+        id: reportId,
+        status: "REJECTED",
+        rejectionReason: "Not a valid report",
+        messages: [
+          {
+            id: 2,
+            content: "Report rejected by public relations officer",
+            senderId: rejecterId,
+          },
+        ],
+        user: { id: 3 },
+        photos: [],
+      };
+
+      mockFindUnique.mockResolvedValue(existing);
+      mockUpdate.mockResolvedValue(updated);
+
+      const { rejectReport } = require("../../../src/services/reportService");
+      const result = await rejectReport(
+        reportId,
+        rejecterId,
+        "Not a valid report"
+      );
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: reportId },
+        data: {
+          status: "REJECTED",
+          rejectionReason: "Not a valid report",
+          messages: {
+            create: {
+              content: "Report rejected by public relations officer",
+              senderId: rejecterId,
+            },
+          },
+        },
+        include: {
+          user: true,
+          photos: true,
+          messages: { include: { user: true } },
+        },
+      });
+
+      expect(result).toEqual(updated);
     });
   });
 });

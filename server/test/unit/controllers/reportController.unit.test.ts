@@ -43,6 +43,8 @@ jest.mock("../../../src/middlewares/errorMiddleware", () => ({
 import {
   createReport,
   getReports,
+  approveReport,
+  rejectReport,
 } from "../../../src/controllers/reportController";
 import * as reportService from "../../../src/services/reportService";
 import { ReportCategory } from "../../../../shared/ReportTypes";
@@ -56,6 +58,14 @@ const mockCreateReportService =
 const mockGetApprovedReportsService =
   reportService.getApprovedReports as jest.MockedFunction<
     typeof reportService.getApprovedReports
+  >;
+const mockApproveReportService =
+  reportService.approveReport as jest.MockedFunction<
+    typeof reportService.approveReport
+  >;
+const mockRejectReportService =
+  reportService.rejectReport as jest.MockedFunction<
+    typeof reportService.rejectReport
   >;
 
 describe("reportController", () => {
@@ -485,6 +495,100 @@ describe("reportController", () => {
         getReports(mockReq as Request, mockRes as Response, mockNext as any)
       ).rejects.toThrow("Database query failed");
       expect(mockGetApprovedReportsService).toHaveBeenCalled();
+    });
+  });
+
+  describe("approveReport / rejectReport", () => {
+    const validUser = { id: 99 };
+
+    it("should approve a report successfully", async () => {
+      mockReq.params = { reportId: "10" };
+      mockReq.user = validUser;
+
+      const updatedReport = { id: 10, status: "ASSIGNED" };
+      mockApproveReportService.mockResolvedValue(updatedReport as any);
+
+      await approveReport(
+        mockReq as Request,
+        mockRes as Response,
+        mockNext as any
+      );
+
+      expect(mockApproveReportService).toHaveBeenCalledWith(10, validUser.id);
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        message: "Report approved successfully",
+        report: updatedReport,
+      });
+    });
+
+    it("should reject when approve reportId param is invalid", async () => {
+      mockReq.params = { reportId: "abc" };
+      mockReq.user = validUser;
+
+      await expect(
+        approveReport(mockReq as Request, mockRes as Response, mockNext as any)
+      ).rejects.toThrow("Invalid report ID parameter");
+    });
+
+    it("should propagate service errors on approve", async () => {
+      mockReq.params = { reportId: "11" };
+      mockReq.user = validUser;
+      mockApproveReportService.mockRejectedValue(new Error("DB fail"));
+
+      await expect(
+        approveReport(mockReq as Request, mockRes as Response, mockNext as any)
+      ).rejects.toThrow("DB fail");
+    });
+
+    it("should reject a report successfully with reason", async () => {
+      mockReq.params = { reportId: "20" };
+      mockReq.user = validUser;
+      mockReq.body = { reason: "Not valid content" };
+
+      const updatedReport = {
+        id: 20,
+        status: "REJECTED",
+        rejectionReason: "Not valid content",
+      };
+      mockRejectReportService.mockResolvedValue(updatedReport as any);
+
+      await rejectReport(
+        mockReq as Request,
+        mockRes as Response,
+        mockNext as any
+      );
+
+      expect(mockRejectReportService).toHaveBeenCalledWith(
+        20,
+        validUser.id,
+        "Not valid content"
+      );
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        message: "Report rejected successfully",
+        report: updatedReport,
+      });
+    });
+
+    it("should throw when rejection reason is missing", async () => {
+      mockReq.params = { reportId: "21" };
+      mockReq.user = validUser;
+      mockReq.body = { reason: "" };
+
+      await expect(
+        rejectReport(mockReq as Request, mockRes as Response, mockNext as any)
+      ).rejects.toThrow("Missing rejection reason");
+    });
+
+    it("should throw when reject reportId param is invalid", async () => {
+      mockReq.params = { reportId: "xyz" };
+      mockReq.user = validUser;
+      mockReq.body = { reason: "Some reason" };
+
+      await expect(
+        rejectReport(mockReq as Request, mockRes as Response, mockNext as any)
+      ).rejects.toThrow("Invalid report ID parameter");
     });
   });
 });
