@@ -34,3 +34,17 @@ export function requireCitizen(req: Request, res: Response, next: NextFunction) 
 
   return next();
 }
+
+export function requirePublicRelations(req: Request, res: Response, next: NextFunction) {
+  const authReq = req as Request & { user?: User; isAuthenticated?: () => boolean };
+
+  if (!authReq.isAuthenticated || !authReq.isAuthenticated()) {
+    throw new UnauthorizedError("Authentication required");
+  }
+
+  if (!authReq.user || authReq.user.role !== 'PUBLIC_RELATIONS') {
+    throw new ForbiddenError("Public relations officer privileges required");
+  }
+
+  return next();
+}

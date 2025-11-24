@@ -13,9 +13,9 @@ export enum ReportCategory {
 export enum ReportStatus {
   PENDING_APPROVAL = "PENDING_APPROVAL",
   ASSIGNED = "ASSIGNED",
+  REJECTED = "REJECTED",
   IN_PROGRESS = "IN_PROGRESS",
   SUSPENDED = "SUSPENDED",
-  REJECTED = "REJECTED",
   RESOLVED = "RESOLVED"
 }
 
@@ -40,4 +40,7 @@ export interface CreateReportResponse {
   message: string;
 }
 
-    
+// Story 6 interfaces
+export interface RejectReportRequest {
+  reason: string;
+}
