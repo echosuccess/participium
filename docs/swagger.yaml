@@ -10,9 +10,20 @@ info:
     The system must have at least one administrator account pre-configured in the database.
 
     Available municipality roles:
+    - ADMINISTRATOR: System administrator with full privileges
     - PUBLIC_RELATIONS: Public relations officer for citizen communication
-    - ADMINISTRATOR: Administrative staff for report management 
-    - TECHNICAL_OFFICE: Technical staff for resolving reported issues
+    - CULTURE_EVENTS_TOURISM_SPORTS: Culture, events, tourism and sports
+    - LOCAL_PUBLIC_SERVICES: Local public services
+    - EDUCATION_SERVICES: Education services
+    - PUBLIC_RESIDENTIAL_HOUSING: Public/residential housing services
+    - INFORMATION_SYSTEMS: Information systems/IT
+    - MUNICIPAL_BUILDING_MAINTENANCE: Municipal building maintenance
+    - PRIVATE_BUILDINGS: Private buildings oversight
+    - INFRASTRUCTURES: Road, bridges and general infrastructures
+    - GREENSPACES_AND_ANIMAL_PROTECTION: Parks, green areas and animal protection
+    - WASTE_MANAGEMENT: Waste collection and management
+    - ROAD_MAINTENANCE: Road maintenance
+    - CIVIL_PROTECTION: Civil protection and emergency coordination
   version: 1.1.0
   contact:
     name: Municipality of Turin
@@ -261,7 +272,7 @@ paths:
               lastName: Verdi
               email: giuseppe.verdi@comune.torino.it
               password: AdminPass123!
-              role: PUBLIC_RELATIONS
+              role: LOCAL_PUBLIC_SERVICES
       responses:
         "201":
           description: Municipality user created successfully
@@ -349,7 +360,7 @@ paths:
                   firstName: "Giuseppe"
                   lastName: "Verdi"
                   email: "giuseppe.verdi@comune.torino.it"
-                  role: "PUBLIC_RELATIONS"
+                  role: "LOCAL_PUBLIC_SERVICES"
                 - id: 456
                   firstName: "Maria"
                   lastName: "Rossi"
@@ -359,7 +370,7 @@ paths:
                   firstName: "Franco"
                   lastName: "Bianchi"
                   email: "franco.bianchi@comune.torino.it"
-                  role: "TECHNICAL_OFFICE"
+                  role: "ROAD_MAINTENANCE"
         "401":
           description: Not authenticated
           content:
@@ -560,8 +571,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/MunicipalityRole"
               example:
+                - ADMINISTRATOR
                 - PUBLIC_RELATIONS
-                - TECHNICAL_OFFICE
+                - CULTURE_EVENTS_TOURISM_SPORTS
+                - LOCAL_PUBLIC_SERVICES
+                - EDUCATION_SERVICES
+                - PUBLIC_RESIDENTIAL_HOUSING
+                - INFORMATION_SYSTEMS
+                - MUNICIPAL_BUILDING_MAINTENANCE
+                - PRIVATE_BUILDINGS
+                - INFRASTRUCTURES
+                - GREENSPACES_AND_ANIMAL_PROTECTION
+                - WASTE_MANAGEMENT
+                - ROAD_MAINTENANCE
+                - CIVIL_PROTECTION
+
         "401":
           description: Not authenticated
           content:
@@ -666,7 +690,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 code: 400
-                error: "Bad Request"
+                error: "BadRequest"
                 message: "Missing required fields"
         "401":
           description: Not authenticated
@@ -716,7 +740,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
                 code: 500
-                error: "Internal Server Error"
+                error: "InternalServerError"
                 message: "Unable to create report"
 
     get:
@@ -787,6 +811,10 @@ paths:
                       content: "Initial report created by user"
                       createdAt: "2025-11-11T10:12:34Z"
                       senderId: 201
+                    - id: 2
+                      content: "Report approved by public relations officer"
+                      createdAt: "2025-11-11T11:15:00Z"
+                      senderId: 123
                   rejectedReason: null
                   photos:
                     - id: 301
@@ -849,7 +877,8 @@ paths:
         - Reports
       summary: Get reports pending approval
       description: |
-        Retrieve all reports with status PENDING_APPROVAL for review by public relations officers.
+        Retrieve all reports with status PENDING for review by public relations officers.
+        This is a specialized endpoint for PUBLIC_RELATIONS staff to review and process citizen reports.
         Only public relations officers can access this endpoint.
       operationId: getPendingReports
       security:
@@ -1471,8 +1500,7 @@ components:
         user:
           allOf:
             - $ref: "#/components/schemas/UserInfo"
-          description: User information (only present when authenticated is true)
-          nullable: true
+          description: User information
 
     UserInfo:
       type: object
@@ -1582,22 +1610,44 @@ components:
       type: string
       description: |
         A canonical list of roles that can be assigned to municipality users. Allowed values correspond to the
-        three supported role types for municipality staff.
+        roles defined for internal municipality staff in the database schema.
       enum:
-        - PUBLIC_RELATIONS
         - ADMINISTRATOR
-        - TECHNICAL_OFFICE
+        - PUBLIC_RELATIONS
+        - CULTURE_EVENTS_TOURISM_SPORTS
+        - LOCAL_PUBLIC_SERVICES
+        - EDUCATION_SERVICES
+        - PUBLIC_RESIDENTIAL_HOUSING
+        - INFORMATION_SYSTEMS
+        - MUNICIPAL_BUILDING_MAINTENANCE
+        - PRIVATE_BUILDINGS
+        - INFRASTRUCTURES
+        - GREENSPACES_AND_ANIMAL_PROTECTION
+        - WASTE_MANAGEMENT
+        - ROAD_MAINTENANCE
+        - CIVIL_PROTECTION
 
     UserRole:
       type: string
       description: |
         All possible user roles in the system, including citizens and municipality staff.
-        Used for authentication and session management.
+        Used for authentication and session management. Values mirror the `Role` enum in the Prisma schema.
       enum:
         - CITIZEN
-        - PUBLIC_RELATIONS
         - ADMINISTRATOR
-        - TECHNICAL_OFFICE
+        - PUBLIC_RELATIONS
+        - CULTURE_EVENTS_TOURISM_SPORTS
+        - LOCAL_PUBLIC_SERVICES
+        - EDUCATION_SERVICES
+        - PUBLIC_RESIDENTIAL_HOUSING
+        - INFORMATION_SYSTEMS
+        - MUNICIPAL_BUILDING_MAINTENANCE
+        - PRIVATE_BUILDINGS
+        - INFRASTRUCTURES
+        - GREENSPACES_AND_ANIMAL_PROTECTION
+        - WASTE_MANAGEMENT
+        - ROAD_MAINTENANCE
+        - CIVIL_PROTECTION
       example: CITIZEN
 
     AssignRoleRequest:
@@ -1609,19 +1659,15 @@ components:
           $ref: "#/components/schemas/MunicipalityRole"
       description: Payload to assign or update a municipality user's role
 
-    Location:
-      type: object
-      properties:
-        latitude:
-          type: number
-          format: double
-          description: Latitude in decimal degrees (WGS84)
-          example: 45.070339
-        longitude:
-          type: number
-          format: double
-          description: Longitude in decimal degrees (WGS84)
-          example: 7.686864
+    Latitude:
+      type: number
+      description: Latitude in decimal degrees (WGS84)
+      example: 45.070339
+
+    Longitude:
+      type: number
+      description: Longitude in decimal degrees (WGS84)
+      example: 7.686864
 
     ReportRequest:
       type: object
@@ -1644,9 +1690,9 @@ components:
         category:
           $ref: "#/components/schemas/ReportCategory"
         latitude:
-          $ref: "#/components/schemas/Location/properties/latitude"
+          $ref: "#/components/schemas/Latitude"
         longitude:
-          $ref: "#/components/schemas/Location/properties/longitude"
+          $ref: "#/components/schemas/Longitude"
         address:
           type: string
           nullable: true
@@ -1672,9 +1718,9 @@ components:
           type: string
           example: "Pothole on Via Roma"
         latitude:
-          $ref: "#/components/schemas/Location/properties/latitude"
+          $ref: "#/components/schemas/Latitude"
         longitude:
-          $ref: "#/components/schemas/Location/properties/longitude"
+          $ref: "#/components/schemas/Longitude"
         category:
           $ref: "#/components/schemas/ReportCategory"
         status:
@@ -1730,9 +1776,9 @@ components:
         category:
           $ref: "#/components/schemas/ReportCategory"
         latitude:
-          $ref: "#/components/schemas/Location/properties/latitude"
+          $ref: "#/components/schemas/Latitude"
         longitude:
-          $ref: "#/components/schemas/Location/properties/longitude"
+          $ref: "#/components/schemas/Longitude"
         status:
           $ref: "#/components/schemas/ReportStatus"
         user:
@@ -1780,6 +1826,7 @@ components:
         - REJECTED
         - RESOLVED
       example: PENDING_APPROVAL
+    
     ReportCategory:
       type: string
       description: Category of the reported problem

@@ -11,7 +11,7 @@ import { Roles } from "../../../src/interfaces/UserDTO";
 var mockPrisma: any;
 
 // Mock PrismaClient
-jest.mock("../../../prisma/generated/client", () => {
+jest.mock("@prisma/client", () => {
   mockPrisma = {
     user: {
       findUnique: jest.fn(),
@@ -28,6 +28,17 @@ jest.mock("../../../prisma/generated/client", () => {
 
 describe("userService", () => {
   beforeEach(() => {
+    if (!mockPrisma) {
+      mockPrisma = {
+        user: {
+          findUnique: jest.fn(),
+          create: jest.fn(),
+          update: jest.fn(),
+          delete: jest.fn(),
+          findMany: jest.fn(),
+        },
+      };
+    }
     jest.clearAllMocks();
   });
 
@@ -259,7 +270,10 @@ describe("userService", () => {
       const updateData = {
         email_notifications_enabled: false,
       };
-      const mockUpdatedUser = { id: 1, email_notifications_enabled: false } as any;
+      const mockUpdatedUser = {
+        id: 1,
+        email_notifications_enabled: false,
+      } as any;
       mockPrisma.user.update.mockResolvedValue(mockUpdatedUser);
 
       await updateUser(1, updateData);
@@ -332,7 +346,10 @@ describe("userService", () => {
       ] as any;
       mockPrisma.user.findMany.mockResolvedValue(mockUsers);
 
-      const result = await findUsersByRoles([Roles.ADMINISTRATOR, Roles.PUBLIC_RELATIONS]);
+      const result = await findUsersByRoles([
+        Roles.ADMINISTRATOR,
+        Roles.PUBLIC_RELATIONS,
+      ]);
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
         where: {
@@ -359,7 +376,9 @@ describe("userService", () => {
     it("should return empty array when no users found", async () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
 
-      const result = await findUsersByRoles([Roles.TECHNICAL_OFFICE]);
+      const result = await findUsersByRoles([
+        Roles.MUNICIPAL_BUILDING_MAINTENANCE,
+      ]);
 
       expect(result).toEqual([]);
     });

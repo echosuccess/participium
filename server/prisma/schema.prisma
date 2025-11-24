@@ -2,12 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "./generated"
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -27,9 +27,20 @@ model User {
 
 enum Role {
   CITIZEN
-  PUBLIC_RELATIONS
   ADMINISTRATOR
-  TECHNICAL_OFFICE
+  PUBLIC_RELATIONS
+  CULTURE_EVENTS_TOURISM_SPORTS
+  LOCAL_PUBLIC_SERVICES
+  EDUCATION_SERVICES
+  PUBLIC_RESIDENTIAL_HOUSING
+  INFORMATION_SYSTEMS
+  MUNICIPAL_BUILDING_MAINTENANCE
+  PRIVATE_BUILDINGS
+  INFRASTRUCTURES
+  GREENSPACES_AND_ANIMAL_PROTECTION
+  WASTE_MANAGEMENT
+  ROAD_MAINTENANCE
+  CIVIL_PROTECTION
 }
 
 model Report {
@@ -39,6 +50,7 @@ model Report {
   category      ReportCategory 
   latitude      Float
   longitude     Float
+  address       String?
   isAnonymous   Boolean @default(false)
   status        ReportStatus @default(PENDING_APPROVAL)
   user          User     @relation(fields: [userId], references: [id])
