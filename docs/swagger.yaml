@@ -1928,7 +1928,6 @@ components:
         assignedOfficer:
           allOf:
             - $ref: "#/components/schemas/MunicipalityUserResponse"
-          nullable: true
           description: Details of the assigned officer (null if not assigned)
         messages:
           type: array
