@@ -61,8 +61,28 @@ export async function updateCitizenProfile(req: Request, res: Response): Promise
   const user = req.user as { id: number };
   const { firstName, lastName, email, password, telegramUsername, emailNotificationsEnabled } = req.body as CitizenConfigRequestDTO;
 
+  // Almeno un campo deve essere presente
+  if (
+    firstName === undefined &&
+    lastName === undefined &&
+    email === undefined &&
+    password === undefined &&
+    telegramUsername === undefined &&
+    emailNotificationsEnabled === undefined
+  ) {
+    throw new BadRequestError('At least one field must be provided');
+  }
+
   let hashedPassword: string | undefined;
   let salt: string | undefined;
+
+  // Se l'utente vuole cambiare email, controlla che non sia già usata da un altro
+  if (email) {
+    const existing = await findByEmail(email);
+    if (existing && existing.id !== user.id) {
+      throw new ConflictError('Email already in use');
+    }
+  }
 
   if (password) {
     const hashed = await hashPassword(password);
@@ -132,27 +152,24 @@ export async function uploadCitizenPhoto(req: Request, res: Response): Promise<v
     },
   };
 
-  res.status(200).json(response);
+  res.status(201).json(response);
 }
 
 export async function deleteCitizenPhoto(req: Request, res: Response): Promise<void> {
   const user = req.user as { id: number };
 
-  // Get photo info to delete from MinIO
   const photo = await getCitizenPhoto(user.id);
   if (!photo) {
     throw new NotFoundError('Photo not found');
   }
 
-  // Delete from MinIO
   try {
     await minioClient.removeObject(BUCKET_NAME, photo.filename);
   } catch (error) {
     console.error('Failed to delete photo from MinIO:', error);
   }
 
-  // Delete from database
   await deleteCitizenPhotoService(user.id);
 
-  res.status(200).json({ message: 'Photo deleted successfully' });
+  res.status(204).send();
 }

@@ -272,12 +272,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 500
+                error: "InternalServerError"
+                message: "An unexpected error occurred"
 
     patch:
       tags:
         - Citizens
       summary: Update citizen profile configuration
-      description: Update name, surname, email, password, Telegram username and email notification preference.
+      description: Update name, surname, email, password, Telegram username and email notification preference. At least one field must be provided.
       operationId: updateCitizenConfig
       security:
         - SessionAuth: []
@@ -288,12 +302,7 @@ paths:
             schema:
               $ref: "#/components/schemas/CitizenConfigRequest"
             example:
-              firstName: "Mario"
-              lastName: "Rossi"
               email: "mario.updated@example.com"
-              password: "NewSecurePass123!"
-              telegramUsername: "mario_rossi"
-              emailNotificationsEnabled: true
       responses:
         "200":
           description: Configuration updated successfully
@@ -307,18 +316,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 400
+                error: "BadRequest"
+                message: "At least one field must be provided"
         "401":
           description: Not authenticated
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "409":
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 409
+                error: "Conflict"
+                message: "Email already in use"
         "422":
           description: Validation error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 422
+                error: "UnprocessableEntity"
+                message: "Invalid email format"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 500
+                error: "InternalServerError"
+                message: "An unexpected error occurred"
 
   /citizen/me/photo:
     post:
@@ -355,19 +396,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 400
+                error: "BadRequest"
+                message: "Photo file is required"
         "413":
           description: File too large
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 413
+                error: "PayloadTooLarge"
+                message: "Photo file exceeds the maximum allowed size"
         "401":
           description: Not authenticated
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 500
+                error: "InternalServerError"
+                message: "An unexpected error occurred"
     delete:
       tags:
         - Citizens
@@ -385,12 +447,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
         "404":
           description: Photo not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                error: "NotFound"
+                message: "Photo not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 500
+                error: "InternalServerError"
+                message: "An unexpected error occurred"
 
   /admin/municipality-users:
     post:
@@ -2092,25 +2172,27 @@ components:
       properties:
         firstName:
           type: string
-          minLength: 1
+          minLength: 0
           maxLength: 50
           description: Citizen's first name
           example: Mario
         lastName:
           type: string
-          minLength: 1
+          minLength: 0
           maxLength: 50
           description: Citizen's last name
           example: Rossi
         email:
           type: string
+          nullable: true
           format: email
           maxLength: 100
           description: New email address (must be unique)
           example: mario.updated@example.com
+
         password:
           type: string
-          minLength: 8
+          minLength: 0
           maxLength: 100
           format: password
           description: New password (minimum 8 characters)
@@ -2118,7 +2200,7 @@ components:
         telegramUsername:
           type: string
           nullable: true
-          minLength: 1
+          minLength: 0
           maxLength: 32
           description: Telegram username (without @)
           example: mario_rossi
@@ -2177,4 +2259,6 @@ components:
           description: Mandatory explanation for why the report is being rejected
           example: "The reported issue does not fall under municipal jurisdiction"
 
-
+# Security requirements for protected endpoints
+security:
+  - SessionAuth: []
