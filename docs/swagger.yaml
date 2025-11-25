@@ -1660,12 +1660,12 @@ components:
       description: Payload to assign or update a municipality user's role
 
     Latitude:
-      type: number
+      type: string
       description: Latitude in decimal degrees (WGS84)
       example: 45.070339
 
     Longitude:
-      type: number
+      type: string
       description: Longitude in decimal degrees (WGS84)
       example: 7.686864
 
@@ -1786,7 +1786,6 @@ components:
         assignedOfficer:
           allOf:
             - $ref: "#/components/schemas/MunicipalityUserResponse"
-          nullable: true
           description: Details of the assigned officer (null if not assigned)
         messages:
           type: array
