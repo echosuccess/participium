@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
-import multer from "multer";
 import path from "path";
-import multer from "multer";
 import { 
   createReport as createReportService, 
   getApprovedReports as getApprovedReportsService,
@@ -29,8 +27,6 @@ export async function createReport(req: Request, res: Response): Promise<void> {
   } = req.body;
 
         const user = req.user as { id: number };
-        const { title, description, category, latitude, longitude, isAnonymous } = req.body;
-        const photos = req.files as Express.Multer.File[];
 
         // Validate required fields
         if (
@@ -114,8 +110,6 @@ export async function createReport(req: Request, res: Response): Promise<void> {
           photos: photoData,
           userId: user.id,
         };
-
-        const newReport = await createReportService(reportData);
 
   const newReport = await createReportService(reportData);
 
