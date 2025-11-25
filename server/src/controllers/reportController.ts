@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import path from "path";
-import multer from "multer";
 import { 
   createReport as createReportService, 
   getApprovedReports as getApprovedReportsService,
@@ -17,8 +16,6 @@ import { asyncHandler } from "../middlewares/errorMiddleware";
 
 export async function createReport(req: Request, res: Response): Promise<void> {
         const user = req.user as { id: number };
-        const { title, description, category, latitude, longitude, isAnonymous } = req.body;
-        const photos = req.files as Express.Multer.File[];
 
         // Validate required fields
         if (
@@ -170,9 +167,9 @@ export async function rejectReport(req: Request, res: Response): Promise<void> {
     throw new BadRequestError("Invalid report ID parameter");
   }
 
-  if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
-    throw new BadRequestError("Missing rejection reason");
-  }
+    if (!reason || typeof reason !== "string" || reason.trim().length === 0) {
+      throw new BadRequestError("Missing rejection reason");
+    }
 
   const updatedReport = await rejectReportService(reportId, user.id, reason);
   res.status(200).json({
