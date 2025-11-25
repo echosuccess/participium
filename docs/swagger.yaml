@@ -2177,6 +2177,4 @@ components:
           description: Mandatory explanation for why the report is being rejected
           example: "The reported issue does not fall under municipal jurisdiction"
 
-# Security requirements for protected endpoints
-security:
-  - SessionAuth: []
+

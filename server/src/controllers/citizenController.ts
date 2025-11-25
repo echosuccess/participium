@@ -1,8 +1,18 @@
 import { Request, Response } from 'express';
+import path from 'path';
 import { createUser, findByEmail } from '../services/userService';
 import { hashPassword } from '../services/passwordService';
 import { toUserDTO, Role, isValidRole } from '../interfaces/UserDTO';
-import { BadRequestError, ConflictError } from '../utils';
+import { BadRequestError, ConflictError, NotFoundError } from '../utils';
+import {
+  getCitizenById,
+  updateCitizenProfile as updateCitizenProfileService,
+  uploadCitizenPhoto as uploadCitizenPhotoService,
+  deleteCitizenPhoto as deleteCitizenPhotoService,
+  getCitizenPhoto,
+} from '../services/citizenService';
+import minioClient, { BUCKET_NAME } from '../utils/minioClient';
+import type { CitizenConfigRequestDTO, PhotoUploadResponseDTO } from '../interfaces/CitizenDTO';
 
 export function signup(role: Role) {
   return async function (req: Request, res: Response): Promise<void> {
@@ -39,4 +49,110 @@ export function signup(role: Role) {
 
     res.status(201).json(toUserDTO(created));
   };
+}
+
+export async function getCitizenProfile(req: Request, res: Response): Promise<void> {
+  const user = req.user as { id: number };
+  const profile = await getCitizenById(user.id);
+  res.status(200).json(profile);
+}
+
+export async function updateCitizenProfile(req: Request, res: Response): Promise<void> {
+  const user = req.user as { id: number };
+  const { firstName, lastName, email, password, telegramUsername, emailNotificationsEnabled } = req.body as CitizenConfigRequestDTO;
+
+  let hashedPassword: string | undefined;
+  let salt: string | undefined;
+
+  if (password) {
+    const hashed = await hashPassword(password);
+    hashedPassword = hashed.hashedPassword;
+    salt = hashed.salt;
+  }
+
+  const updatedProfile = await updateCitizenProfileService(user.id, {
+    firstName,
+    lastName,
+    email,
+    password: hashedPassword,
+    salt,
+    telegramUsername,
+    emailNotificationsEnabled,
+  });
+
+  res.status(200).json(updatedProfile);
+}
+
+export async function uploadCitizenPhoto(req: Request, res: Response): Promise<void> {
+  const user = req.user as { id: number };
+  const photos = req.files as Express.Multer.File[];
+
+  if (!photos || photos.length === 0) {
+    throw new BadRequestError('Photo file is required');
+  }
+
+  if (photos.length > 1) {
+    throw new BadRequestError('Only one photo allowed');
+  }
+
+  const photo = photos[0];
+
+  // Delete old photo from MinIO if exists
+  const existingPhoto = await getCitizenPhoto(user.id);
+  if (existingPhoto) {
+    try {
+      await minioClient.removeObject(BUCKET_NAME, existingPhoto.filename);
+    } catch (error) {
+      console.error('Failed to delete old photo from MinIO:', error);
+    }
+  }
+
+  // Upload new photo to MinIO
+  const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+  const filename = `citizen-${user.id}-${uniqueSuffix}${path.extname(photo.originalname)}`;
+
+  await minioClient.putObject(BUCKET_NAME, filename, photo.buffer, photo.size, {
+    'Content-Type': photo.mimetype,
+  });
+
+  const protocol = process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http';
+  const host = process.env.MINIO_ENDPOINT || 'localhost';
+  const port = process.env.MINIO_PORT ? `:${process.env.MINIO_PORT}` : '';
+  const url = `${protocol}://${host}${port}/${BUCKET_NAME}/${filename}`;
+
+  // Save to database
+  const savedPhoto = await uploadCitizenPhotoService(user.id, url, filename);
+
+  const response: PhotoUploadResponseDTO = {
+    message: 'Photo uploaded successfully',
+    photo: {
+      id: 0,
+      url: savedPhoto.url,
+      filename: savedPhoto.filename,
+    },
+  };
+
+  res.status(200).json(response);
+}
+
+export async function deleteCitizenPhoto(req: Request, res: Response): Promise<void> {
+  const user = req.user as { id: number };
+
+  // Get photo info to delete from MinIO
+  const photo = await getCitizenPhoto(user.id);
+  if (!photo) {
+    throw new NotFoundError('Photo not found');
+  }
+
+  // Delete from MinIO
+  try {
+    await minioClient.removeObject(BUCKET_NAME, photo.filename);
+  } catch (error) {
+    console.error('Failed to delete photo from MinIO:', error);
+  }
+
+  // Delete from database
+  await deleteCitizenPhotoService(user.id);
+
+  res.status(200).json({ message: 'Photo deleted successfully' });
 }
