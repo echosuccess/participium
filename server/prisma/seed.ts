@@ -42,33 +42,9 @@ async function main() {
     }
   }
   // Delete photos (they reference reports)
-  if (await tableExists('ReportPhoto')) {
-    if ((prisma as any).reportPhoto?.deleteMany) {
-      await prisma.reportPhoto.deleteMany();
-    } else {
-      await prisma.$executeRawUnsafe('DELETE FROM "ReportPhoto";');
-    }
-  }
-  // Delete citizen photos (they reference users). Attempt to use the
-  // generated Prisma client if the model exists; otherwise fall back to
-  // a raw SQL DELETE. This handles the case where the database still
-  // contains a `CitizenPhoto` table from a previous run but the current
-  // Prisma schema does not include the model (so `prisma.citizenPhoto`
-  // would be undefined). We swallow errors if the table does not exist.
-  try {
-    if (await tableExists('CitizenPhoto')) {
-      if ((prisma as any).citizenPhoto?.deleteMany) {
-        await (prisma as any).citizenPhoto.deleteMany();
-      } else {
-        // Table name inferred from previous schema; use quoted identifier.
-        await prisma.$executeRawUnsafe('DELETE FROM "CitizenPhoto";');
-      }
-    }
-  } catch (err) {
-    // Ignore errors (table may not exist) but log for visibility.
-    // eslint-disable-next-line no-console
-    console.warn('seed: could not delete CitizenPhoto rows (may not exist):', (err as any)?.message || err);
-  }
+  await prisma.reportPhoto.deleteMany();
+  // Delete citizen photos (they reference users)
+  await prisma.citizenPhoto.deleteMany();
   // Delete reports (they reference users)
   if (await tableExists('Report')) {
     if ((prisma as any).report?.deleteMany) {
@@ -355,22 +331,26 @@ async function main() {
     }
 
     if (status === "REJECTED") {
-      // Only include the field in the create payload if the DB column matches
-      // the current Prisma schema name. Otherwise we'll set it via a raw
-      // UPDATE after the record is created.
-      const reasonText = "Segnalazione non pertinente al patrimonio comunale.";
-      if (rejectionColumn === 'rejectionReason') {
-        reportData.rejectionReason = reasonText;
-      } else {
-        // set temporary property so we can update after creation
-        (reportData as any).__rejectionReasonForRawUpdate = reasonText;
-      }
+      reportData.rejectedReason =
+        "Segnalazione non pertinente al patrimonio comunale.";
     }
 
     const createdReport = await prisma.report.create({ data: reportData });
     console.log(
       `📝 Created report id=${createdReport.id} status=${status} category=${category}`
     );
+
+    // Log assignment info if present
+    if (reportData.assignedToId) {
+      const assignedUser = createdUsers.find(
+        (u) => u.id === reportData.assignedToId
+      );
+      if (assignedUser) {
+        console.log(
+          `   → Assigned to: ${assignedUser.email} (${assignedUser.role})`
+        );
+      }
+    }
 
     // add 1-3 realistic photo placeholders for the report (vary per report)
     const numPhotos = (i % 3) + 1; // 1,2,3 repeating

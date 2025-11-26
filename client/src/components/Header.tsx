@@ -70,6 +70,17 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
     color: "rgba(255, 255, 255, 0.95)",
   };
 
+  function normalizeMinioUrl(url?: string | null) {
+    if (!url) return null;
+    try {
+      if (url.includes('://minio')) return url.replace('://minio', '://localhost');
+      if (url.includes('minio:')) return url.replace('minio:', 'localhost:');
+    } catch (e) {
+      // ignore
+    }
+    return url;
+  }
+
   const userNameStyle = {
     fontWeight: 600,
     fontSize: "0.95rem",
@@ -126,17 +137,14 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
           {/* User info visible always on desktop and mobile, outside the burger */}
           {isAuthenticated && user && !showBackToHome && (
             <div className="d-flex align-items-center gap-2 d-lg-none">
-              <div className="d-flex align-items-center gap-2">
-                <div
-                  style={{
-                    ...userAvatarStyle,
-                    fontSize: "1.5rem",
-                    width: "32px",
-                    height: "32px",
-                  }}
-                >
-                  <PersonCircle />
-                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <div style={{...userAvatarStyle, fontSize: '1.5rem', width: '32px', height: '32px'}}>
+                    {(() => {
+                      const photoRaw = ((user as any)?.photoUrl || (user as any)?.photo) as string | null | undefined;
+                      const photo = normalizeMinioUrl(photoRaw) ?? undefined;
+                      return photo ? (<Image src={photo} roundedCircle width={32} height={32} alt="avatar" />) : (<PersonCircle />);
+                    })()}
+                  </div>
                 <div className="d-flex flex-column">
                   <div style={{ ...userNameStyle, fontSize: "0.85rem" }}>
                     {user.firstName}
@@ -146,6 +154,16 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
                   </div>
                 </div>
               </div>
+              {user.role === 'CITIZEN' && (
+                <button
+                  onClick={() => navigate('/me')}
+                  className="border-0 bg-transparent d-flex align-items-center justify-content-center"
+                  style={{ color: 'white', fontSize: '1.25rem', padding: '0.25rem', cursor: 'pointer' }}
+                  aria-label="Account settings"
+                >
+                  <GearFill />
+                </button>
+              )}
             </div>
           )}
 
@@ -224,13 +242,27 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
                   )}
                   <div className="d-flex align-items-center gap-2">
                     <div style={userAvatarStyle}>
-                      <PersonCircle />
+                      {(() => {
+                        const photoRaw = ((user as any)?.photoUrl || (user as any)?.photo) as string | null | undefined;
+                        const photo = normalizeMinioUrl(photoRaw) ?? undefined;
+                        return photo ? (<Image src={photo} roundedCircle width={40} height={40} alt="avatar" />) : (<PersonCircle />);
+                      })()}
                     </div>
                     <div className="d-flex flex-column">
                       <div style={userNameStyle}>{user.firstName}</div>
                       <div style={userSurnameStyle}>{user.lastName}</div>
                     </div>
                   </div>
+                  {user.role === 'CITIZEN' && (
+                    <button
+                      onClick={() => navigate('/me')}
+                      className="border-0 bg-transparent d-flex align-items-center justify-content-center"
+                      style={{ color: 'white', fontSize: '1.25rem', padding: '0.25rem', marginLeft: '0.5rem', cursor: 'pointer' }}
+                      aria-label="Account settings"
+                    >
+                      <GearFill />
+                    </button>
+                  )}
                 </div>
                 {/* Chat button for CITIZEN */}
                 {user.role === "CITIZEN" && (
