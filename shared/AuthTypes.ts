@@ -11,6 +11,8 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  // Optional helper used in the client to refresh the cached user
+  refreshUser?: () => Promise<void>;
 }
 
 export interface AuthResponse {

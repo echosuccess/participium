@@ -40,6 +40,45 @@ export default function TechDashboard() {
     }
   };
 
+  // Merge updated report into current list so it remains visible after status changes
+  const handleStatusUpdated = async (updatedReport?: any) => {
+    if (!updatedReport) {
+      // fallback to full refresh
+      await fetchAssigned();
+      return;
+    }
+    try {
+      setLoading(true);
+      // normalize coordinates
+      const normalized = {
+        ...updatedReport,
+        latitude: Number((updatedReport as any).latitude),
+        longitude: Number((updatedReport as any).longitude),
+      } as AppReport;
+
+      // If the updated report is still assigned to this user, ensure it's present/updated
+      if ((normalized as any).assignedToId === (user as any)?.id) {
+        setReports((prev) => {
+          const exists = prev.find((r) => r.id === normalized.id);
+          if (exists) {
+            return prev.map((r) => (r.id === normalized.id ? normalized : r));
+          }
+          // add to the top so technician sees it immediately
+          return [normalized, ...(prev || [])];
+        });
+      } else {
+        // otherwise remove it from the list
+        setReports((prev) => (prev || []).filter((r) => r.id !== normalized.id));
+      }
+    } catch (err) {
+      console.error('Failed to merge updated report', err);
+      // On error, fallback to a full refresh
+      await fetchAssigned();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) return <div className="loading-container"><LoadingSpinner /></div>;
 
   return (
@@ -59,8 +98,8 @@ export default function TechDashboard() {
       ) : (
         <Row>
           {reports.map((report) => (
-            <Col key={report.id} lg={6} xl={4} className="mb-4">
-              <ReportCard report={report} />
+              <Col key={report.id} lg={6} xl={4} className="mb-4">
+              <ReportCard report={report} onStatusUpdated={handleStatusUpdated} />
             </Col>
           ))}
         </Row>

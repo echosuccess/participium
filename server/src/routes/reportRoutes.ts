@@ -11,7 +11,8 @@ import {
   getAssignableTechnicals,
   updateReportStatus,
   sendReportMessage,
-  getReportMessages
+  getReportMessages,
+  getAssignedReports
 } from '../controllers/reportController';
 import { upload } from '../middlewares/uploadsMiddleware';
 import { ApiValidationMiddleware } from '../middlewares/validationMiddlewere';
@@ -31,8 +32,7 @@ router.post(
 router.get("/", ApiValidationMiddleware, asyncHandler(getReports));
 
 // GET /api/reports/assigned - Get reports assigned to the authenticated technical officer
-import { getAssignedReports } from "../controllers/reportController";
-router.get("/assigned", asyncHandler(getAssignedReports));
+router.get("/assigned", requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(getAssignedReports));
 
 // GET /api/reports/pending - Get pending reports for review
 router.get("/pending", requirePublicRelations, asyncHandler(getPendingReports));

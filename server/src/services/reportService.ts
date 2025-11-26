@@ -1,3 +1,9 @@
+import { prisma } from "../utils/prismaClient";
+import { ReportDTO, toReportDTO, ReportMessageDTO } from "../interfaces/ReportDTO";
+import { ReportPhoto, ReportCategory, ReportStatus } from "../../../shared/ReportTypes";
+import { NotFoundError, BadRequestError, UnprocessableEntityError, ForbiddenError } from "../utils/errors";
+import { notifyReportStatusChange, notifyNewMessage, notifyReportAssigned, notifyReportApproved, notifyReportRejected } from "./notificationService";
+
 /**
  * Restituisce i report assegnati all'utente tecnico autenticato
  */
@@ -36,11 +42,6 @@ export async function getAssignedReportsService(
   });
   return reports.map(toReportDTO);
 }
-import { prisma } from "../utils/prismaClient";
-import { ReportDTO, toReportDTO, ReportMessageDTO } from "../interfaces/ReportDTO";
-import { ReportPhoto, ReportCategory, ReportStatus } from "../../../shared/ReportTypes";
-import { NotFoundError, BadRequestError, UnprocessableEntityError, ForbiddenError } from "../utils/errors";
-import { notifyReportStatusChange, notifyNewMessage, notifyReportAssigned, notifyReportApproved, notifyReportRejected } from "./notificationService";
 
 // =========================
 // ENUMS E MAPPATURA LOGICA
@@ -157,8 +158,8 @@ type CreateReportData = Omit<
   | "longitude"
 > & {
   // When creating a report, latitude/longitude are numbers coming from the client
-  latitude: string;
-  longitude: string;
+  latitude: number;
+  longitude: number;
   userId: number; // add userId to link report to user
   photos: ReportPhoto[];
   address?: string;
@@ -174,8 +175,10 @@ export async function createReport(data: CreateReportData) {
       title: data.title,
       description: data.description,
       category: data.category as ReportCategory,
-      latitude: data.latitude,
-      longitude: data.longitude,
+      // Cast to any to avoid generated Prisma client typing mismatch between string/number
+      // The controller already ensures coordinates are valid numbers.
+      latitude: data.latitude as any,
+      longitude: data.longitude as any,
       address: data.address || null,
       isAnonymous: data.isAnonymous,
       status: ReportStatus.PENDING_APPROVAL,
@@ -429,8 +432,8 @@ export async function updateReportStatus(
     (updatedReport as any).assignedTo = assigned ?? null;
   }
 
-  // Notify citizen about status change
-  await notifyReportStatusChange(report.id, report.userId, oldStatus, newStatus);
+  // Notify citizen about status change (include report title for context)
+  await notifyReportStatusChange(report.id, report.userId, oldStatus, newStatus, report.title);
 
   return toReportDTO(updatedReport as any);
 }

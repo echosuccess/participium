@@ -77,13 +77,21 @@ export async function notifyReportStatusChange(
   reportId: number,
   userId: number,
   oldStatus: string,
-  newStatus: string
+  newStatus: string,
+  reportTitle?: string,
+  reason?: string
 ): Promise<void> {
+  const title = "Report Status Updated";
+  let message = `Your report${reportTitle ? ` "${reportTitle}"` : ""} status has been changed from ${oldStatus} to ${newStatus}.`;
+  if (reason) {
+    message += ` Reason: ${reason}`;
+  }
+
   await createNotification(
     userId,
     NotificationType.REPORT_STATUS_CHANGED,
-    "Report Status Updated",
-    `Your report status has been changed from ${oldStatus} to ${newStatus}`,
+    title,
+    message,
     reportId
   );
 }

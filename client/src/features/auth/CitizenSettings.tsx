@@ -114,7 +114,7 @@ export default function CitizenSettings() {
         setPhotoPreview(normalized);
         setProfile((prev: any) => ({ ...(prev || {}), photo: normalized, photoUrl: normalized }));
         // refresh auth user so header picks up new photo immediately
-        try { await refreshUser(); } catch (e) { /* ignore */ }
+        try { if (refreshUser) await refreshUser(); } catch (e) { /* ignore */ }
       }
       setSuccessMessage('Profile photo uploaded successfully.');
     } catch (err) {
@@ -135,7 +135,7 @@ export default function CitizenSettings() {
       await api.deleteCitizenPhoto();
       setPhotoPreview(null);
       setSuccessMessage('Profile photo removed.');
-      try { await refreshUser(); } catch (e) { /* ignore */ }
+      try { if (refreshUser) await refreshUser(); } catch (e) { /* ignore */ }
     } catch (err) {
       console.error('Delete photo failed', err);
       setErrorMessage('Could not delete photo. Please try again.');
@@ -179,7 +179,7 @@ export default function CitizenSettings() {
         setProfile((prev: any) => ({ ...(prev || {}), firstName, lastName, email, telegramUsername, emailNotificationsEnabled }));
       }
       // refresh auth user so header reflects updates
-      try { await refreshUser(); } catch (e) { /* ignore */ }
+      try { if (refreshUser) await refreshUser(); } catch (e) { /* ignore */ }
       // exit edit mode
       setEditing(false);
       setNewPassword('');

@@ -8,6 +8,7 @@ interface ReportCardProps {
   report: Report;
   isSelected?: boolean;
   onClick?: () => void;
+  onStatusUpdated?: (updatedReport?: any) => void;
 }
 
 function statusVariant(status?: string) {
@@ -29,7 +30,7 @@ function statusVariant(status?: string) {
   }
 }
 
-export default function ReportCard({ report, isSelected = false, onClick }: ReportCardProps) {
+export default function ReportCard({ report, isSelected = false, onClick, onStatusUpdated }: ReportCardProps) {
   // Ensure status is uppercase to match backend enums
   const statusText = typeof report.status === 'string' ? report.status : String(report.status);
   const { user } = useAuth();
@@ -88,8 +89,8 @@ export default function ReportCard({ report, isSelected = false, onClick }: Repo
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>📍 <span style={{ fontFamily: 'monospace' }}>{report.latitude.toFixed(6)}, {report.longitude.toFixed(6)}</span></span>
           {/* Allow municipal users to update report status inline */}
           {user && TECHNICAL_ROLES.includes(user.role) && (
-            <div style={{ marginLeft: 'auto' }}>
-              <UpdateStatusForm reportId={report.id} />
+              <div style={{ marginLeft: 'auto' }}>
+              <UpdateStatusForm reportId={report.id} currentStatus={statusText} onSuccess={onStatusUpdated} />
             </div>
           )}
         </div>

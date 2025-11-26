@@ -7,12 +7,21 @@ import { TECHNICAL_ROLES } from '../utils/roles';
 
 type Props = {
   reportId: number;
+  currentStatus?: string;
+  // onSuccess may receive the updated report object so parents can merge it locally
+  onSuccess?: (updatedReport?: any) => void;
 };
 
-export default function UpdateStatusForm({ reportId }: Props) {
+export default function UpdateStatusForm({ reportId, currentStatus, onSuccess }: Props) {
   const { user } = useAuth();
   const [show, setShow] = useState(false);
-  const [status, setStatus] = useState<string>('IN_PROGRESS');
+  const [status, setStatus] = useState<string>(() => {
+    // choose a sensible default depending on current status
+    if (currentStatus === 'ASSIGNED') return 'IN_PROGRESS';
+    if (currentStatus === 'IN_PROGRESS') return 'SUSPENDED';
+    if (currentStatus === 'SUSPENDED') return 'RESOLVED';
+    return 'IN_PROGRESS';
+  });
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -26,9 +35,10 @@ export default function UpdateStatusForm({ reportId }: Props) {
   const handleSubmit = async () => {
     try {
       setBusy(true);
-      await updateReportStatus(reportId, status, status === 'REJECTED' ? reason : undefined);
-      // Refresh to reflect changes in lists; parent apps may replace this with a better refresh
-      window.location.reload();
+      const updated = await updateReportStatus(reportId, status, status === 'REJECTED' ? reason : undefined);
+      // let parent refresh/merge the updated report in-place if provided, otherwise fallback to full reload
+      if (onSuccess) onSuccess(updated);
+      else window.location.reload();
     } catch (err) {
       alert((err as any)?.message || 'Failed to update status');
     } finally {

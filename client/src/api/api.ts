@@ -205,20 +205,18 @@ export async function updateReportStatus(
   reportId: number,
   status: string,
   rejectionReason?: string
-): Promise<void> {
+): Promise<any> {
   const body = { status, rejectionReason };
-  
+
   const res = await fetch(`${API_PREFIX}/reports/${reportId}/status`, {
-    method: "PATCH", // or PUT depending on your backend
+    method: "PATCH",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.message || "Failed to update report status");
-  }
+  // The server returns { message, report }
+  const data = await handleResponse<any>(res);
+  return data && data.report ? data.report : data;
 }
 
 export async function rejectReport(reportId: number, reason: string): Promise<any> {
@@ -231,13 +229,6 @@ export async function rejectReport(reportId: number, reason: string): Promise<an
   return handleResponse<any>(res);
 }
 
-export async function getAssignedReports(): Promise<Report[]> {
-  const res = await fetch(`${API_PREFIX}/reports/assigned`, {
-    method: "GET",
-    credentials: "include",
-  });
-  return handleResponse<Report[]>(res);
-}
 
 export default {
   getSession,

@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { Navbar, Container, Nav, Button, Badge } from "react-bootstrap";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../hooks";
+import { Image } from "react-bootstrap";
+import { GearFill } from "react-bootstrap-icons";
 import { TECHNICAL_ROLES, getRoleLabel } from "../utils/roles";
 import { PersonCircle, ArrowLeft } from "react-bootstrap-icons";
 
