@@ -19,7 +19,8 @@ import { asyncHandler } from "../middlewares/errorMiddleware";
 
 export async function createReport(req: Request, res: Response): Promise<void> {
         const user = req.user as { id: number };
-
+        const { title, description, category, latitude, longitude, isAnonymous } = req.body;
+        const photos = req.files as Express.Multer.File[];
         // Validate required fields
         if (
           !title ||
