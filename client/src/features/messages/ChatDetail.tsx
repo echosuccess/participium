@@ -19,26 +19,62 @@ const ChatDetail: React.FC = () => {
     async function fetchData() {
       try {
         setLoading(true);
-        const [rawMsgs, reports] = await Promise.all([
-          getReportMessages(reportId),
-          getReports(),
-        ]);
-        // Patch: Map backend format to frontend expected format
-        const msgs = Array.isArray(rawMsgs)
-          ? rawMsgs.map((m: any) => ({
-              sender: m.sender || m.senderId || "System",
-              content: m.content,
-              timestamp:
-                m.timestamp || m.createdAt || new Date().toLocaleString(),
-            }))
+        const reports = await getReports();
+        const rep = Array.isArray(reports) ? reports.find((r: any) => r.id === reportId) : null;
+        setReport(rep);
+        // Usa i nuovi campi citizenId e technicianId
+        let rawMsgs: any[] = [];
+        try {
+          rawMsgs = await getReportMessages(reportId);
+          console.log("Raw messages response:", rawMsgs);
+        } catch (apiErr: any) {
+          console.error("API error fetching messages:", apiErr);
+          let backendMsg = "";
+          if (apiErr?.response && apiErr.response.data) {
+            backendMsg = typeof apiErr.response.data === "string"
+              ? apiErr.response.data
+              : apiErr.response.data.message || JSON.stringify(apiErr.response.data);
+          } else if (apiErr?.message) {
+            backendMsg = apiErr.message;
+          }
+          setError(`Server error: ${backendMsg || "invalid response format (API error)"}`);
+          setMessages([]);
+          setLoading(false);
+          return;
+        }
+        if (!Array.isArray(rawMsgs)) {
+          setError("Server error: invalid response format (not an array)");
+          setMessages([]);
+          setLoading(false);
+          return;
+        }
+        const msgs = rep
+          ? rawMsgs.map((m: any) => {
+              let sender = "System";
+              if (m.senderId) {
+                if (rep.citizenId && m.senderId === rep.citizenId) {
+                  sender = "Citizen";
+                } else if (rep.technicianId && m.senderId === rep.technicianId) {
+                  sender = "Technical Officer";
+                } else if (m.senderId === rep.id) {
+                  sender = "Citizen";
+                } else {
+                  sender = "Technical Officer";
+                }
+              }
+              return {
+                sender,
+                content: m.content,
+                timestamp: m.createdAt || m.timestamp || new Date().toLocaleString(),
+                isMine: false, // cannot check ownership without userId
+              };
+            })
           : [];
         setMessages(msgs);
-        const rep = reports.find((r: any) => r.id === reportId);
-        setReport(rep);
       } catch (err: any) {
-        // Patch: Handle non-JSON errors (e.g. HTML response)
-        if (err instanceof SyntaxError) {
-          setError("Server error: invalid response format");
+        console.error("ChatDetail fetchData error:", err);
+        if (err?.message?.includes('Unexpected token') || err instanceof SyntaxError) {
+          setError("Server error: invalid response format (JSON parse error)");
         } else {
           setError(err.message || "Failed to load chat");
         }
@@ -53,13 +89,13 @@ const ChatDetail: React.FC = () => {
     e.preventDefault();
     try {
       const newMsg = await sendReportMessage(reportId, input);
-      // Fallback per campi mancanti
       setMessages([
         ...messages,
         {
-          sender: newMsg.sender || "You",
+          sender: "Citizen", // Assume sender is always the logged-in user
           content: newMsg.content || input,
           timestamp: newMsg.timestamp || new Date().toLocaleString(),
+          isMine: true,
         },
       ]);
       setInput("");
@@ -110,21 +146,23 @@ const ChatDetail: React.FC = () => {
               const isAssignmentMsg =
                 typeof content === "string" &&
                 content.toLowerCase().includes("technical officer assigned");
+              // Stile diverso per messaggi del cittadino
+              const isMine = msg.isMine;
               return (
                 <div
                   key={idx}
                   style={{
                     marginBottom: "1.2em",
-                    background: isAssignmentMsg ? "#e9ecef" : undefined,
-                    borderRadius: isAssignmentMsg ? "8px" : undefined,
-                    padding: isAssignmentMsg ? "0.75em" : undefined,
+                    background: isMine ? "#d1e7dd" : isAssignmentMsg ? "#e9ecef" : undefined,
+                    borderRadius: "8px",
+                    padding: "0.75em",
+                    alignSelf: isMine ? "flex-end" : "flex-start",
                   }}
                 >
                   <div
                     style={{
                       fontWeight: "bold",
-                      color:
-                        sender === "Citizen" ? "var(--primary)" : "#482F1D",
+                      color: sender === "Citizen" ? "var(--primary)" : "#482F1D",
                     }}
                   >
                     {sender}
@@ -142,7 +180,7 @@ const ChatDetail: React.FC = () => {
             >
               <input
                 type="text"
-                placeholder="Type your message..."
+                placeholder={messages.length === 0 ? "Send your first message to the technical officer..." : "Type your message..."}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 style={{
@@ -154,7 +192,7 @@ const ChatDetail: React.FC = () => {
                 required
               />
               <Button type="submit" variant="primary">
-                Send
+                {messages.length === 0 ? "Send First Message" : "Send"}
               </Button>
             </form>
           </>

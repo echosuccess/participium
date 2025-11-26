@@ -47,10 +47,10 @@ router.post('/:reportId/reject', requirePublicRelations, ApiValidationMiddleware
 router.patch('/:reportId/status', requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(updateReportStatus));
 
 // POST /api/reports/:reportId/messages - Send message in report conversation (citizen or technical)
-router.post('/:reportId/messages', isLoggedIn, ApiValidationMiddleware, asyncHandler(sendReportMessage));
+router.post('/:reportId/messages', isLoggedIn, asyncHandler(sendReportMessage));
 
 // GET /api/reports/:reportId/messages - Get report conversation history
-router.get('/:reportId/messages', isLoggedIn, ApiValidationMiddleware, asyncHandler(getReportMessages));
+router.get('/:reportId/messages', isLoggedIn, asyncHandler(getReportMessages));
 
 // GET /api/reports/:reportId/assignable-technicals - list technicals valid for this report
 router.get(

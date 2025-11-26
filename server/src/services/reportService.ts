@@ -17,6 +17,7 @@ export async function getAssignedReportsService(
   const allowedStatuses = [
     ReportStatus.ASSIGNED,
     ReportStatus.IN_PROGRESS,
+    ReportStatus.SUSPENDED,
     ReportStatus.RESOLVED,
   ];
   let statusFilter: ReportStatus[] = allowedStatuses;
@@ -44,6 +45,18 @@ export async function getAssignedReportsService(
 }
 
 // =========================
+/**
+ * Invia un messaggio dal tecnico al cittadino quando lo stato del report viene aggiornato
+ */
+async function sendStatusUpdateMessage(reportId: number, technicalUserId: number, citizenUserId: number, newStatus: ReportStatus) {
+  await prisma.reportMessage.create({
+    data: {
+      reportId,
+      senderId: technicalUserId,
+      content: `The report status has been updated: new status is "${newStatus}"`,
+    },
+  });
+}
 // ENUMS E MAPPATURA LOGICA
 // =========================
 
@@ -175,10 +188,8 @@ export async function createReport(data: CreateReportData) {
       title: data.title,
       description: data.description,
       category: data.category as ReportCategory,
-      // Cast to any to avoid generated Prisma client typing mismatch between string/number
-      // The controller already ensures coordinates are valid numbers.
-      latitude: data.latitude as any,
-      longitude: data.longitude as any,
+      latitude: data.latitude.toString(),
+      longitude: data.longitude.toString(),
       address: data.address || null,
       isAnonymous: data.isAnonymous,
       status: ReportStatus.PENDING_APPROVAL,
@@ -410,9 +421,12 @@ export async function updateReportStatus(
 
   const oldStatus = report.status;
 
+  // Aggiorna lo stato
   const updatedReport = await prisma.report.update({
     where: { id: reportId },
-    data: { status: newStatus },
+    data: {
+      status: newStatus,
+    },
     include: {
       user: true,
       photos: true,
@@ -423,6 +437,9 @@ export async function updateReportStatus(
       },
     },
   });
+
+  // Invia il messaggio al cittadino
+  await sendStatusUpdateMessage(reportId, technicalUserId, report.userId, newStatus);
 
   // Carica separatamente l'utente assegnato (per evitare problemi di typing con Prisma client)
   if ((updatedReport as any).assignedToId) {

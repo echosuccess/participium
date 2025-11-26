@@ -53,6 +53,14 @@ async function main() {
       await prisma.$executeRawUnsafe('DELETE FROM "Report";');
     }
   }
+  // Delete notifications (they reference users)
+  if (await tableExists('Notification')) {
+    if ((prisma as any).notification?.deleteMany) {
+      await prisma.notification.deleteMany();
+    } else {
+      await prisma.$executeRawUnsafe('DELETE FROM "Notification";');
+    }
+  }
   // Now it's safe to delete users
   if (await tableExists('User')) {
     if ((prisma as any).user?.deleteMany) {
@@ -308,12 +316,13 @@ async function main() {
       preferredRole: "INFRASTRUCTURES",
     };
 
+
     const reportData: any = {
       title: sample.title,
       description: sample.description,
       category: category,
-      latitude: 45.0703 + i * 0.001,
-      longitude: 7.6869 + i * 0.001,
+      latitude: (45.0703 + i * 0.001).toString(),
+      longitude: (7.6869 + i * 0.001).toString(),
       address: `Via esempio ${100 + i}, Torino`,
       isAnonymous: false,
       status: status,
@@ -322,16 +331,14 @@ async function main() {
       updatedAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000),
     };
 
-    // assign a realistic technical when appropriate
-    if (status === "ASSIGNED" || status === "IN_PROGRESS") {
-      const preferredRole = sample.preferredRole;
-      const assignedUser =
-        createdUsers.find((u) => u.role === preferredRole) || tech;
-      if (assignedUser) reportData.assignedToId = assignedUser.id;
+    // Associa sempre il tecnico con email 'tech@participium.com' ai report del citizen
+    const techUser = createdUsers.find((u) => u.email === "tech@participium.com");
+    if (techUser) {
+      reportData.assignedToId = techUser.id;
     }
 
     if (status === "REJECTED") {
-      reportData.rejectedReason =
+      reportData.rejectionReason =
         "Segnalazione non pertinente al patrimonio comunale.";
     }
 
@@ -365,15 +372,16 @@ async function main() {
       });
     }
 
-    // add an initial citizen message and for some statuses an internal follow-up
+    // Add a clear citizen message for every report
     await prisma.reportMessage.create({
       data: {
-        content: `Report submitted: ${sample.description}`,
+        content: `Citizen message: ${sample.description}`,
         reportId: createdReport.id,
         senderId: citizen.id,
       },
     });
 
+    // For assigned/in-progress, add a technician message
     if (status === "ASSIGNED" || status === "IN_PROGRESS") {
       const assignedUser = createdUsers.find(
         (u) => u.id === (reportData.assignedToId as any)
@@ -381,7 +389,7 @@ async function main() {
       if (assignedUser) {
         await prisma.reportMessage.create({
           data: {
-            content: `Technician ${assignedUser.first_name} ${assignedUser.last_name} assigned to the case. On-site inspection started.`,
+            content: `Technician update: Inspection started by ${assignedUser.first_name} ${assignedUser.last_name}.`,
             reportId: createdReport.id,
             senderId: assignedUser.id,
           },
@@ -389,6 +397,7 @@ async function main() {
       }
     }
 
+    // For rejected, add a PR message with reason
     if (status === "REJECTED") {
       // If the DB uses the old `rejectedReason` column name, update it now.
       if (rejectionColumn === 'rejectedReason' && (reportData as any).__rejectionReasonForRawUpdate) {
@@ -397,14 +406,13 @@ async function main() {
         `;
       }
 
+      const prUser = createdUsers.find((u) => u.role === "PUBLIC_RELATIONS") || createdUsers[2];
       await prisma.reportMessage.create({
         data: {
           content:
-            "The report was rejected because it falls outside municipal responsibilities.",
+            "Public Relations: The report was rejected because it falls outside municipal responsibilities.",
           reportId: createdReport.id,
-          senderId:
-            createdUsers.find((u) => u.role === "PUBLIC_RELATIONS")?.id ||
-            createdUsers[2].id,
+          senderId: prUser.id,
         },
       });
     }

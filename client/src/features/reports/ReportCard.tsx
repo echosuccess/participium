@@ -87,8 +87,8 @@ export default function ReportCard({ report, isSelected = false, onClick, onStat
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: '#9ca3af', flexWrap: 'wrap', gap: '0.5rem' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>📍 <span style={{ fontFamily: 'monospace' }}>{report.latitude.toFixed(6)}, {report.longitude.toFixed(6)}</span></span>
-          {/* Allow municipal users to update report status inline */}
-          {user && TECHNICAL_ROLES.includes(user.role) && (
+          {/* Allow municipal users to update report status inline, but hide if RESOLVED */}
+          {user && TECHNICAL_ROLES.includes(user.role) && statusText !== 'RESOLVED' && (
               <div style={{ marginLeft: 'auto' }}>
               <UpdateStatusForm reportId={report.id} currentStatus={statusText} onSuccess={onStatusUpdated} />
             </div>

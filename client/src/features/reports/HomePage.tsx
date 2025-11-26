@@ -36,7 +36,7 @@ export default function HomePage() {
         const data = await getReportsApi();
         if (!mounted) return;
         // Ensure citizens see their own pending reports even if backend didn't include them
-        const approvedStatuses = ["ASSIGNED", "IN_PROGRESS", "RESOLVED"];
+        const approvedStatuses = ["ASSIGNED", "IN_PROGRESS", "SUSPENDED", "RESOLVED"];
         const visible = (data || []).filter((r: any) => {
           if (approvedStatuses.includes(r.status)) return true;
           if (isAuthenticated && user && r.user && r.user.email === user.email)

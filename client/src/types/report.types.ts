@@ -13,6 +13,8 @@ export interface Report {
   createdAt?: string;
   photos?: ReportPhoto[];
   isAnonymous?: boolean;
+  citizenId?: number;
+  technicianId?: number;
 }
 
 // Re-export shared report types
