@@ -5,16 +5,7 @@ import { createUserInDatabase } from "../helpers/testUtils";
 
 const app = createApp();
 
-/**
- * Story 3 E2E Tests - Municipality User Roles Management
- *
- * This test suite validates the complete workflow for managing different
- * municipality user roles (ADMINISTRATOR, PUBLIC_RELATIONS, MUNICIPAL_BUILDING_MAINTENANCE):
- * 1. Admin manages users with different roles
- * 2. Role-based access control validation
- * 3. Complete CRUD operations for each role
- */
-describe("Story 3 E2E - Municipality User Roles Management", () => {
+describe("Municipality User Roles Management", () => {
   beforeEach(async () => {
     await cleanDatabase();
   });
@@ -25,26 +16,33 @@ describe("Story 3 E2E - Municipality User Roles Management", () => {
 
   describe("Complete Role Management Workflow", () => {
     it("should manage municipality users across all three roles", async () => {
-      // Setup: Create administrator
+
+      // Step 1: Create administrator via API
       const adminEmail = `admin${Date.now()}@example.com`;
       const adminPassword = "AdminPass123!";
-
-      await createUserInDatabase({
-        email: adminEmail,
-        first_name: "Super",
-        last_name: "Admin",
-        password: adminPassword,
-        role: "ADMINISTRATOR",
+      const preAgent = request.agent(app);
+      await preAgent
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Super",
+          lastName: "Admin",
+          email: adminEmail,
+          password: adminPassword,
+        })
+        .expect(201);
+      // Promote to ADMINISTRATOR directly in DB
+      const { prisma } = require("../helpers/testSetup");
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: "ADMINISTRATOR" },
       });
-
-      // Step 1: Admin Login
-      console.log("Step 1: Administrator logging in...");
+      // Crea un nuovo agent e fai login per ottenere la sessione aggiornata
       const agent = request.agent(app);
       await agent
         .post("/api/session")
         .send({ email: adminEmail, password: adminPassword })
         .expect(200);
-      console.log("✓ Administrator logged in");
+      console.log("✓ Administrator created, promoted and logged in (fresh session)");
 
       // Step 2: Create users with each municipality role
       console.log("Step 2: Creating users for each role...");
@@ -114,20 +112,27 @@ describe("Story 3 E2E - Municipality User Roles Management", () => {
     });
 
     it("should handle concurrent role operations", async () => {
-      // Setup admin
+      // Setup admin via API and login
       const adminEmail = `admin${Date.now()}@example.com`;
-      await createUserInDatabase({
-        email: adminEmail,
-        first_name: "Admin",
-        last_name: "User",
-        password: "AdminPass123!",
-        role: "ADMINISTRATOR",
-      });
-
+      const adminPassword = "AdminPass123!";
       const agent = request.agent(app);
       await agent
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Admin",
+          lastName: "User",
+          email: adminEmail,
+          password: adminPassword,
+        })
+        .expect(201);
+      const { prisma } = require("../helpers/testSetup");
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: "ADMINISTRATOR" },
+      });
+      await agent
         .post("/api/session")
-        .send({ email: adminEmail, password: "AdminPass123!" })
+        .send({ email: adminEmail, password: adminPassword })
         .expect(200);
 
       // Create multiple users concurrently
@@ -170,47 +175,70 @@ describe("Story 3 E2E - Municipality User Roles Management", () => {
     it("should enforce proper access control for each role", async () => {
       const timestamp = Date.now();
 
-      // Create users with different roles
-      const admin = await createUserInDatabase({
-        email: `admin${timestamp}@example.com`,
-        first_name: "Admin",
-        last_name: "User",
-        password: "Pass123!",
-        role: "ADMINISTRATOR",
+      // Create admin via API/signup, promote, login
+      const adminEmail = `admin${timestamp}@example.com`;
+      const adminPassword = "Pass123!";
+      const adminAgent = request.agent(app);
+      await adminAgent
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Admin",
+          lastName: "User",
+          email: adminEmail,
+          password: adminPassword,
+        })
+        .expect(201);
+      const { prisma } = require("../helpers/testSetup");
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: "ADMINISTRATOR" },
       });
+      await adminAgent
+        .post("/api/session")
+        .send({ email: adminEmail, password: adminPassword })
+        .expect(200);
 
-      const prUser = await createUserInDatabase({
-        email: `pr${timestamp}@example.com`,
-        first_name: "PR",
-        last_name: "User",
-        password: "Pass123!",
-        role: "PUBLIC_RELATIONS",
-      });
+      // Create other users via API/signup (so password is hashed correctly)
+      const prEmail = `pr${timestamp}@example.com`;
+      const techEmail = `tech${timestamp}@example.com`;
+      const citizenEmail = `citizen${timestamp}@example.com`;
+      const userPassword = "Pass123!";
 
-      const techUser = await createUserInDatabase({
-        email: `tech${timestamp}@example.com`,
-        first_name: "Tech",
-        last_name: "User",
-        password: "Pass123!",
-        role: "MUNICIPAL_BUILDING_MAINTENANCE",
-      });
-
-      const citizen = await createUserInDatabase({
-        email: `citizen${timestamp}@example.com`,
-        first_name: "Citizen",
-        last_name: "User",
-        password: "Pass123!",
-        role: "CITIZEN",
-      });
+      // PR
+      await adminAgent
+        .post("/api/admin/municipality-users")
+        .send({
+          firstName: "PR",
+          lastName: "User",
+          email: prEmail,
+          password: userPassword,
+          role: "PUBLIC_RELATIONS",
+        })
+        .expect(201);
+      // TECH
+      await adminAgent
+        .post("/api/admin/municipality-users")
+        .send({
+          firstName: "Tech",
+          lastName: "User",
+          email: techEmail,
+          password: userPassword,
+          role: "MUNICIPAL_BUILDING_MAINTENANCE",
+        })
+        .expect(201);
+      // CITIZEN (via citizen signup)
+      await request(app)
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Citizen",
+          lastName: "User",
+          email: citizenEmail,
+          password: userPassword,
+        })
+        .expect(201);
 
       // Test ADMINISTRATOR access
       console.log("Testing ADMINISTRATOR access...");
-      const adminAgent = request.agent(app);
-      await adminAgent
-        .post("/api/session")
-        .send({ email: `admin${timestamp}@example.com`, password: "Pass123!" })
-        .expect(200);
-
       await adminAgent.get("/api/admin/municipality-users").expect(200);
       console.log("✓ ADMINISTRATOR can access admin endpoints");
 
@@ -219,9 +247,8 @@ describe("Story 3 E2E - Municipality User Roles Management", () => {
       const prAgent = request.agent(app);
       await prAgent
         .post("/api/session")
-        .send({ email: `pr${timestamp}@example.com`, password: "Pass123!" })
+        .send({ email: prEmail, password: userPassword })
         .expect(200);
-
       await prAgent.get("/api/admin/municipality-users").expect(403);
       console.log("✓ PUBLIC_RELATIONS correctly denied admin access");
 
@@ -230,9 +257,8 @@ describe("Story 3 E2E - Municipality User Roles Management", () => {
       const techAgent = request.agent(app);
       await techAgent
         .post("/api/session")
-        .send({ email: `tech${timestamp}@example.com`, password: "Pass123!" })
+        .send({ email: techEmail, password: userPassword })
         .expect(200);
-
       await techAgent.get("/api/admin/municipality-users").expect(403);
       console.log(
         "✓ MUNICIPAL_BUILDING_MAINTENANCE correctly denied admin access"
@@ -243,12 +269,8 @@ describe("Story 3 E2E - Municipality User Roles Management", () => {
       const citizenAgent = request.agent(app);
       await citizenAgent
         .post("/api/session")
-        .send({
-          email: `citizen${timestamp}@example.com`,
-          password: "Pass123!",
-        })
+        .send({ email: citizenEmail, password: userPassword })
         .expect(200);
-
       await citizenAgent.get("/api/admin/municipality-users").expect(403);
       console.log("✓ CITIZEN correctly denied admin access");
 
@@ -261,18 +283,25 @@ describe("Story 3 E2E - Municipality User Roles Management", () => {
 
     beforeEach(async () => {
       const adminEmail = `admin${Date.now()}@example.com`;
-      await createUserInDatabase({
-        email: adminEmail,
-        first_name: "Admin",
-        last_name: "User",
-        password: "AdminPass123!",
-        role: "ADMINISTRATOR",
-      });
-
+      const adminPassword = "AdminPass123!";
       adminAgent = request.agent(app);
       await adminAgent
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Admin",
+          lastName: "User",
+          email: adminEmail,
+          password: adminPassword,
+        })
+        .expect(201);
+      const { prisma } = require("../helpers/testSetup");
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: "ADMINISTRATOR" },
+      });
+      await adminAgent
         .post("/api/session")
-        .send({ email: adminEmail, password: "AdminPass123!" })
+        .send({ email: adminEmail, password: adminPassword })
         .expect(200);
     });
 
@@ -339,20 +368,27 @@ describe("Story 3 E2E - Municipality User Roles Management", () => {
 
   describe("Role Persistence and Retrieval", () => {
     it("should correctly persist and retrieve role information", async () => {
-      // Setup admin
+      // Setup admin via API/signup, promote, login
       const adminEmail = `admin${Date.now()}@example.com`;
-      await createUserInDatabase({
-        email: adminEmail,
-        first_name: "Admin",
-        last_name: "User",
-        password: "AdminPass123!",
-        role: "ADMINISTRATOR",
-      });
-
+      const adminPassword = "AdminPass123!";
       const agent = request.agent(app);
       await agent
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Admin",
+          lastName: "User",
+          email: adminEmail,
+          password: adminPassword,
+        })
+        .expect(201);
+      const { prisma } = require("../helpers/testSetup");
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: "ADMINISTRATOR" },
+      });
+      await agent
         .post("/api/session")
-        .send({ email: adminEmail, password: "AdminPass123!" })
+        .send({ email: adminEmail, password: adminPassword })
         .expect(200);
 
       // Create a user with each role
@@ -406,20 +442,27 @@ describe("Story 3 E2E - Municipality User Roles Management", () => {
 
   describe("Available Roles Endpoint", () => {
     it("should retrieve complete list of available roles", async () => {
-      // Setup admin
+      // Setup admin via API/signup, promote, login
       const adminEmail = `admin${Date.now()}@example.com`;
-      await createUserInDatabase({
-        email: adminEmail,
-        first_name: "Admin",
-        last_name: "User",
-        password: "AdminPass123!",
-        role: "ADMINISTRATOR",
-      });
-
+      const adminPassword = "AdminPass123!";
       const agent = request.agent(app);
       await agent
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Admin",
+          lastName: "User",
+          email: adminEmail,
+          password: adminPassword,
+        })
+        .expect(201);
+      const { prisma } = require("../helpers/testSetup");
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: "ADMINISTRATOR" },
+      });
+      await agent
         .post("/api/session")
-        .send({ email: adminEmail, password: "AdminPass123!" })
+        .send({ email: adminEmail, password: adminPassword })
         .expect(200);
 
       // Get roles list

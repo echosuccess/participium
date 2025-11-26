@@ -10,6 +10,8 @@ export async function cleanDatabase() {
   await prisma.reportMessage.deleteMany();
   await prisma.reportPhoto.deleteMany();
   await prisma.report.deleteMany();
+  await prisma.citizenPhoto.deleteMany();
+  await prisma.notification.deleteMany();
   await prisma.user.deleteMany();
 }
 
