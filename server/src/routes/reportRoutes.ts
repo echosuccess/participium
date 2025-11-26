@@ -10,7 +10,7 @@ import {
   rejectReport,
   getAssignableTechnicals,
   updateReportStatus,
-  sendMessageToCitizen,
+  sendReportMessage,
   getReportMessages
 } from '../controllers/reportController';
 import { upload } from '../middlewares/uploadsMiddleware';
@@ -38,8 +38,8 @@ router.post('/:reportId/reject', requirePublicRelations, ApiValidationMiddleware
 // PATCH /api/reports/:reportId/status - Update report status
 router.patch('/:reportId/status', requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(updateReportStatus));
 
-// POST /api/reports/:reportId/messages - Send message to citizen
-router.post('/:reportId/messages', requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(sendMessageToCitizen));
+// POST /api/reports/:reportId/messages - Send message in report conversation (citizen or technical)
+router.post('/:reportId/messages', isLoggedIn, ApiValidationMiddleware, asyncHandler(sendReportMessage));
 
 // GET /api/reports/:reportId/messages - Get report conversation history
 router.get('/:reportId/messages', isLoggedIn, ApiValidationMiddleware, asyncHandler(getReportMessages));

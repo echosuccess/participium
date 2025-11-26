@@ -1602,10 +1602,9 @@ paths:
     post:
       tags:
         - Reports
-      summary: Send message to citizen
+      summary: Send message in report conversation
       description: |
-        Send a message to the citizen who created the report. Only technical office staff assigned 
-        to the report can send messages. A notification is automatically created for the citizen.
+        Send a message in the report conversation. Both the assigned technical staff and the citizen who created the report can send messages and reply to each other. A notification is automatically created for the recipient.
       operationId: sendReportMessage
       security:
         - SessionAuth: []

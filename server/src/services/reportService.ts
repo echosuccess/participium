@@ -91,8 +91,8 @@ type CreateReportData = Omit<
   | "longitude"
 > & {
   // When creating a report, latitude/longitude are numbers coming from the client
-  latitude: number;
-  longitude: number;
+  latitude: string;
+  longitude: string;
   userId: number; // add userId to link report to user
   photos: ReportPhoto[];
   address?: string;
@@ -342,11 +342,11 @@ export async function updateReportStatus(
 }
 
 /**
- * Invia un messaggio al cittadino (solo technical)
+ * Invia un messaggio nella conversazione del report (citizen o technical)
  */
-export async function sendMessageToCitizen(
+export async function sendReportMessage(
   reportId: number,
-  technicalUserId: number,
+  senderUserId: number,
   content: string
 ): Promise<ReportMessageDTO> {
   const report = await prisma.report.findUnique({
@@ -358,25 +358,38 @@ export async function sendMessageToCitizen(
     throw new NotFoundError("Report not found");
   }
 
-  // Verifica che il technical sia assegnato a questo report
-  if (report.assignedToId !== technicalUserId) {
-    throw new ForbiddenError("You are not assigned to this report");
+  // Consenti solo al cittadino che ha creato il report o al tecnico assegnato di inviare messaggi
+  const isCitizenOwner = report.userId === senderUserId;
+  const isAssignedTechnical = report.assignedToId === senderUserId;
+  if (!isCitizenOwner && !isAssignedTechnical) {
+    throw new ForbiddenError("You are not authorized to send messages for this report");
   }
 
   const message = await prisma.reportMessage.create({
     data: {
       content,
       reportId,
-      senderId: technicalUserId,
+      senderId: senderUserId,
     },
     include: {
       user: true,
     },
   });
 
-  // Notifica il cittadino del nuovo messaggio
-  const senderName = `${report.assignedTo?.first_name} ${report.assignedTo?.last_name}`;
-  await notifyNewMessage(report.id, report.userId, senderName);
+  // Notifica il destinatario corretto: il destinatario è sempre l'altro partecipante
+  let recipientId: number | undefined = undefined;
+  let senderName: string = "";
+  if (isCitizenOwner && report.assignedTo) {
+    recipientId = report.assignedToId!;
+    senderName = `${report.user.first_name} ${report.user.last_name}`;
+  } else if (isAssignedTechnical) {
+    recipientId = report.userId;
+    senderName = `${report.assignedTo?.first_name ?? ''} ${report.assignedTo?.last_name ?? ''}`.trim();
+  }
+  // Notifica solo se il destinatario è diverso dal mittente e definito
+  if (recipientId && recipientId !== senderUserId && senderName) {
+    await notifyNewMessage(report.id, recipientId, senderName);
+  }
 
   return {
     id: message.id,

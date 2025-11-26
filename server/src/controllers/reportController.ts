@@ -8,14 +8,13 @@ import {
   rejectReport as rejectReportService,
   getAssignableTechnicalsForReport as getAssignableTechnicalsForReportService,
   updateReportStatus as updateReportStatusService,
-  sendMessageToCitizen as sendMessageToCitizenService,
+  sendReportMessage as sendReportMessageService,
   getReportMessages as getReportMessagesService,
 } from "../services/reportService";
 import { ReportCategory, ReportStatus } from "../../../shared/ReportTypes";
 import { calculateAddress } from "../utils/addressFinder";
 import minioClient, { BUCKET_NAME } from "../utils/minioClient";
-import { BadRequestError, UnauthorizedError, ForbiddenError } from "../utils";
-import { asyncHandler } from "../middlewares/errorMiddleware";
+import { BadRequestError } from "../utils";
 
 export async function createReport(req: Request, res: Response): Promise<void> {
   const user = req.user as { id: number };
@@ -107,8 +106,8 @@ export async function createReport(req: Request, res: Response): Promise<void> {
     title,
     description,
     category: category as ReportCategory,
-    latitude: parsedLatitude,
-    longitude: parsedLongitude,
+    latitude: latitude,
+    longitude: longitude,
     address,
     isAnonymous: isAnonymous === "true",
     photos: photoData,
@@ -255,8 +254,8 @@ export async function updateReportStatus(
   });
 }
 
-// Send message to citizen
-export async function sendMessageToCitizen(
+// Send message in report conversation (citizen or technical)
+export async function sendReportMessage(
   req: Request,
   res: Response
 ): Promise<void> {
@@ -272,7 +271,7 @@ export async function sendMessageToCitizen(
     throw new BadRequestError("Message content is required");
   }
 
-  const message = await sendMessageToCitizenService(reportId, user.id, content);
+  const message = await sendReportMessageService(reportId, user.id, content);
   res.status(201).json({
     message: "Message sent successfully",
     data: message,
