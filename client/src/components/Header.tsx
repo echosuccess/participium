@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
-import { Navbar, Container, Nav, Button, Badge } from 'react-bootstrap';
+import { Navbar, Container, Nav, Button, Badge, Image } from 'react-bootstrap';
 import { useAuth } from '../hooks/useAuth';
 import { MUNICIPALITY_ROLES, getRoleLabel } from '../utils/roles';
 import { PersonCircle, ArrowLeft, GearFill } from 'react-bootstrap-icons';
@@ -70,6 +70,17 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
     color: 'rgba(255, 255, 255, 0.95)',
   };
 
+  function normalizeMinioUrl(url?: string | null) {
+    if (!url) return null;
+    try {
+      if (url.includes('://minio')) return url.replace('://minio', '://localhost');
+      if (url.includes('minio:')) return url.replace('minio:', 'localhost:');
+    } catch (e) {
+      // ignore
+    }
+    return url;
+  }
+
   const userNameStyle = {
     fontWeight: 600,
     fontSize: '0.95rem',
@@ -107,8 +118,14 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
           {/* User info visible always on desktop and mobile, outside the burger */}
           {isAuthenticated && user && !showBackToHome && (
             <div className="d-flex align-items-center gap-2 d-lg-none">
-              <div className="d-flex align-items-center gap-2">
-                <div style={{...userAvatarStyle, fontSize: '1.5rem', width: '32px', height: '32px'}}><PersonCircle /></div>
+                <div className="d-flex align-items-center gap-2">
+                  <div style={{...userAvatarStyle, fontSize: '1.5rem', width: '32px', height: '32px'}}>
+                    {(() => {
+                      const photoRaw = ((user as any)?.photoUrl || (user as any)?.photo) as string | null | undefined;
+                      const photo = normalizeMinioUrl(photoRaw) ?? undefined;
+                      return photo ? (<Image src={photo} roundedCircle width={32} height={32} alt="avatar" />) : (<PersonCircle />);
+                    })()}
+                  </div>
                 <div className="d-flex flex-column">
                   <div style={{...userNameStyle, fontSize: '0.85rem'}}>{user.firstName}</div>
                   <div style={{...userSurnameStyle, fontSize: '0.75rem'}}>{user.lastName}</div>
@@ -190,7 +207,13 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
                     </Badge>
                   )}
                   <div className="d-flex align-items-center gap-2">
-                    <div style={userAvatarStyle}><PersonCircle /></div>
+                    <div style={userAvatarStyle}>
+                      {(() => {
+                        const photoRaw = ((user as any)?.photoUrl || (user as any)?.photo) as string | null | undefined;
+                        const photo = normalizeMinioUrl(photoRaw) ?? undefined;
+                        return photo ? (<Image src={photo} roundedCircle width={40} height={40} alt="avatar" />) : (<PersonCircle />);
+                      })()}
+                    </div>
                     <div className="d-flex flex-column">
                       <div style={userNameStyle}>{user.firstName}</div>
                       <div style={userSurnameStyle}>{user.lastName}</div>

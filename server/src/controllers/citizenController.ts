@@ -11,7 +11,7 @@ import {
   deleteCitizenPhoto as deleteCitizenPhotoService,
   getCitizenPhoto,
 } from '../services/citizenService';
-import minioClient, { BUCKET_NAME } from '../utils/minioClient';
+import minioClient, { BUCKET_NAME, getMinioObjectUrl } from '../utils/minioClient';
 import type { CitizenConfigRequestDTO, PhotoUploadResponseDTO } from '../interfaces/CitizenDTO';
 
 export function signup(role: Role) {
@@ -135,10 +135,7 @@ export async function uploadCitizenPhoto(req: Request, res: Response): Promise<v
     'Content-Type': photo.mimetype,
   });
 
-  const protocol = process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http';
-  const host = process.env.MINIO_ENDPOINT || 'localhost';
-  const port = process.env.MINIO_PORT ? `:${process.env.MINIO_PORT}` : '';
-  const url = `${protocol}://${host}${port}/${BUCKET_NAME}/${filename}`;
+  const url = getMinioObjectUrl(filename);
 
   // Save to database
   const savedPhoto = await uploadCitizenPhotoService(user.id, url, filename);

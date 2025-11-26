@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -12,27 +9,66 @@ datasource db {
 }
 
 model User {
-  id      Int     @id @default(autoincrement())
-  email   String  @unique
-  first_name    String
-  last_name String
-  password String
-  salt     String
-  role Role @default(CITIZEN)
-  reports Report[]
-  messages ReportMessage[]
-  assignedReports Report[] @relation("AssignedReports")
-  photo CitizenPhoto?
-  telegram_username String? 
-  email_notifications_enabled Boolean @default(true)
+  id                          Int             @id @default(autoincrement())
+  email                       String          @unique
+  first_name                  String
+  last_name                   String
+  password                    String
+  salt                        String
+  role                        Role            @default(CITIZEN)
+  telegram_username           String?
+  email_notifications_enabled Boolean         @default(true)
+  assignedReports             Report[]        @relation("AssignedReports")
+  reports                     Report[]
+  messages                    ReportMessage[]
+  photo                       CitizenPhoto?   
+}
+
+model Report {
+  id             Int             @id @default(autoincrement())
+  title          String
+  description    String
+  category       ReportCategory
+  latitude       Float
+  longitude      Float
+  address        String?
+  isAnonymous    Boolean         @default(false)
+  status         ReportStatus    @default(PENDING_APPROVAL)
+  userId         Int
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  assignedToId   Int?
+  rejectedReason String?
+  assignedTo     User?           @relation("AssignedReports", fields: [assignedToId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
+  messages       ReportMessage[]
+  photos         ReportPhoto[]
+}
+
+model ReportPhoto {
+  id       Int    @id @default(autoincrement())
+  url      String
+  filename String
+  reportId Int
+  report   Report @relation(fields: [reportId], references: [id])
+}
+
+model ReportMessage {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  reportId  Int
+  senderId  Int
+  report    Report   @relation(fields: [reportId], references: [id])
+  user      User     @relation(fields: [senderId], references: [id])
 }
 
 model CitizenPhoto {
-  id        Int      @id @default(autoincrement())
-  url       String
-  filename  String
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int      @unique
+  id       Int    @id @default(autoincrement())
+  url      String
+  filename String
+  userId   Int    @unique
+  user     User   @relation(fields: [userId], references: [id])
 }
 
 enum Role {
@@ -51,29 +87,6 @@ enum Role {
   WASTE_MANAGEMENT
   ROAD_MAINTENANCE
   CIVIL_PROTECTION
-}
-
-
-
-model Report {
-  id            Int      @id @default(autoincrement())
-  title         String
-  description   String
-  category      ReportCategory 
-  latitude      Float
-  longitude     Float
-  address       String?
-  isAnonymous   Boolean @default(false)
-  status        ReportStatus @default(PENDING_APPROVAL)
-  user          User     @relation(fields: [userId], references: [id])
-  userId        Int
-  photos        ReportPhoto[]
-  messages      ReportMessage[]
-  rejectedReason String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  assignedTo    User?    @relation("AssignedReports", fields: [assignedToId], references: [id])
-  assignedToId  Int?
 }
 
 enum ReportCategory {
@@ -95,24 +108,4 @@ enum ReportStatus {
   SUSPENDED
   REJECTED
   RESOLVED
-}
-
- model ReportPhoto {
-  id        Int      @id @default(autoincrement())
-  url       String
-  filename  String
-  report    Report   @relation(fields: [reportId], references: [id])
-  reportId  Int
-} 
-
-model ReportMessage {
-  id        Int      @id @default(autoincrement())
-  content   String
-  createdAt DateTime @default(now())
-
-  report    Report   @relation(fields: [reportId], references: [id])
-  reportId  Int
-
-  user      User     @relation(fields: [senderId], references: [id])
-  senderId    Int
 }

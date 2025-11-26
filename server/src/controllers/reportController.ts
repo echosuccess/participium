@@ -10,12 +10,21 @@ import {
 } from "../services/reportService";
 import { ReportCategory } from "../../../shared/ReportTypes";
 import { calculateAddress } from "../utils/addressFinder";
-import minioClient, { BUCKET_NAME } from "../utils/minioClient";
+import minioClient, { BUCKET_NAME, getMinioObjectUrl } from "../utils/minioClient";
 import { BadRequestError, UnauthorizedError, ForbiddenError } from "../utils";
-import { asyncHandler } from "../middlewares/errorMiddleware";
 
 export async function createReport(req: Request, res: Response): Promise<void> {
         const user = req.user as { id: number };
+  const {
+    title,
+    description,
+    category,
+    latitude,
+    longitude,
+    isAnonymous,
+  } = req.body as Record<string, any>;
+
+  const photos = (req.files as Express.Multer.File[] | undefined) || [];
 
         // Validate required fields
         if (
@@ -73,10 +82,7 @@ export async function createReport(req: Request, res: Response): Promise<void> {
               { "Content-Type": photo.mimetype }
             );
 
-            const protocol = process.env.MINIO_USE_SSL === "true" ? "https" : "http";
-            const host = process.env.MINIO_ENDPOINT || "localhost";
-            const port = process.env.MINIO_PORT ? `:${process.env.MINIO_PORT}` : "";
-            const url = `${protocol}://${host}${port}/${BUCKET_NAME}/${filename}`;
+            const url = getMinioObjectUrl(filename);
 
             photoData.push({
               id: 0,
@@ -128,17 +134,16 @@ export async function getPendingReports(req: Request, res: Response): Promise<vo
 export async function approveReport(req: Request, res: Response): Promise<void> {
   const reportId = parseInt(req.params.reportId);
   const user = req.user as { id: number };
-  const { assignedTechnicalId } = req.body;
+  const assignedTechnicalId = (req.body && req.body.assignedTechnicalId) as any;
 
   if (isNaN(reportId)) {
     throw new BadRequestError("Invalid report ID parameter");
   }
 
-  if (!assignedTechnicalId || isNaN(parseInt(assignedTechnicalId))) {
+  const assignedIdNum = Number(assignedTechnicalId);
+  if (assignedTechnicalId === undefined || assignedTechnicalId === null || isNaN(assignedIdNum)) {
     throw new BadRequestError("Missing or invalid 'assignedTechnicalId' in request body");
   }
-
-  const assignedIdNum = parseInt(assignedTechnicalId);
 
   const updatedReport = await approveReportService(reportId, user.id, assignedIdNum);
   res.status(200).json({

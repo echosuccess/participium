@@ -9,8 +9,25 @@ import * as api from '../../api/api';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
+function normalizeMinioUrl(url: string | null): string | null {
+  if (!url) return url;
+  try {
+    // quick replace for typical Docker hostnames used in dev
+    if (url.includes('://minio')) {
+      return url.replace('://minio', '://localhost');
+    }
+    // also handle hostnames like "minio:9000"
+    if (url.includes('minio:')) {
+      return url.replace('minio:', 'localhost:');
+    }
+  } catch (e) {
+    // ignore
+  }
+  return url;
+}
+
 export default function CitizenSettings() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any | null>(null);
   const [telegramUsername, setTelegramUsername] = useState('');
@@ -46,7 +63,7 @@ export default function CitizenSettings() {
         setEmail(u.email || '');
         setTelegramUsername(u.telegramUsername || '');
         setEmailNotificationsEnabled(!!u.emailNotificationsEnabled);
-        setPhotoPreview(u.photoUrl || u.photo || null);
+        setPhotoPreview(normalizeMinioUrl(u.photoUrl || u.photo || null));
       } catch (err) {
         console.error('Failed to load profile', err);
         setErrorMessage('Unable to load profile. Please try again later.');
@@ -90,11 +107,22 @@ export default function CitizenSettings() {
       fd.append('photo', selectedFile);
       const res = await api.uploadCitizenPhoto(fd);
       setSelectedFile(null);
-      if (res && (res.photoUrl || res.url)) setPhotoPreview(res.photoUrl || res.url);
+      // backend returns { message, photo: { id, url, filename } }
+      const photoUrl = res?.photo?.url || res?.url || res?.photoUrl || (res && (res.photoUrl || res.photo?.url)) || null;
+      if (photoUrl) {
+        const normalized = normalizeMinioUrl(photoUrl);
+        setPhotoPreview(normalized);
+        setProfile((prev: any) => ({ ...(prev || {}), photo: normalized, photoUrl: normalized }));
+        // refresh auth user so header picks up new photo immediately
+        try { await refreshUser(); } catch (e) { /* ignore */ }
+      }
       setSuccessMessage('Profile photo uploaded successfully.');
     } catch (err) {
       console.error('Upload failed', err);
-      setErrorMessage('Upload failed. Please try again.');
+      // try to show backend error if available
+      const backendMsg = (err as any)?.body?.message || (err as any)?.body?.error;
+      const msg = backendMsg || (err as any)?.message || 'Upload failed. Please try again.';
+      setErrorMessage(msg);
     } finally {
       setSaving(false);
     }
@@ -107,6 +135,7 @@ export default function CitizenSettings() {
       await api.deleteCitizenPhoto();
       setPhotoPreview(null);
       setSuccessMessage('Profile photo removed.');
+      try { await refreshUser(); } catch (e) { /* ignore */ }
     } catch (err) {
       console.error('Delete photo failed', err);
       setErrorMessage('Could not delete photo. Please try again.');
@@ -137,24 +166,29 @@ export default function CitizenSettings() {
         emailNotificationsEnabled,
       };
       if (newPassword) payload.password = newPassword;
-      await api.updateCitizenConfig(payload);
+      const res = await api.updateCitizenConfig(payload);
       setSuccessMessage('Account settings updated successfully.');
-      // update local profile copy so Reset works without refetch
-      setProfile((prev: any) => ({
-        ...(prev || {}),
-        firstName,
-        lastName,
-        email,
-        telegramUsername,
-        emailNotificationsEnabled,
-      }));
+      // If backend returned the updated user, use it to update local copy
+      if (res && typeof res === 'object') {
+        const updatedUser = (res.user || res);
+        setProfile((prev: any) => ({ ...(prev || {}), ...(updatedUser || {}), firstName, lastName, email, telegramUsername, emailNotificationsEnabled }));
+        // if response contains photo info, update preview
+        const photoUrl = (updatedUser && (updatedUser.photoUrl || updatedUser.photo)) || null;
+        if (photoUrl) setPhotoPreview(normalizeMinioUrl(photoUrl));
+      } else {
+        setProfile((prev: any) => ({ ...(prev || {}), firstName, lastName, email, telegramUsername, emailNotificationsEnabled }));
+      }
+      // refresh auth user so header reflects updates
+      try { await refreshUser(); } catch (e) { /* ignore */ }
       // exit edit mode
       setEditing(false);
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
       console.error('Save config failed', err);
-      setErrorMessage('Failed to save settings. Please try again.');
+      const backendMsg = (err as any)?.body?.message || (err as any)?.body?.error;
+      const msg = backendMsg || (err as any)?.message || 'Failed to save settings. Please try again.';
+      setErrorMessage(msg);
     } finally {
       setSaving(false);
     }
@@ -162,13 +196,13 @@ export default function CitizenSettings() {
 
   const enterEditMode = () => {
     clearMessages();
-    if (profile) {
+      if (profile) {
       setFirstName(profile.firstName || '');
       setLastName(profile.lastName || '');
       setEmail(profile.email || '');
       setTelegramUsername(profile.telegramUsername || '');
       setEmailNotificationsEnabled(!!profile.emailNotificationsEnabled);
-      setPhotoPreview(profile.photoUrl || profile.photo || null);
+      setPhotoPreview(normalizeMinioUrl(profile.photoUrl || profile.photo || null));
     }
     setNewPassword('');
     setConfirmPassword('');
@@ -321,7 +355,7 @@ export default function CitizenSettings() {
 
                       <div className="d-flex gap-2">
                         <Button type="button" variant="primary" isLoading={saving} onClick={handleSaveConfig}>Save changes</Button>
-                        <Button variant="ghost" onClick={() => {
+                          <Button variant="ghost" onClick={() => {
                           // cancel edits and restore values
                           setSuccessMessage(null);
                           setErrorMessage(null);
@@ -331,7 +365,7 @@ export default function CitizenSettings() {
                             setEmail(profile.email || '');
                             setTelegramUsername(profile.telegramUsername || '');
                             setEmailNotificationsEnabled(!!profile.emailNotificationsEnabled);
-                            setPhotoPreview(profile.photoUrl || profile.photo || null);
+                            setPhotoPreview(normalizeMinioUrl(profile.photoUrl || profile.photo || null));
                           }
                           setNewPassword('');
                           setConfirmPassword('');
