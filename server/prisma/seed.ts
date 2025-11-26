@@ -162,7 +162,7 @@ async function main() {
       role: "PUBLIC_RELATIONS",
       telegram_username: null,
       email_notifications_enabled: true,
-    }
+    },
   ];
 
   // Hash passwords and insert users (keep created records for relations)
@@ -205,46 +205,63 @@ async function main() {
   ];
 
   // helper to find users by role/email
-  const citizen = createdUsers.find((x) => x.email === "citizen@participium.com");
-  const tech = createdUsers.find((x) => x.email === "tech@participium.com") || createdUsers[0];
+  const citizen = createdUsers.find(
+    (x) => x.email === "citizen@participium.com"
+  );
+  const tech =
+    createdUsers.find((x) => x.email === "tech@participium.com") ||
+    createdUsers[0];
   // realistic samples per category
-  const categorySamples: Record<string, { title: string; description: string; preferredRole: string }> = {
+  const categorySamples: Record<
+    string,
+    { title: string; description: string; preferredRole: string }
+  > = {
     WATER_SUPPLY_DRINKING_WATER: {
-      title: 'Contaminated drinking water at the city fountain',
-      description: 'The central fountain has a strong smell and the water appears cloudy. Please inspect as soon as possible.',
-      preferredRole: 'LOCAL_PUBLIC_SERVICES',
+      title: "Contaminated drinking water at the city fountain",
+      description:
+        "The central fountain has a strong smell and the water appears cloudy. Please inspect as soon as possible.",
+      preferredRole: "LOCAL_PUBLIC_SERVICES",
     },
     ARCHITECTURAL_BARRIERS: {
-      title: 'Staircase missing handrail limits access',
-      description: 'The park staircase lacks a handrail and poses a risk to elderly and disabled people.',
-      preferredRole: 'MUNICIPAL_BUILDING_MAINTENANCE',
+      title: "Staircase missing handrail limits access",
+      description:
+        "The park staircase lacks a handrail and poses a risk to elderly and disabled people.",
+      preferredRole: "MUNICIPAL_BUILDING_MAINTENANCE",
     },
     SEWER_SYSTEM: {
-      title: 'Road drain flooding after heavy rain',
-      description: 'After heavy rain the street drain on Via Roma clogs and causes local flooding.',
-      preferredRole: 'INFRASTRUCTURES',
+      title: "Road drain flooding after heavy rain",
+      description:
+        "After heavy rain the street drain on Via Roma clogs and causes local flooding.",
+      preferredRole: "INFRASTRUCTURES",
     },
     PUBLIC_LIGHTING: {
-      title: 'Streetlight out on Viale Garibaldi',
-      description: 'Streetlight no.45 on Viale Garibaldi has been out for weeks, area poorly lit at night.',
-      preferredRole: 'LOCAL_PUBLIC_SERVICES',
+      title: "Streetlight out on Viale Garibaldi",
+      description:
+        "Streetlight no.45 on Viale Garibaldi has been out for weeks, area poorly lit at night.",
+      preferredRole: "LOCAL_PUBLIC_SERVICES",
     },
     WASTE: {
-      title: 'Illegal waste dump near bin',
-      description: 'Accumulation of waste and bulky items near the bin at Via Milano corner, sanitary risk.',
-      preferredRole: 'WASTE_MANAGEMENT',
+      title: "Illegal waste dump near bin",
+      description:
+        "Accumulation of waste and bulky items near the bin at Via Milano corner, sanitary risk.",
+      preferredRole: "WASTE_MANAGEMENT",
     },
     ROAD_SIGNS_TRAFFIC_LIGHTS: {
       title: "Traffic light malfunction at Corso Italia intersection",
-      description: 'The traffic light stays red for only one direction causing confusion and danger.',
-      preferredRole: 'ROAD_MAINTENANCE',
+      description:
+        "The traffic light stays red for only one direction causing confusion and danger.",
+      preferredRole: "ROAD_MAINTENANCE",
     },
   };
 
   for (let i = 0; i < statuses.length; i++) {
     const status = statuses[i];
     const category = categories[i % categories.length];
-    const sample = categorySamples[category] || { title: `Segnalazione ${category}`, description: 'Segnalazione generica', preferredRole: 'INFRASTRUCTURES' };
+    const sample = categorySamples[category] || {
+      title: `Segnalazione ${category}`,
+      description: "Segnalazione generica",
+      preferredRole: "INFRASTRUCTURES",
+    };
 
     const reportData: any = {
       title: sample.title,
@@ -261,18 +278,34 @@ async function main() {
     };
 
     // assign a realistic technical when appropriate
-    if (status === 'ASSIGNED' || status === 'IN_PROGRESS') {
+    if (status === "ASSIGNED" || status === "IN_PROGRESS") {
       const preferredRole = sample.preferredRole;
-      const assignedUser = createdUsers.find((u) => u.role === preferredRole) || tech;
+      const assignedUser =
+        createdUsers.find((u) => u.role === preferredRole) || tech;
       if (assignedUser) reportData.assignedToId = assignedUser.id;
     }
 
-    if (status === 'REJECTED') {
-      reportData.rejectedReason = 'Segnalazione non pertinente al patrimonio comunale.';
+    if (status === "REJECTED") {
+      reportData.rejectionReason =
+        "Segnalazione non pertinente al patrimonio comunale.";
     }
 
     const createdReport = await prisma.report.create({ data: reportData });
-    console.log(`📝 Created report id=${createdReport.id} status=${status} category=${category}`);
+    console.log(
+      `📝 Created report id=${createdReport.id} status=${status} category=${category}`
+    );
+
+    // Log assignment info if present
+    if (reportData.assignedToId) {
+      const assignedUser = createdUsers.find(
+        (u) => u.id === reportData.assignedToId
+      );
+      if (assignedUser) {
+        console.log(
+          `   → Assigned to: ${assignedUser.email} (${assignedUser.role})`
+        );
+      }
+    }
 
     // add 1-3 realistic photo placeholders for the report (vary per report)
     const numPhotos = (i % 3) + 1; // 1,2,3 repeating
@@ -296,8 +329,10 @@ async function main() {
       },
     });
 
-    if (status === 'ASSIGNED' || status === 'IN_PROGRESS') {
-      const assignedUser = createdUsers.find((u) => u.id === (reportData.assignedToId as any));
+    if (status === "ASSIGNED" || status === "IN_PROGRESS") {
+      const assignedUser = createdUsers.find(
+        (u) => u.id === (reportData.assignedToId as any)
+      );
       if (assignedUser) {
         await prisma.reportMessage.create({
           data: {
@@ -309,12 +344,15 @@ async function main() {
       }
     }
 
-    if (status === 'REJECTED') {
+    if (status === "REJECTED") {
       await prisma.reportMessage.create({
         data: {
-          content: 'The report was rejected because it falls outside municipal responsibilities.',
+          content:
+            "The report was rejected because it falls outside municipal responsibilities.",
           reportId: createdReport.id,
-          senderId: createdUsers.find((u) => u.role === 'PUBLIC_RELATIONS')?.id || createdUsers[2].id,
+          senderId:
+            createdUsers.find((u) => u.role === "PUBLIC_RELATIONS")?.id ||
+            createdUsers[2].id,
         },
       });
     }
