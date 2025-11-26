@@ -11,7 +11,7 @@ export const CONFIG = {
   CORS: {
     ORIGIN: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ["http://localhost:5173", "http://localhost:3000"],
     CREDENTIALS: true,
-    METHODS: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    METHODS: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   },
 
   // Routes
@@ -22,6 +22,7 @@ export const CONFIG = {
     CITIZEN: "/api/citizen",
     ADMIN: "/api/admin",
     REPORTS: "/api/reports",
+    NOTIFICATIONS: "/api/notifications",
     SWAGGER: "/api-docs",
   },
 
