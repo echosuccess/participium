@@ -303,17 +303,29 @@ async function main() {
       }
     }
 
-    // add 1-3 realistic photo placeholders for the report (vary per report)
-    const numPhotos = (i % 3) + 1; // 1,2,3 repeating
-    for (let p = 1; p <= numPhotos; p++) {
-      const photoUrl = `https://picsum.photos/seed/participium-${createdReport.id}-${p}/800/600`;
-      await prisma.reportPhoto.create({
-        data: {
-          url: photoUrl,
-          filename: `seed-${createdReport.id}-${p}.jpg`,
-          reportId: createdReport.id,
-        },
-      });
+    
+    for (let p = 1; p <= 5; p++) {
+      if(p == 4) {
+        const photoUrl = `http://minio:9000/reports-photos/report` + i + `.jpeg`;
+        await prisma.reportPhoto.create({
+          data: {
+            url: photoUrl,
+            filename: `seed-${createdReport.id}-${p}.jpg`,
+            reportId: createdReport.id,
+          },
+        });
+
+      } else {
+        const photoUrl = `http://minio:9000/reports-photos/report4.1.jpeg`
+        await prisma.reportPhoto.create({
+          data: {
+            url: photoUrl,
+            filename: `seed-${createdReport.id}-${p}.jpg`,
+            reportId: createdReport.id,
+          },
+        });
+      }
+      
     }
 
     // add an initial citizen message and for some statuses an internal follow-up
