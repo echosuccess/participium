@@ -1,21 +1,26 @@
-import { Router } from 'express';
-import { asyncHandler } from '../middlewares/errorMiddleware';
-import { requireCitizen, requirePublicRelations, requireTechnicalStaff, isLoggedIn } from '../middlewares/routeProtection';
-import { validateTurinBoundaries } from '../middlewares/validateTurinBoundaries';
-import { 
-  createReport, 
-  getReports, 
-  getPendingReports, 
-  approveReport, 
+import { Router } from "express";
+import { asyncHandler } from "../middlewares/errorMiddleware";
+import {
+  requireCitizen,
+  requirePublicRelations,
+  requireTechnicalStaff,
+  isLoggedIn,
+} from "../middlewares/routeProtection";
+import { validateTurinBoundaries } from "../middlewares/validateTurinBoundaries";
+import {
+  createReport,
+  getReports,
+  getPendingReports,
+  approveReport,
   rejectReport,
   getAssignableTechnicals,
   updateReportStatus,
   sendReportMessage,
   getReportMessages,
-  getAssignedReports
-} from '../controllers/reportController';
-import { upload } from '../middlewares/uploadsMiddleware';
-import { ApiValidationMiddleware } from '../middlewares/validationMiddlewere';
+  getAssignedReports,
+} from "../controllers/reportController";
+import { upload } from "../middlewares/uploadsMiddleware";
+import { ApiValidationMiddleware } from "../middlewares/validationMiddlewere";
 
 const router = Router();
 
@@ -32,25 +37,55 @@ router.post(
 router.get("/", ApiValidationMiddleware, asyncHandler(getReports));
 
 // GET /api/reports/assigned - Get reports assigned to the authenticated technical officer
-router.get("/assigned", requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(getAssignedReports));
+router.get(
+  "/assigned",
+  requireTechnicalStaff,
+  ApiValidationMiddleware,
+  asyncHandler(getAssignedReports)
+);
 
 // GET /api/reports/pending - Get pending reports for review
 router.get("/pending", requirePublicRelations, asyncHandler(getPendingReports));
 
 // POST /api/reports/:reportId/approve - Approve a report
-router.post('/:reportId/approve', requirePublicRelations, ApiValidationMiddleware, asyncHandler(approveReport));
+router.post(
+  "/:reportId/approve",
+  requirePublicRelations,
+  ApiValidationMiddleware,
+  asyncHandler(approveReport)
+);
 
 // POST /api/reports/:reportId/reject - Reject a report
-router.post('/:reportId/reject', requirePublicRelations, ApiValidationMiddleware, asyncHandler(rejectReport));
+router.post(
+  "/:reportId/reject",
+  requirePublicRelations,
+  ApiValidationMiddleware,
+  asyncHandler(rejectReport)
+);
 
 // PATCH /api/reports/:reportId/status - Update report status
-router.patch('/:reportId/status', requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(updateReportStatus));
+router.patch(
+  "/:reportId/status",
+  requireTechnicalStaff,
+  ApiValidationMiddleware,
+  asyncHandler(updateReportStatus)
+);
 
 // POST /api/reports/:reportId/messages - Send message in report conversation (citizen or technical)
-router.post('/:reportId/messages', isLoggedIn, asyncHandler(sendReportMessage));
+router.post(
+  "/:reportId/messages",
+  isLoggedIn,
+  ApiValidationMiddleware,
+  asyncHandler(sendReportMessage)
+);
 
 // GET /api/reports/:reportId/messages - Get report conversation history
-router.get('/:reportId/messages', isLoggedIn, asyncHandler(getReportMessages));
+router.get(
+  "/:reportId/messages",
+  isLoggedIn,
+  ApiValidationMiddleware,
+  asyncHandler(getReportMessages)
+);
 
 // GET /api/reports/:reportId/assignable-technicals - list technicals valid for this report
 router.get(

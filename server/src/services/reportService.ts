@@ -1,8 +1,27 @@
 import { prisma } from "../utils/prismaClient";
-import { ReportDTO, toReportDTO, ReportMessageDTO } from "../interfaces/ReportDTO";
-import { ReportPhoto, ReportCategory, ReportStatus } from "../../../shared/ReportTypes";
-import { NotFoundError, BadRequestError, UnprocessableEntityError, ForbiddenError } from "../utils/errors";
-import { notifyReportStatusChange, notifyNewMessage, notifyReportAssigned, notifyReportApproved, notifyReportRejected } from "./notificationService";
+import {
+  ReportDTO,
+  toReportDTO,
+  ReportMessageDTO,
+} from "../interfaces/ReportDTO";
+import {
+  ReportPhoto,
+  ReportCategory,
+  ReportStatus,
+} from "../../../shared/ReportTypes";
+import {
+  NotFoundError,
+  BadRequestError,
+  UnprocessableEntityError,
+  ForbiddenError,
+} from "../utils/errors";
+import {
+  notifyReportStatusChange,
+  notifyNewMessage,
+  notifyReportAssigned,
+  notifyReportApproved,
+  notifyReportRejected,
+} from "./notificationService";
 
 /**
  * Restituisce i report assegnati all'utente tecnico autenticato
@@ -48,7 +67,12 @@ export async function getAssignedReportsService(
 /**
  * Invia un messaggio dal tecnico al cittadino quando lo stato del report viene aggiornato
  */
-async function sendStatusUpdateMessage(reportId: number, technicalUserId: number, citizenUserId: number, newStatus: ReportStatus) {
+async function sendStatusUpdateMessage(
+  reportId: number,
+  technicalUserId: number,
+  citizenUserId: number,
+  newStatus: ReportStatus
+) {
   await prisma.reportMessage.create({
     data: {
       reportId,
@@ -439,7 +463,12 @@ export async function updateReportStatus(
   });
 
   // Invia il messaggio al cittadino
-  await sendStatusUpdateMessage(reportId, technicalUserId, report.userId, newStatus);
+  await sendStatusUpdateMessage(
+    reportId,
+    technicalUserId,
+    report.userId,
+    newStatus
+  );
 
   // Carica separatamente l'utente assegnato (per evitare problemi di typing con Prisma client)
   if ((updatedReport as any).assignedToId) {
@@ -450,7 +479,13 @@ export async function updateReportStatus(
   }
 
   // Notify citizen about status change (include report title for context)
-  await notifyReportStatusChange(report.id, report.userId, oldStatus, newStatus, report.title);
+  await notifyReportStatusChange(
+    report.id,
+    report.userId,
+    oldStatus,
+    newStatus,
+    report.title
+  );
 
   return toReportDTO(updatedReport as any);
 }
@@ -476,7 +511,9 @@ export async function sendReportMessage(
   const isCitizenOwner = report.userId === senderUserId;
   const isAssignedTechnical = report.assignedToId === senderUserId;
   if (!isCitizenOwner && !isAssignedTechnical) {
-    throw new ForbiddenError("You are not authorized to send messages for this report");
+    throw new ForbiddenError(
+      "You are not authorized to send messages for this report"
+    );
   }
 
   const message = await prisma.reportMessage.create({
@@ -498,7 +535,9 @@ export async function sendReportMessage(
     senderName = `${report.user.first_name} ${report.user.last_name}`;
   } else if (isAssignedTechnical) {
     recipientId = report.userId;
-    senderName = `${report.assignedTo?.first_name ?? ''} ${report.assignedTo?.last_name ?? ''}`.trim();
+    senderName = `${report.assignedTo?.first_name ?? ""} ${
+      report.assignedTo?.last_name ?? ""
+    }`.trim();
   }
   // Notifica solo se il destinatario è diverso dal mittente e definito
   if (recipientId && recipientId !== senderUserId && senderName) {
@@ -520,6 +559,13 @@ export async function getReportMessages(
   reportId: number,
   userId: number
 ): Promise<ReportMessageDTO[]> {
+  console.log(
+    "[getReportMessagesService] START - reportId:",
+    reportId,
+    "userId:",
+    userId
+  );
+
   const report = await prisma.report.findUnique({
     where: { id: reportId },
     include: {
@@ -535,17 +581,44 @@ export async function getReportMessages(
     },
   });
 
+  console.log("[getReportMessagesService] Report found:", !!report);
+
   if (!report) {
+    console.log(
+      "[getReportMessagesService] Report not found - throwing NotFoundError"
+    );
     throw new NotFoundError("Report not found");
   }
 
   // Verifica autorizzazione: il cittadino può vedere solo i propri report, il technical può vedere i report assegnati
   const isReportOwner = report.userId === userId;
   const isAssignedTechnical = report.assignedToId === userId;
-  
+
+  console.log(
+    "[getReportMessagesService] Authorization check - isOwner:",
+    isReportOwner,
+    "isAssigned:",
+    isAssignedTechnical,
+    "report.userId:",
+    report.userId,
+    "report.assignedToId:",
+    report.assignedToId
+  );
+
   if (!isReportOwner && !isAssignedTechnical) {
-    throw new ForbiddenError("You are not authorized to view this conversation");
+    console.log(
+      "[getReportMessagesService] Authorization failed - throwing ForbiddenError"
+    );
+    throw new ForbiddenError(
+      "You are not authorized to view this conversation"
+    );
   }
+
+  console.log(
+    "[getReportMessagesService] Returning",
+    report.messages.length,
+    "messages"
+  );
 
   return report.messages.map((m) => ({
     id: m.id,
@@ -554,4 +627,3 @@ export async function getReportMessages(
     senderId: m.senderId,
   }));
 }
-

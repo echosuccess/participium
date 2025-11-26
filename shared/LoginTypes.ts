@@ -1,6 +1,7 @@
 //Here we have to implement the interface useful whether client or server
 
 export interface User {
+  id: number;
   firstName: string;
   lastName: string;
   email: string;
@@ -17,6 +18,7 @@ export interface LoginFormData {
 export interface LoginResponse {
   message: string;
   user: {
+    id: number;
     firstName: string;
     lastName: string;
     email: string;
@@ -49,4 +51,3 @@ export interface ValidationResult {
     password?: string;
   };
 }
-

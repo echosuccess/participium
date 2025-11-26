@@ -14,8 +14,15 @@ import {
 } from "../services/reportService";
 import { ReportCategory, ReportStatus } from "../../../shared/ReportTypes";
 import { calculateAddress } from "../utils/addressFinder";
-import minioClient, { BUCKET_NAME, getMinioObjectUrl } from "../utils/minioClient";
-import { BadRequestError, UnauthorizedError, ForbiddenError } from "../utils/errors";
+import minioClient, {
+  BUCKET_NAME,
+  getMinioObjectUrl,
+} from "../utils/minioClient";
+import {
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+} from "../utils/errors";
 
 // Get reports assigned to the authenticated technical officer
 export async function getAssignedReports(
@@ -223,7 +230,7 @@ export async function approveReport(
   if (isNaN(reportId)) {
     throw new BadRequestError("Invalid report ID parameter");
   }
-  
+
   const assignedIdNum = parseInt(assignedTechnicalId);
 
   if (!assignedTechnicalId || isNaN(parseInt(assignedTechnicalId))) {
@@ -346,13 +353,34 @@ export async function getReportMessages(
   req: Request,
   res: Response
 ): Promise<void> {
+  console.log(
+    "[getReportMessages] START - params:",
+    req.params,
+    "user:",
+    req.user
+  );
+
   const reportId = parseInt(req.params.reportId);
   const user = req.user as { id: number };
 
+  console.log("[getReportMessages] reportId:", reportId, "userId:", user?.id);
+
   if (isNaN(reportId)) {
+    console.log("[getReportMessages] Invalid reportId");
     throw new BadRequestError("Invalid report ID parameter");
   }
 
+  if (!user || !user.id) {
+    console.log("[getReportMessages] User not authenticated");
+    throw new BadRequestError("User not authenticated");
+  }
+
+  console.log("[getReportMessages] Calling service...");
   const messages = await getReportMessagesService(reportId, user.id);
+  console.log(
+    "[getReportMessages] Service returned:",
+    messages?.length,
+    "messages"
+  );
   res.status(200).json(messages);
 }

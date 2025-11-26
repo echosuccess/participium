@@ -66,6 +66,7 @@ describe("Header", () => {
   it("shows user info and logout when authenticated", () => {
     (useAuth as MockedFunction<typeof useAuth>).mockReturnValue({
       user: {
+        id: 1,
         email: "test@example.com",
         firstName: "Test",
         lastName: "User",
@@ -94,6 +95,7 @@ describe("Header", () => {
     const mockLogout = vi.fn().mockResolvedValue(undefined);
     (useAuth as MockedFunction<typeof useAuth>).mockReturnValue({
       user: {
+        id: 1,
         email: "test@example.com",
         firstName: "Test",
         lastName: "User",
