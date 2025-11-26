@@ -62,7 +62,7 @@ model Report {
   photos        ReportPhoto[]
   messages      ReportMessage[]
   notifications Notification[]
-  rejectedReason String?
+  rejectionReason String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   assignedTo    User?    @relation("AssignedReports", fields: [assignedToId], references: [id])
