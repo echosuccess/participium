@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Clipboard, Pencil, List } from "react-bootstrap-icons";
 import { Offcanvas } from "react-bootstrap";
 import { useAuth } from "../../hooks";
+import { TECHNICAL_ROLES } from '../../utils/roles';
 import Button from "../../components/ui/Button.tsx";
 import AuthRequiredModal from "../auth/AuthRequiredModal.tsx";
 import ReportCard from "./ReportCard.tsx";
@@ -198,6 +199,11 @@ export default function HomePage() {
           >
             <Pencil className="me-2" />
             Assign technical
+          </Button>
+          ) : isAuthenticated && user && TECHNICAL_ROLES.includes(user.role) ? (
+          <Button onClick={() => navigate('/technical')} variant="primary" fullWidth>
+            <Pencil className="me-2" />
+            Access your reports
           </Button>
         ) : !isAuthenticated || user?.role === "CITIZEN" ? (
           <Button onClick={handleAddReport} variant="primary" fullWidth>

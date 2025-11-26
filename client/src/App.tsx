@@ -6,7 +6,8 @@ import HomePage from "./features/reports/HomePage.tsx";
 import LoginPage from "./features/auth/LoginPage.tsx";
 import SignupPage from "./features/auth/SignupPage.tsx";
 import AdminPanel from "./features/admin/AdminPanel.tsx";
-import TechPanel from "./features/technician/TechPanel.tsx";
+import TechPanel from "./features/public_relations/PublicRelationsDashboard.tsx";
+import TechDashboard from "./features/technicians/TechDashboard";
 import ReportForm from "./components/ReportForm";
 import MessagesView from "./features/messages/MessagesView";
 import ChatDetail from "./features/messages/ChatDetail";
@@ -48,6 +49,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/assign-reports" element={<TechPanel />} />
+          <Route path="/technical" element={<TechDashboard />} />
           <Route path="/report/new" element={<ReportForm />} />
           <Route path="/messages" element={<MessagesView />} />
           <Route path="/messages/:id" element={<ChatDetail />} />

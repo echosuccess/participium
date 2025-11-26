@@ -9,22 +9,10 @@ import { getReports, getPendingReports, rejectReport, getAssignableTechnicals, a
 import type { Report as AppReport } from "../../types/report.types";
 import ReportCard from "../reports/ReportCard";
 import "../../styles/TechPanelstyle.css";
+import { TECHNICAL_ROLES } from '../../utils/roles';
 
-const ALLOWED_ROLES = [
-  "PUBLIC_RELATIONS",
-  "CULTURE_EVENTS_TOURISM_SPORTS",
-  "LOCAL_PUBLIC_SERVICES",
-  "EDUCATION_SERVICES",
-  "PUBLIC_RESIDENTIAL_HOUSING",
-  "INFORMATION_SYSTEMS",
-  "MUNICIPAL_BUILDING_MAINTENANCE",
-  "PRIVATE_BUILDINGS",
-  "INFRASTRUCTURES",
-  "GREENSPACES_AND_ANIMAL_PROTECTION",
-  "WASTE_MANAGEMENT",
-  "ROAD_MAINTENANCE",
-  "CIVIL_PROTECTION"
-];
+// Allow only municipality technical roles (exclude CITIZEN, ADMINISTRATOR, PUBLIC_RELATIONS)
+const ALLOWED_ROLES = TECHNICAL_ROLES;
 
 export default function TechPanel() {
   const { user, isAuthenticated } = useAuth();

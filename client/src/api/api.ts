@@ -16,7 +16,15 @@ const API_PREFIX = import.meta.env.VITE_API_URL || "/api";
 
 async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
-  const data = text ? JSON.parse(text) : {};
+  let data: any = {};
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      // Response was not JSON (e.g. HTML error page). Keep raw text for better error messages.
+      data = { _raw: text };
+    }
+  }
   if (res.ok) return data as T;
   const err =
     (data && (data.message || data.error)) ||
@@ -124,6 +132,15 @@ export async function getReports(): Promise<Report[]> {
 
 export async function getPendingReports(): Promise<Report[]> {
   const res = await fetch(`${API_PREFIX}/reports/pending`, {
+    method: "GET",
+    credentials: "include",
+  });
+  return handleResponse<Report[]>(res);
+}
+
+export async function getAssignedReports(status?: string): Promise<Report[]> {
+  const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+  const res = await fetch(`${API_PREFIX}/reports/assigned${qs}`, {
     method: "GET",
     credentials: "include",
   });

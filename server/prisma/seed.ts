@@ -6,16 +6,85 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log("🌱 Starting database seed...");
+  // Helper to check whether a table exists in the current DB schema.
+  async function tableExists(tableName: string) {
+    const rows: Array<any> = (await prisma.$queryRawUnsafe(
+      `SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND (table_name = '${tableName}' OR lower(table_name) = lower('${tableName}')) LIMIT 1`
+    )) as any;
+    return Array.isArray(rows) && rows.length > 0;
+  }
+
+  // If the core tables (migrations haven't been applied yet) are not present,
+  // skip the seed. This avoids races where the seed container runs before
+  // the server has applied Prisma migrations and created tables.
+  if (!(await tableExists('Report'))) {
+    console.log('seed: core tables not present yet, skipping seed.');
+    return;
+  }
+
+  // Detect which column name is present in the DB for the report rejection reason
+  // Some older migrations used `rejectedReason` while newer schema uses `rejectionReason`.
+  // We'll query information_schema to pick the correct column name, or null if none.
+  const rejectionColumnRows: Array<{ column_name: string }> = (await prisma.$queryRawUnsafe(
+    `SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name IN ('Report','report') AND column_name IN ('rejectionReason','rejectedReason')`
+  )) as any;
+  const rejectionColumn = rejectionColumnRows.length
+    ? (rejectionColumnRows[0].column_name as string)
+    : null;
 
   // Clear dependent tables first to avoid foreign key constraint violations
   // Delete messages (they reference reports and users)
-  await prisma.reportMessage.deleteMany();
+  if (await tableExists('ReportMessage')) {
+    if ((prisma as any).reportMessage?.deleteMany) {
+      await prisma.reportMessage.deleteMany();
+    } else {
+      await prisma.$executeRawUnsafe('DELETE FROM "ReportMessage";');
+    }
+  }
   // Delete photos (they reference reports)
-  await prisma.reportPhoto.deleteMany();
+  if (await tableExists('ReportPhoto')) {
+    if ((prisma as any).reportPhoto?.deleteMany) {
+      await prisma.reportPhoto.deleteMany();
+    } else {
+      await prisma.$executeRawUnsafe('DELETE FROM "ReportPhoto";');
+    }
+  }
+  // Delete citizen photos (they reference users). Attempt to use the
+  // generated Prisma client if the model exists; otherwise fall back to
+  // a raw SQL DELETE. This handles the case where the database still
+  // contains a `CitizenPhoto` table from a previous run but the current
+  // Prisma schema does not include the model (so `prisma.citizenPhoto`
+  // would be undefined). We swallow errors if the table does not exist.
+  try {
+    if (await tableExists('CitizenPhoto')) {
+      if ((prisma as any).citizenPhoto?.deleteMany) {
+        await (prisma as any).citizenPhoto.deleteMany();
+      } else {
+        // Table name inferred from previous schema; use quoted identifier.
+        await prisma.$executeRawUnsafe('DELETE FROM "CitizenPhoto";');
+      }
+    }
+  } catch (err) {
+    // Ignore errors (table may not exist) but log for visibility.
+    // eslint-disable-next-line no-console
+    console.warn('seed: could not delete CitizenPhoto rows (may not exist):', (err as any)?.message || err);
+  }
   // Delete reports (they reference users)
-  await prisma.report.deleteMany();
+  if (await tableExists('Report')) {
+    if ((prisma as any).report?.deleteMany) {
+      await prisma.report.deleteMany();
+    } else {
+      await prisma.$executeRawUnsafe('DELETE FROM "Report";');
+    }
+  }
   // Now it's safe to delete users
-  await prisma.user.deleteMany();
+  if (await tableExists('User')) {
+    if ((prisma as any).user?.deleteMany) {
+      await prisma.user.deleteMany();
+    } else {
+      await prisma.$executeRawUnsafe('DELETE FROM "User";');
+    }
+  }
 
   // Users to insert (plain passwords)
   const users = [
@@ -286,8 +355,16 @@ async function main() {
     }
 
     if (status === "REJECTED") {
-      reportData.rejectionReason =
-        "Segnalazione non pertinente al patrimonio comunale.";
+      // Only include the field in the create payload if the DB column matches
+      // the current Prisma schema name. Otherwise we'll set it via a raw
+      // UPDATE after the record is created.
+      const reasonText = "Segnalazione non pertinente al patrimonio comunale.";
+      if (rejectionColumn === 'rejectionReason') {
+        reportData.rejectionReason = reasonText;
+      } else {
+        // set temporary property so we can update after creation
+        (reportData as any).__rejectionReasonForRawUpdate = reasonText;
+      }
     }
 
     const createdReport = await prisma.report.create({ data: reportData });
@@ -333,6 +410,13 @@ async function main() {
     }
 
     if (status === "REJECTED") {
+      // If the DB uses the old `rejectedReason` column name, update it now.
+      if (rejectionColumn === 'rejectedReason' && (reportData as any).__rejectionReasonForRawUpdate) {
+        await prisma.$executeRaw`
+          UPDATE "Report" SET "rejectedReason" = ${ (reportData as any).__rejectionReasonForRawUpdate } WHERE id = ${ createdReport.id }
+        `;
+      }
+
       await prisma.reportMessage.create({
         data: {
           content:

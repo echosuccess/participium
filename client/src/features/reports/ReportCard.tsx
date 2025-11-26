@@ -1,5 +1,8 @@
 import { Badge } from 'react-bootstrap';
 import type { Report } from "../../types";
+import UpdateStatusForm from '../../components/UpdateStatusForm';
+import { useAuth } from '../../hooks';
+import { TECHNICAL_ROLES } from '../../utils/roles';
 
 interface ReportCardProps {
   report: Report;
@@ -29,6 +32,7 @@ function statusVariant(status?: string) {
 export default function ReportCard({ report, isSelected = false, onClick }: ReportCardProps) {
   // Ensure status is uppercase to match backend enums
   const statusText = typeof report.status === 'string' ? report.status : String(report.status);
+  const { user } = useAuth();
 
   return (
     <div
@@ -82,6 +86,12 @@ export default function ReportCard({ report, isSelected = false, onClick }: Repo
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: '#9ca3af', flexWrap: 'wrap', gap: '0.5rem' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>📍 <span style={{ fontFamily: 'monospace' }}>{report.latitude.toFixed(6)}, {report.longitude.toFixed(6)}</span></span>
+          {/* Allow municipal users to update report status inline */}
+          {user && TECHNICAL_ROLES.includes(user.role) && (
+            <div style={{ marginLeft: 'auto' }}>
+              <UpdateStatusForm reportId={report.id} />
+            </div>
+          )}
         </div>
       </div>
     </div>

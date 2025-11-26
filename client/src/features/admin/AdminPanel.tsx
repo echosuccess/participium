@@ -8,7 +8,7 @@ import Card, { CardHeader, CardBody } from "../../components/ui/Card.tsx";
 import { createMunicipalityUser, listMunicipalityUsers, deleteMunicipalityUser } from "../../api/api";
 import type { MunicipalityUserRequest, MunicipalityUserResponse } from "../../types";
 import { PersonPlus, Trash, People } from "react-bootstrap-icons";
-import { MUNICIPALITY_ROLES, getRoleLabel } from "../../utils/roles";
+import { TECHNICAL_ROLES, getRoleLabel } from "../../utils/roles";
 
 const INITIAL_FORM_STATE: MunicipalityUserRequest = {
   firstName: "",
@@ -180,7 +180,7 @@ export default function AdminPanel() {
                   required
                 >
                   <option value="">- Select a role -</option>
-                  {MUNICIPALITY_ROLES.map((role) => (
+                  {TECHNICAL_ROLES.map((role) => (
                     <option key={role} value={role}>
                       {getRoleLabel(role)}
                     </option>
