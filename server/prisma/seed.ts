@@ -295,6 +295,18 @@ async function main() {
       `📝 Created report id=${createdReport.id} status=${status} category=${category}`
     );
 
+    // Log assignment info if present
+    if (reportData.assignedToId) {
+      const assignedUser = createdUsers.find(
+        (u) => u.id === reportData.assignedToId
+      );
+      if (assignedUser) {
+        console.log(
+          `   → Assigned to: ${assignedUser.email} (${assignedUser.role})`
+        );
+      }
+    }
+
     // add 1-3 realistic photo placeholders for the report (vary per report)
     const numPhotos = (i % 3) + 1; // 1,2,3 repeating
     for (let p = 1; p <= numPhotos; p++) {

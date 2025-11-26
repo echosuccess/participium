@@ -1,3 +1,59 @@
+// Get reports assigned to the authenticated technical officer
+import { getAssignedReportsService } from "../services/reportService";
+export async function getAssignedReports(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const user = req.user as { id: number; role: string };
+  if (!user || !user.id) {
+    throw new UnauthorizedError("Authentication required");
+  }
+  // Only allow technical roles (not citizens, admins, public relations)
+  const technicalRoles = [
+    "CULTURE_EVENTS_TOURISM_SPORTS",
+    "LOCAL_PUBLIC_SERVICES",
+    "EDUCATION_SERVICES",
+    "PUBLIC_RESIDENTIAL_HOUSING",
+    "INFORMATION_SYSTEMS",
+    "MUNICIPAL_BUILDING_MAINTENANCE",
+    "PRIVATE_BUILDINGS",
+    "INFRASTRUCTURES",
+    "GREENSPACES_AND_ANIMAL_PROTECTION",
+    "WASTE_MANAGEMENT",
+    "ROAD_MAINTENANCE",
+    "CIVIL_PROTECTION",
+  ];
+  if (!technicalRoles.includes(user.role)) {
+    throw new ForbiddenError("Technical office staff privileges required");
+  }
+  const status =
+    typeof req.query.status === "string" ? req.query.status : undefined;
+  const sortBy =
+    typeof req.query.sortBy === "string" ? req.query.sortBy : undefined;
+  const order =
+    typeof req.query.order === "string" ? req.query.order : undefined;
+  // Validate status
+  let statusFilter;
+  if (status) {
+    const allowed = ["ASSIGNED", "IN_PROGRESS", "RESOLVED"];
+    if (!allowed.includes(status)) {
+      throw new BadRequestError("Invalid status filter");
+    }
+    statusFilter = status;
+  }
+  // Validate sortBy and order
+  const allowedSort = ["createdAt", "priority"];
+  const sortField = allowedSort.includes(sortBy ?? "") ? sortBy! : "createdAt";
+  const sortOrder = order === "asc" ? "asc" : "desc";
+  // Call service
+  const reports = await getAssignedReportsService(
+    user.id,
+    statusFilter,
+    sortField,
+    sortOrder
+  );
+  res.status(200).json(reports);
+}
 import { Request, Response } from "express";
 import path from "path";
 import {
