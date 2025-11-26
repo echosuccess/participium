@@ -8,6 +8,7 @@ import {
   getPendingReports, 
   approveReport, 
   rejectReport,
+  getAssignableTechnicals,
   updateReportStatus,
   sendMessageToCitizen,
   getReportMessages
@@ -42,5 +43,8 @@ router.post('/:reportId/messages', requireTechnicalStaff, ApiValidationMiddlewar
 
 // GET /api/reports/:reportId/messages - Get report conversation history
 router.get('/:reportId/messages', isLoggedIn, ApiValidationMiddleware, asyncHandler(getReportMessages));
+
+// GET /api/reports/:reportId/assignable-technicals - list technicals valid for this report
+router.get('/:reportId/assignable-technicals', requirePublicRelations, asyncHandler(getAssignableTechnicals));
 
 export default router;
