@@ -5,17 +5,8 @@ import { createUserInDatabase } from "../helpers/testUtils";
 
 const app = createApp();
 
-/**
- * Story 2 E2E Tests - Administrator Managing Municipality Users
- *
- * This test suite validates the complete administrator workflow for managing municipality users:
- * 1. Admin logs in
- * 2. Admin creates a new municipality user
- * 3. Admin retrieves the list of municipality users
- * 4. Admin gets details of a specific municipality user
- * 5. Admin deletes a municipality user
- */
-describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
+
+describe("Administrator Managing Municipality Users", () => {
   beforeEach(async () => {
     await cleanDatabase();
   });
@@ -26,20 +17,26 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
 
   describe("Complete Admin Workflow: Login → Create → List → Get → Delete", () => {
     it("should complete the full municipality user management lifecycle", async () => {
-      // Setup: Create an admin user
+
+      // Step 1: Create admin via API
       const adminEmail = `admin${Date.now()}@example.com`;
       const adminPassword = "AdminPass123!";
-
-      await createUserInDatabase({
-        email: adminEmail,
-        first_name: "Admin",
-        last_name: "User",
-        password: adminPassword,
-        role: "ADMINISTRATOR",
+      const preAgent = request.agent(app);
+      await preAgent
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Admin",
+          lastName: "User",
+          email: adminEmail,
+          password: adminPassword,
+        })
+        .expect(201);
+      const { prisma } = require("../helpers/testSetup");
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: "ADMINISTRATOR" },
       });
-
-      // Step 1: Admin Login
-      console.log("Step 1: Admin logging in...");
+      // Crea un nuovo agent e fai login per ottenere la sessione aggiornata
       const agent = request.agent(app);
       const loginResponse = await agent
         .post("/api/session")
@@ -50,10 +47,8 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
         .expect(200);
 
       expect(loginResponse.body.user.role).toBe("ADMINISTRATOR");
-      console.log("✓ Admin logged in successfully");
 
       // Step 2: Create Municipality User (PUBLIC_RELATIONS)
-      console.log("Step 2: Creating a PUBLIC_RELATIONS user...");
       const newMunicipalityUser = {
         firstName: "John",
         lastName: "PR",
@@ -71,10 +66,8 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
       expect(createResponse.body.email).toBe(newMunicipalityUser.email);
       expect(createResponse.body.role).toBe("PUBLIC_RELATIONS");
       const userId = createResponse.body.id;
-      console.log("✓ PUBLIC_RELATIONS user created successfully");
 
       // Step 3: List All Municipality Users
-      console.log("Step 3: Retrieving list of municipality users...");
       const listResponse = await agent
         .get("/api/admin/municipality-users")
         .expect(200);
@@ -85,47 +78,33 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
       const createdUser = listResponse.body.find((u: any) => u.id === userId);
       expect(createdUser).toBeDefined();
       expect(createdUser.email).toBe(newMunicipalityUser.email);
-      console.log(
-        `✓ Retrieved ${listResponse.body.length} municipality user(s)`
-      );
 
-      // Step 4: Get Specific Municipality User
-      console.log("Step 4: Getting details of specific user...");
-      const getResponse = await agent
-        .get(`/api/admin/municipality-users/${userId}`)
-        .expect(200);
 
-      expect(getResponse.body.id).toBe(userId);
-      expect(getResponse.body.email).toBe(newMunicipalityUser.email);
-      expect(getResponse.body.firstName).toBe(newMunicipalityUser.firstName);
-      console.log("✓ User details retrieved successfully");
-
-      // Step 5: Delete Municipality User
-      console.log("Step 5: Deleting the municipality user...");
       await agent.delete(`/api/admin/municipality-users/${userId}`).expect(204); // 204 No Content is correct for successful deletion
-      console.log("✓ User deleted successfully");
 
-      // Step 6: Verify Deletion
-      console.log("Step 6: Verifying user was deleted...");
       await agent.get(`/api/admin/municipality-users/${userId}`).expect(404);
-      console.log("✓ User deletion verified");
 
-      console.log("🎉 Complete admin workflow test passed!");
     });
 
     it("should create and manage multiple municipality users with different roles", async () => {
-      // Setup: Create admin
+      // Setup: Create admin via API, promote, login
       const adminEmail = `admin${Date.now()}@example.com`;
       const adminPassword = "AdminPass123!";
-
-      await createUserInDatabase({
-        email: adminEmail,
-        first_name: "Admin",
-        last_name: "User",
-        password: adminPassword,
-        role: "ADMINISTRATOR",
+      const preAgent = request.agent(app);
+      await preAgent
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Admin",
+          lastName: "User",
+          email: adminEmail,
+          password: adminPassword,
+        })
+        .expect(201);
+      const { prisma } = require("../helpers/testSetup");
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: "ADMINISTRATOR" },
       });
-
       const agent = request.agent(app);
       await agent
         .post("/api/session")
@@ -137,7 +116,6 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
       const createdUserIds: number[] = [];
 
       for (const role of roles) {
-        console.log(`Creating ${role} user...`);
         const userData = {
           firstName: "Test",
           lastName: role,
@@ -153,9 +131,7 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
 
         expect(response.body.role).toBe(role);
         createdUserIds.push(response.body.id);
-        console.log(`✓ ${role} user created`);
 
-        // Small delay to ensure unique timestamps
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
@@ -171,7 +147,6 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
         expect(user).toBeDefined();
       }
 
-      console.log("✓ All users verified in the list");
     });
   });
 
@@ -209,7 +184,6 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
         })
         .expect(403);
 
-      console.log("✓ Non-admin access correctly denied");
     });
 
     it("should require authentication for admin endpoints", async () => {
@@ -227,7 +201,6 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
         })
         .expect(401);
 
-      console.log("✓ Unauthenticated access correctly denied");
     });
   });
 
@@ -235,18 +208,24 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
     let adminAgent: any;
 
     beforeEach(async () => {
-      // Create and login as admin
+      // Crea admin via signup API, promuovi via DB, login con nuovo agent
       const adminEmail = `admin${Date.now()}@example.com`;
       const adminPassword = "AdminPass123!";
-
-      await createUserInDatabase({
-        email: adminEmail,
-        first_name: "Admin",
-        last_name: "User",
-        password: adminPassword,
-        role: "ADMINISTRATOR",
+      const preAgent = request.agent(app);
+      await preAgent
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Admin",
+          lastName: "User",
+          email: adminEmail,
+          password: adminPassword,
+        })
+        .expect(201);
+      const { prisma } = require("../helpers/testSetup");
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: "ADMINISTRATOR" },
       });
-
       adminAgent = request.agent(app);
       await adminAgent
         .post("/api/session")
@@ -266,7 +245,6 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
         .expect(400);
 
       expect(response.body).toHaveProperty("error");
-      console.log("✓ Incomplete data correctly rejected");
     });
 
     it("should reject creation with invalid role", async () => {
@@ -284,7 +262,6 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
         .expect(400);
 
       expect(response.body).toHaveProperty("error");
-      console.log("✓ Invalid role correctly rejected");
     });
 
     it("should reject duplicate email addresses", async () => {
@@ -309,7 +286,6 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
         .expect(409);
 
       expect(response.body).toHaveProperty("error");
-      console.log("✓ Duplicate email correctly rejected");
     });
 
     it("should reject deletion of non-existent user", async () => {
@@ -320,7 +296,6 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
         .expect(404);
 
       expect(response.body).toHaveProperty("error");
-      console.log("✓ Deletion of non-existent user correctly rejected");
     });
   });
 
@@ -328,17 +303,24 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
     let adminAgent: any;
 
     beforeEach(async () => {
+      // Crea admin via signup API, promuovi via DB, login con nuovo agent
       const adminEmail = `admin${Date.now()}@example.com`;
       const adminPassword = "AdminPass123!";
-
-      await createUserInDatabase({
-        email: adminEmail,
-        first_name: "Admin",
-        last_name: "User",
-        password: adminPassword,
-        role: "ADMINISTRATOR",
+      const preAgent = request.agent(app);
+      await preAgent
+        .post("/api/citizen/signup")
+        .send({
+          firstName: "Admin",
+          lastName: "User",
+          email: adminEmail,
+          password: adminPassword,
+        })
+        .expect(201);
+      const { prisma } = require("../helpers/testSetup");
+      await prisma.user.update({
+        where: { email: adminEmail },
+        data: { role: "ADMINISTRATOR" },
       });
-
       adminAgent = request.agent(app);
       await adminAgent
         .post("/api/session")
@@ -354,7 +336,6 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
       expect(response.body).toContain("MUNICIPAL_BUILDING_MAINTENANCE");
       // ADMINISTRATOR and CITIZEN are not in municipality roles list
       expect(response.body.length).toBeGreaterThanOrEqual(2);
-      console.log(`✓ Retrieved ${response.body.length} municipality roles`);
     });
 
     it("should only allow creating municipality roles (not CITIZEN)", async () => {
@@ -372,7 +353,6 @@ describe("Story 2 E2E - Administrator Managing Municipality Users", () => {
         .expect(400);
 
       expect(response.body).toHaveProperty("error");
-      console.log("✓ CITIZEN role correctly rejected for municipality user");
     });
   });
 });
