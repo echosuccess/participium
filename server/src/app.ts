@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { Request, Response, NextFunction } from "express";
 import express, { Express } from "express";
 import session from "express-session";
 import passport from "passport";
@@ -14,11 +15,17 @@ import authRoutes from "./routes/authRoutes";
 import citizenRoutes from "./routes/citizenRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import reportRoutes from "./routes/reportRoutes";
+import notificationRoutes from "./routes/notificationRoutes";
 import { ApiValidationMiddleware } from "./middlewares/validationMiddlewere";
 import { initMinio } from "./utils/minioClient";
 
 export function createApp(): Express {
   const app: Express = express();
+  // Log tutte le richieste HTTP
+  app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+  });
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -56,7 +63,7 @@ export function createApp(): Express {
   configurePassport();
   app.use(passport.initialize());
   app.use(passport.session());
-  
+
   app.use(
     CONFIG.ROUTES.SWAGGER,
     swaggerUi.serve,
@@ -70,12 +77,17 @@ export function createApp(): Express {
   app.use(CONFIG.ROUTES.CITIZEN, citizenRoutes);
   app.use(CONFIG.ROUTES.ADMIN, adminRoutes);
   app.use(CONFIG.ROUTES.REPORTS, reportRoutes);
+  app.use(CONFIG.ROUTES.NOTIFICATIONS, notificationRoutes);
 
   app.use(errorHandler);
+  // Log errori runtime
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error("Errore runtime:", err);
+    next(err);
+  });
   initMinio().then(() => {
     console.log("MinIO initialized successfully");
   });
 
   return app;
 }
-
