@@ -224,6 +224,12 @@ async function main() {
         "The central fountain has a strong smell and the water appears cloudy. Please inspect as soon as possible.",
       preferredRole: "LOCAL_PUBLIC_SERVICES",
     },
+    ARCHITECTURAL_BARRIERS: {
+      title: "Park entrance without wheelchair access",
+      description:
+        "The main entrance to the city park does not have a wheelchair-accessible ramp, making it difficult for people with mobility issues to enter.",
+      preferredRole: "MUNICIPAL_BUILDING_MAINTENANCE",
+    },
     SEWER_SYSTEM: {
       title: "Road drain flooding after heavy rain",
       description:
@@ -316,7 +322,7 @@ async function main() {
         });
 
       } else {
-        const photoUrl = `http://minio:9000/reports-photos/report4.1.jpeg`
+        const photoUrl = `http://minio:9000/reports-photos/report5.1.jpeg`
         await prisma.reportPhoto.create({
           data: {
             url: photoUrl,
