@@ -1,13 +1,18 @@
+import React from "react";
 import { renderHook, waitFor, act } from "@testing-library/react";
-import { useAuth } from "../../../src/hooks/useAuth";
+import { useAuth, AuthProvider } from "../../../src/hooks/useAuth";
+import { vi } from "vitest";
+
+const wrapper = ({ children }: { children?: React.ReactNode }) =>
+  React.createElement(AuthProvider, null, children as React.ReactNode);
 
 // Mock fetch
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
 
 describe("useAuth", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockFetch.mockClear();
   });
 
@@ -15,10 +20,10 @@ describe("useAuth", () => {
     it("should have initial loading state", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ authenticated: false }),
+        text: async () => JSON.stringify({ authenticated: false }),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       expect(result.current.loading).toBe(true);
       expect(result.current.user).toBe(null);
@@ -31,10 +36,11 @@ describe("useAuth", () => {
       const mockUser = { id: 1, email: "test@example.com" };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ authenticated: true, user: mockUser }),
+        text: async () =>
+          JSON.stringify({ authenticated: true, user: mockUser }),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -51,10 +57,10 @@ describe("useAuth", () => {
     it("should set user to null when not authenticated", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ authenticated: false }),
+        text: async () => JSON.stringify({ authenticated: false }),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -67,7 +73,7 @@ describe("useAuth", () => {
     it("should handle fetch errors", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -91,15 +97,15 @@ describe("useAuth", () => {
       // Mock checkAuth
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ authenticated: false }),
+        text: async () => JSON.stringify({ authenticated: false }),
       });
       // Mock signup
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse,
+        text: async () => JSON.stringify(mockResponse),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -129,15 +135,15 @@ describe("useAuth", () => {
       // Mock checkAuth
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ authenticated: false }),
+        text: async () => JSON.stringify({ authenticated: false }),
       });
       // Mock signup
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ message: "Email already exists" }),
+        text: async () => JSON.stringify({ message: "Email already exists" }),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -156,15 +162,15 @@ describe("useAuth", () => {
       // Mock checkAuth
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ authenticated: false }),
+        text: async () => JSON.stringify({ authenticated: false }),
       });
       // Mock login
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ user: mockUser }),
+        text: async () => JSON.stringify({ user: mockUser }),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -193,15 +199,15 @@ describe("useAuth", () => {
       // Mock checkAuth
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ authenticated: false }),
+        text: async () => JSON.stringify({ authenticated: false }),
       });
       // Mock login
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ message: "Invalid credentials" }),
+        text: async () => JSON.stringify({ message: "Invalid credentials" }),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -219,10 +225,11 @@ describe("useAuth", () => {
       const mockUser = { id: 1, email: "test@example.com" };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ authenticated: true, user: mockUser }),
+        text: async () =>
+          JSON.stringify({ authenticated: true, user: mockUser }),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.user).toEqual(mockUser);
@@ -231,7 +238,7 @@ describe("useAuth", () => {
       // Now logout
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({}),
+        text: async () => JSON.stringify({}),
       });
 
       await act(async () => {
@@ -250,15 +257,15 @@ describe("useAuth", () => {
       // Mock checkAuth
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ authenticated: false }),
+        text: async () => JSON.stringify({ authenticated: false }),
       });
       // Mock logout
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ message: "Logout failed" }),
+        text: async () => JSON.stringify({ message: "Logout failed" }),
       });
 
-      const { result } = renderHook(() => useAuth());
+      const { result } = renderHook(() => useAuth(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

@@ -5,7 +5,9 @@ import Header from "./components/Header";
 import HomePage from "./features/reports/HomePage.tsx";
 import LoginPage from "./features/auth/LoginPage.tsx";
 import SignupPage from "./features/auth/SignupPage.tsx";
+import CitizenSettings from "./features/auth/CitizenSettings";
 import AdminPanel from "./features/admin/AdminPanel.tsx";
+import TechPanel from "./features/technician/TechPanel.tsx";
 import ReportForm from "./components/ReportForm";
 
 function App() {
@@ -21,15 +23,19 @@ function App() {
   }
 
   return (
-    <div>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Header showBackToHome={location.pathname !== "/"} />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/admin" element={<AdminPanel />} />
-        <Route path="/report/new" element={<ReportForm />} />
-      </Routes>
+      <div style={{ flex: 1, overflow: location.pathname === '/' ? 'hidden' : 'auto' }}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/me" element={<CitizenSettings />} />
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/assign-reports" element={<TechPanel />} />
+          <Route path="/report/new" element={<ReportForm />} />
+        </Routes>
+      </div>
     </div>
   );
 }
