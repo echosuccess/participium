@@ -81,7 +81,7 @@ export default function ReportCard({ report, isSelected = false, onClick }: Repo
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: '#9ca3af', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>📍 <span style={{ fontFamily: 'monospace' }}>{report.latitude.toFixed(6)}, {report.longitude.toFixed(6)}</span></span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>📍 <span style={{ fontFamily: 'monospace' }}>{report.address}</span></span>
         </div>
       </div>
     </div>

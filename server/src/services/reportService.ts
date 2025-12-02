@@ -225,6 +225,7 @@ export async function getApprovedReports(
       createdAt: "desc",
     },
   });
+  
   return reports.map(toReportDTO);
 }
 

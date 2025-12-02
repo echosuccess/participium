@@ -58,7 +58,6 @@ export default function ReportForm() {
   const [isDragging, setIsDragging] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [hoverPreview, setHoverPreview] = useState<number | null>(null);
-
   const topRef = useRef<HTMLDivElement>(null);
 
   const processFiles = (newFiles: File[]) => {
