@@ -9,7 +9,7 @@ import {
   Form,
   Card,
 } from "react-bootstrap";
-import { GeoAlt, FileText, Tag, Camera, X } from "react-bootstrap-icons";
+import { GeoAlt, FileText, Tag, Camera, X, Map as MapIcon} from "react-bootstrap-icons";
 import MapView from "./MapView";
 import type { ReportCategory, ReportPhoto } from "../../../shared/ReportTypes";
 import { createReport } from "../api/api";
@@ -37,6 +37,7 @@ import {
   mapDivStyle,
   submitButtonStyle,
 } from "../styles/ReportFormStyles";
+import { fetchAddressFromCoordinates } from "../utils/address";
 
 export default function ReportForm() {
   const navigate = useNavigate();
@@ -58,6 +59,8 @@ export default function ReportForm() {
   const [isDragging, setIsDragging] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [hoverPreview, setHoverPreview] = useState<number | null>(null);
+  const [address, setAddress] = useState<string | null>(null); 
+  const [loadingAddress, setLoadingAddress] = useState(false); 
   const topRef = useRef<HTMLDivElement>(null);
 
   const processFiles = (newFiles: File[]) => {
@@ -126,9 +129,13 @@ export default function ReportForm() {
     }
   };
 
-  const handleLocationSelect = (lat: number, lng: number) => {
+  const handleLocationSelect = async (lat: number, lng: number) => {
     setSelectedLocation([lat, lng]);
     setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+    setLoadingAddress(true);
+    const fetchedAddress = await fetchAddressFromCoordinates(lat, lng);
+    setAddress(fetchedAddress);
+    setLoadingAddress(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -159,6 +166,7 @@ export default function ReportForm() {
       dataToSend.append("latitude", formData.latitude.toString());
       dataToSend.append("longitude", formData.longitude.toString());
       dataToSend.append("isAnonymous", formData.isAnonymous.toString());
+      dataToSend.append("address", address || "");
       files.forEach((file) => {
         dataToSend.append("photos", file);
       });
@@ -442,9 +450,20 @@ export default function ReportForm() {
                       <div style={coordinatesStyle}>
                         <h4 style={h4Style}>Selected Location</h4>
                         <div style={locationDivStyle}>
+                          {/*coordinates*/}
                           <div style={mapDivStyle}>
                             <GeoAlt /> {selectedLocation[0].toFixed(6)},{" "}
                             {selectedLocation[1].toFixed(6)}
+                          </div>
+                          {/*address*/}
+                          <div style={mapDivStyle}>
+                            {loadingAddress ? (
+                              <span>Loading address...</span>
+                            ) : (
+                              <span>
+                                <MapIcon /> {address || "No address available"}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
