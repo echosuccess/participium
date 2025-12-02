@@ -212,7 +212,7 @@ export default function MapView({
     }
 
     // Add markers for reports using MarkerClusterGroup
-    const markerCluster = (L as any).markerClusterGroup({
+    /* const markerCluster = (L as any).markerClusterGroup({
       showCoverageOnHover: false,
       maxClusterRadius: 60, // distanza in pixel per raggruppare
       spiderfyOnMaxZoom: true,
@@ -237,9 +237,7 @@ export default function MapView({
       popupContent.innerHTML = `
         <div class="report-popup-header">${report.title}</div>
         <div class="report-popup-body">
-          <div class="report-popup-location">${report.latitude.toFixed(
-            6
-          )}, ${report.longitude.toFixed(6)}</div>
+          <div class="report-popup-location">${report.address}</div>
           <div class="report-popup-description">${report.description}</div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
             <span style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">${
@@ -273,7 +271,7 @@ export default function MapView({
       markerCluster.addLayer(marker);
     });
 
-    map.addLayer(markerCluster);
+    map.addLayer(markerCluster); */
 
     mapInstanceRef.current = map;
 
@@ -327,9 +325,7 @@ export default function MapView({
       popupContent.innerHTML = `
         <div class="report-popup-header">${report.title}</div>
         <div class="report-popup-body">
-          <div class="report-popup-location">${report.latitude.toFixed(
-            6
-          )}, ${report.longitude.toFixed(6)}</div>
+          <div class="report-popup-location">${report.address}</div>
           <div class="report-popup-description">${report.description}</div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
             <span style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">${

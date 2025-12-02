@@ -964,7 +964,6 @@ paths:
                 code: 500
                 error: "InternalServerError"
                 message: "Unable to create report"
-
     get:
       tags:
         - Reports

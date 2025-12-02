@@ -223,7 +223,7 @@ export default function ReportCard({
           >
             📍{" "}
             <span style={{ fontFamily: "monospace" }}>
-              {report.latitude.toFixed(6)}, {report.longitude.toFixed(6)}
+              {report.address}
             </span>
           </span>
         </div>
