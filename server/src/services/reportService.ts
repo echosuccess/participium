@@ -245,7 +245,7 @@ export async function approveReport(
   
   const updatedReport = await reportRepository.update(reportId, {
     status: ReportStatus.ASSIGNED,
-    assignedToId: assignedTechnical.id,
+    assignedOfficerId: assignedTechnical.id,
   });
 
   if (!updatedReport) throw new NotFoundError("Report not found after update");
@@ -324,7 +324,7 @@ export async function updateReportStatus(
   }
 
   // Verifica che il technical sia assegnato a questo report
-  if (report.assignedToId !== technicalUserId) {
+  if (report.assignedOfficerId !== technicalUserId) {
     throw new ForbiddenError("You are not assigned to this report");
   }
 
@@ -354,7 +354,7 @@ export async function sendMessageToCitizen(
   }
 
   // Verifica che il technical sia assegnato a questo report
-  if (report.assignedToId !== technicalUserId) {
+  if (report.assignedOfficerId !== technicalUserId) {
     throw new ForbiddenError("You are not assigned to this report");
   }
 
@@ -365,7 +365,7 @@ export async function sendMessageToCitizen(
   });
 
   // Notifica il cittadino del nuovo messaggio
-  const senderName = `${report.assignedTo?.first_name} ${report.assignedTo?.last_name}`;
+  const senderName = `${report.assignedOfficer?.first_name} ${report.assignedOfficer?.last_name}`;
   await notifyNewMessage(report.id, report.userId, senderName);
 
   return {
@@ -396,7 +396,7 @@ export async function getReportMessages(
 
   // Verifica autorizzazione: il cittadino può vedere solo i propri report, il technical può vedere i report assegnati
   const isReportOwner = report.userId === userId;
-  const isAssignedTechnical = report.assignedToId === userId;
+  const isAssignedTechnical = report.assignedOfficerId === userId;
   
   if (!isReportOwner && !isAssignedTechnical) {
     throw new ForbiddenError("You are not authorized to view this conversation");

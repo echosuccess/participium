@@ -52,7 +52,7 @@ export class User {
   @OneToMany("ReportMessage", "user")
   messages: ReportMessage[];
 
-  @OneToMany("Report", "assignedTo")
+  @OneToMany("Report", "assignedOfficer")
   assignedReports: Report[];
 
   @OneToMany("Notification", "user")

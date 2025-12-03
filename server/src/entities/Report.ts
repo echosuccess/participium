@@ -55,7 +55,10 @@ export class Report {
   userId: number;
 
   @Column({ type: "int", nullable: true })
-  assignedToId: number;
+  assignedOfficerId: number | null;
+
+  @Column({ type: "int", nullable: true })
+  externalMaintainerId: number | null;
 
   @Column({ type: "int", nullable: true })
   externalCompanyId: number | null;
@@ -77,8 +80,8 @@ export class Report {
   user: User;
 
   @ManyToOne("User", "assignedReports", { nullable: true })
-  @JoinColumn({ name: "assignedToId" })
-  assignedTo: User;
+  @JoinColumn({ name: "assignedOfficerId" })
+  assignedOfficer: User | null;
 
   @OneToMany("ReportPhoto", "report")
   photos: ReportPhoto[];
@@ -88,6 +91,10 @@ export class Report {
 
   @OneToMany("Notification", "report")
   notifications: Notification[];
+
+  @ManyToOne("User", "reports", { nullable: true })
+  @JoinColumn({ name: "externalMaintainerId" })
+  externalMaintainer: User | null;
 
   @ManyToOne("ExternalCompany", "reports", { nullable: true })
   @JoinColumn({ name: "externalCompanyId" })
