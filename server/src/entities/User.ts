@@ -57,6 +57,15 @@ export class User {
   @Column({ default: true })
   email_notifications_enabled: boolean;
 
+  @Column({ default: false })
+  isVerified: boolean;
+
+  @Column({ type: "varchar", nullable: true })
+  verificationToken: string | null;
+
+  @Column({ type: "timestamp", nullable: true })
+  verificationCodeExpiresAt: Date | null;
+
   @OneToMany("Report", "user")
   reports: import("./Report").Report[];
 
