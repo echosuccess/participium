@@ -13,10 +13,16 @@ export const AppDataSource = new DataSource({
   entities: [User, CitizenPhoto, Report, ReportPhoto, ReportMessage, Notification],
   migrations: ["dist/app/src/migrations/*.js"],
   // Force synchronization in Docker/production for setup
-  synchronize: true, // Always sync in containerized environment
+  synchronize: process.env.TYPEORM_SYNCHRONIZE === "true", 
   logging: process.env.NODE_ENV === "development" || process.env.TYPEORM_LOGGING === "true",
   // Enable schema creation in Docker environment
   dropSchema: false,
+  // Additional connection options for Docker
+  connectTimeoutMS: 20000,
+  extra: {
+    max: 10,
+    connectionTimeoutMillis: 10000,
+  },
 });
 
 export default AppDataSource;

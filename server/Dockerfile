@@ -38,6 +38,7 @@ RUN apk add --no-cache \
     tini \
     wget \
     curl \
+    netcat-openbsd \
     postgresql-client \
     && addgroup -g 1001 -S nodejs \
     && adduser -S nodejs -u 1001
@@ -70,5 +71,5 @@ ENV NODE_ENV=production
 # Use tini to handle signals properly
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Start the application with correct path from actual build output
-CMD ["node", "dist/app/src/index.js"]
+# Start the application with database seeding if needed
+CMD ["sh", "-c", "echo 'Waiting for database to be ready...' && until nc -z ${DB_HOST:-db} ${DB_PORT:-5432}; do echo 'Database not ready, waiting 3 seconds...'; sleep 3; done && echo 'Database is ready!' && if [ \"$AUTO_SEED\" = \"true\" ]; then echo 'Running database seed...' && node dist/app/seed/seed.js || echo 'Seed failed but continuing...'; fi && echo 'Starting server...' && node dist/app/src/index.js"]
