@@ -1,5 +1,6 @@
 import { UserDTO, Role } from './UserDTO';
 import { ReportCategory, ReportStatus, ReportPhoto } from "../../../shared/ReportTypes";
+import { ExternalCompanyDTO } from "./ExternalCompanyDTO";
 
 export { ReportCategory, ReportStatus };
 
@@ -15,6 +16,7 @@ export type ReportDTO = {
   status: ReportStatus;
   user?: UserDTO;
   assignedTo?: UserDTO | null;
+  externalCompany?: ExternalCompanyDTO | null;
   messages: ReportMessageDTO[];
   rejectedReason?: string | null;
   photos: ReportPhoto[];
@@ -52,13 +54,19 @@ export function toReportDTO(r: any): ReportDTO {
             emailNotificationsEnabled: r.user.email_notifications_enabled ?? true,
         } : undefined,
         assignedTo: r.assignedTo ? {
-            id: r.assignedTo.id,
-            firstName: r.assignedTo.first_name,
-            lastName: r.assignedTo.last_name,
-            email: r.assignedTo.email,
-            role: r.assignedTo.role as Role,
-            telegramUsername: r.assignedTo.telegram_username ?? null,
-            emailNotificationsEnabled: r.assignedTo.email_notifications_enabled ?? true,
+          id: r.assignedTo.id,
+          firstName: r.assignedTo.first_name,
+          lastName: r.assignedTo.last_name,
+          email: r.assignedTo.email,
+          role: r.assignedTo.role as Role,
+          telegramUsername: r.assignedTo.telegram_username ?? null,
+          emailNotificationsEnabled: r.assignedTo.email_notifications_enabled ?? true,
+        } : null,
+        externalCompany: r.externalCompany ? {
+            id: r.externalCompany.id,
+            name: r.externalCompany.name,
+            categories: r.externalCompany.categories ? r.externalCompany.categories.map((c: any) => c as ReportCategory) : [],
+            platformAccess: r.externalCompany.platformAccess
         } : null,
         messages: r.messages.map((m: any) => ({
             id: m.id,

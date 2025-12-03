@@ -4,12 +4,13 @@ import {
   Column,
   OneToMany,
   OneToOne,
+  ManyToOne,
+  JoinColumn,
 } from "typeorm";
 import { Report } from "./Report";
 import { ReportMessage } from "./ReportMessage";
 import { Notification } from "./Notification";
 import { CitizenPhoto } from "./CitizenPhoto";
-import { ExternalCompanyUser } from "./ExternalCompanyUser";
 import { Role } from "../../../shared/RoleTypes";
 
 @Entity("User")
@@ -60,9 +61,10 @@ export class User {
   @OneToOne("CitizenPhoto", "user")
   photo: CitizenPhoto;
 
-  @OneToMany("ExternalCompanyUser", "user")
-  externalCompanies: ExternalCompanyUser[];
+  @Column({ type: "int", nullable: true })
+  externalCompanyId: number | null;
 
-  @OneToMany("Report", "externalMaintainer")
-  externalReports: Report[];
+  @ManyToOne("ExternalCompany", "maintainers", { nullable: true })
+  @JoinColumn({ name: "externalCompanyId" })
+  externalCompany: import("./ExternalCompany").ExternalCompany | null;
 }

@@ -4,8 +4,8 @@ import { UserRepository } from "../src/repositories/UserRepository";
 import { ReportRepository } from "../src/repositories/ReportRepository";
 import { ReportPhotoRepository } from "../src/repositories/ReportPhotoRepository";
 import { ReportMessageRepository } from "../src/repositories/ReportMessageRepository";
-import { Role } from "../src/entities/User";
-import { ReportCategory, ReportStatus } from "../src/entities/Report";
+import { Role } from "../../shared/RoleTypes";
+import { ReportCategory, ReportStatus } from "../../shared/ReportTypes";
 import * as bcrypt from "bcrypt";
 
 const seedDatabase = async () => {

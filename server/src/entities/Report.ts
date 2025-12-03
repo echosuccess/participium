@@ -60,9 +60,6 @@ export class Report {
   @Column({ type: "int", nullable: true })
   externalCompanyId: number | null;
 
-  @Column({ type: "int", nullable: true })
-  externalMaintainerId: number | null;
-
   @Column({ type: "datetime", nullable: true })
   externalAssignedAt: Date | null;
 
@@ -95,8 +92,4 @@ export class Report {
   @ManyToOne("ExternalCompany", "reports", { nullable: true })
   @JoinColumn({ name: "externalCompanyId" })
   externalCompany: ExternalCompany | null;
-
-  @ManyToOne("User", "externalReports", { nullable: true })
-  @JoinColumn({ name: "externalMaintainerId" })
-  externalMaintainer: User | null;
 }
