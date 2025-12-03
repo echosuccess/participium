@@ -27,6 +27,7 @@ export type ReportMessageDTO = {
   content: string;
   createdAt: string;
   senderId: number;
+  senderRole: Role;
 };
 
 
@@ -64,6 +65,7 @@ export function toReportDTO(r: any): ReportDTO {
             content: m.content,
             createdAt: m.createdAt,
             senderId: m.senderId,
+            senderRole: m.user?.role as Role,
         })),
         rejectedReason: r.rejectedReason ?? r.rejectionReason ?? null,
         photos: r.photos,

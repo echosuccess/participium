@@ -373,6 +373,7 @@ export async function sendMessageToCitizen(
     content: savedMessage.content,
     createdAt: savedMessage.createdAt.toISOString(),
     senderId: savedMessage.senderId,
+    senderRole: savedMessage.user.role,
   };
 }
 
@@ -408,6 +409,7 @@ export async function getReportMessages(
     content: m.content,
     createdAt: m.createdAt.toISOString(),
     senderId: m.senderId,
+    senderRole: m.user.role,
   }));
 }
 
