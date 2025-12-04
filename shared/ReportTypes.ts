@@ -19,6 +19,14 @@ export enum ReportStatus {
   RESOLVED = "RESOLVED"
 }
 
+export enum NotificationType {
+  REPORT_STATUS_CHANGED = "REPORT_STATUS_CHANGED",
+  MESSAGE_RECEIVED = "MESSAGE_RECEIVED",
+  REPORT_ASSIGNED = "REPORT_ASSIGNED",
+  REPORT_APPROVED = "REPORT_APPROVED",
+  REPORT_REJECTED = "REPORT_REJECTED",
+}
+
 export interface CreateReportRequest {
   title: string;
   description: string;
@@ -43,4 +51,9 @@ export interface CreateReportResponse {
 // Story 6 interfaces
 export interface RejectReportRequest {
   reason: string;
+}
+
+export interface AssignReportToExternalResponse {
+  message: string;
+  report: any;
 }

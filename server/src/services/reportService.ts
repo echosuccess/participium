@@ -11,6 +11,7 @@ import { ReportRepository } from "../repositories/ReportRepository";
 import { ReportMessageRepository } from "../repositories/ReportMessageRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { ReportPhotoRepository } from "../repositories/ReportPhotoRepository";
+import { ExternalCompanyRepository } from "../repositories/ExternalCompanyRepository";
 
 // Services and utilities
 import { notifyReportStatusChange, notifyNewMessage, notifyReportAssigned, notifyReportApproved, notifyReportRejected } from "./notificationService";
@@ -24,6 +25,7 @@ const reportRepository = new ReportRepository();
 const reportMessageRepository = new ReportMessageRepository(); 
 const userRepository = new UserRepository();
 const reportPhotoRepository = new ReportPhotoRepository();
+const externalCompanyRepository = new ExternalCompanyRepository();
 
 // =========================
 // ENUMS AND TYPES
@@ -245,7 +247,7 @@ export async function approveReport(
   
   const updatedReport = await reportRepository.update(reportId, {
     status: ReportStatus.ASSIGNED,
-    assignedToId: assignedTechnical.id,
+    assignedOfficerId: assignedTechnical.id,
   });
 
   if (!updatedReport) throw new NotFoundError("Report not found after update");
@@ -324,7 +326,7 @@ export async function updateReportStatus(
   }
 
   // Verifica che il technical sia assegnato a questo report
-  if (report.assignedToId !== technicalUserId) {
+  if (report.assignedOfficerId !== technicalUserId) {
     throw new ForbiddenError("You are not assigned to this report");
   }
 
@@ -354,7 +356,7 @@ export async function sendMessageToCitizen(
   }
 
   // Verifica che il technical sia assegnato a questo report
-  if (report.assignedToId !== technicalUserId) {
+  if (report.assignedOfficerId !== technicalUserId) {
     throw new ForbiddenError("You are not assigned to this report");
   }
 
@@ -365,7 +367,7 @@ export async function sendMessageToCitizen(
   });
 
   // Notifica il cittadino del nuovo messaggio
-  const senderName = `${report.assignedTo?.first_name} ${report.assignedTo?.last_name}`;
+  const senderName = `${report.assignedOfficer?.first_name} ${report.assignedOfficer?.last_name}`;
   await notifyNewMessage(report.id, report.userId, senderName);
 
   return {
@@ -396,7 +398,7 @@ export async function getReportMessages(
 
   // Verifica autorizzazione: il cittadino può vedere solo i propri report, il technical può vedere i report assegnati
   const isReportOwner = report.userId === userId;
-  const isAssignedTechnical = report.assignedToId === userId;
+  const isAssignedTechnical = report.assignedOfficerId === userId;
   
   if (!isReportOwner && !isAssignedTechnical) {
     throw new ForbiddenError("You are not authorized to view this conversation");
@@ -411,5 +413,84 @@ export async function getReportMessages(
     senderId: m.senderId,
     senderRole: m.user.role,
   }));
+}
+
+// =========================
+// EXTERNAL ASSIGNMENT FUNCTIONS
+// =========================
+
+export async function getAssignableExternals(reportId: number) {
+  const report = await reportRepository.findByIdWithRelations(reportId);
+  if (!report) throw new NotFoundError("Report not found");
+
+  const companies = await externalCompanyRepository.findByCategory(report.category as ReportCategory);
+  return companies.map(c => ({
+    id: c.id,
+    name: c.name,
+    categories: c.categories,
+    hasPlatformAccess: c.platformAccess,
+    users: c.platformAccess ? c.maintainers?.map(u => ({
+      id: u.id,
+      firstName: u.first_name,
+      lastName: u.last_name,
+      email: u.email,
+      role: u.role,
+    })) ?? [] : null,
+  }));
+}
+
+export async function assignReportToExternal(
+  reportId: number,
+  technicalUserId: number,
+  externalCompanyId: number,
+  externalMaintainerId: number | null
+) {
+  const report = await reportRepository.findByIdWithRelations(reportId);
+  if (!report) throw new NotFoundError("Report not found");
+  if (report.status !== ReportStatus.ASSIGNED) {
+    throw new BadRequestError("Report must be in ASSIGNED status to assign to external maintainer");
+  }
+  if (report.assignedOfficerId !== technicalUserId) {
+    throw new ForbiddenError("Only the assigned technical officer can assign to external maintainers");
+  }
+
+  const company = await externalCompanyRepository.findById(externalCompanyId);
+  if (!company) throw new NotFoundError("External company not found");
+
+  if (company.platformAccess) {
+    if (!externalMaintainerId) {
+      throw new BadRequestError("externalMaintainerId is required when company has platform access");
+    }
+    const maintainer = await userRepository.findById(externalMaintainerId);
+    if (!maintainer) throw new NotFoundError("External maintainer not found");
+    if (maintainer.externalCompanyId !== company.id) {
+      throw new BadRequestError("External maintainer does not belong to the specified company");
+    }
+    const updated = await reportRepository.update(reportId, {
+      externalMaintainerId: maintainer.id,
+      externalCompanyId: null,
+    });
+    await reportMessageRepository.create({
+      content: `Assigned to external maintainer: ${maintainer.first_name} ${maintainer.last_name} of company ${company.name}`,
+      senderId: technicalUserId,
+      reportId,
+    });
+    return toReportDTO(updated!);
+  } else {
+    // No platform access: must not include maintainer
+    if (externalMaintainerId) {
+      throw new BadRequestError("externalMaintainerId must be null when company does not have platform access");
+    }
+    const updated = await reportRepository.update(reportId, {
+      externalCompanyId: company.id,
+      externalMaintainerId: null,
+    });
+    await reportMessageRepository.create({
+      content: `Assigned to external company: ${company.name}`,
+      senderId: technicalUserId,
+      reportId,
+    });
+    return toReportDTO(updated!);
+  }
 }
 

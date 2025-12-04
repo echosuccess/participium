@@ -906,7 +906,7 @@ paths:
                       filename: "photo1.jpg"
                   createdAt: "2025-11-11T10:12:34Z"
                   updatedAt: "2025-11-11T10:12:34Z"
-                  assignedAt: null
+                  
         "400":
           description: Missing required fields
           content:
@@ -967,7 +967,6 @@ paths:
                 code: 500
                 error: "InternalServerError"
                 message: "Unable to create report"
-
     get:
       tags:
         - Reports
@@ -1049,7 +1048,7 @@ paths:
                       filename: "photo1.jpg"
                   createdAt: "2025-11-11T10:12:34Z"
                   updatedAt: "2025-11-11T10:12:34Z"
-                  assignedAt: null
+                  
                 - id: 1025
                   title: "Broken street light"
                   description: "Street light not working"
@@ -1076,7 +1075,7 @@ paths:
                   photos: []
                   createdAt: "2025-11-10T09:00:00Z"
                   updatedAt: "2025-11-12T08:00:00Z"
-                  assignedAt: "2025-11-10T14:00:00Z"
+                  
         "400":
           description: Invalid category parameter
           content:
@@ -1148,7 +1147,7 @@ paths:
                       filename: "photo1.jpg"
                   createdAt: "2025-11-11T10:12:34Z"
                   updatedAt: "2025-11-11T10:12:34Z"
-                  assignedAt: null
+                  
         "401":
           description: Not authenticated
           content:
@@ -1300,7 +1299,7 @@ paths:
                   name: Enel X
                   categories:
                     - PUBLIC_LIGHTING
-                  hasPlatformAccess: true
+                  platformAccess: true
                   users:
                     - id: 501
                       firstName: Marco
@@ -1317,7 +1316,7 @@ paths:
                   categories:
                     - WASTE
                     - ROADS_URBAN_FURNISHINGS
-                  hasPlatformAccess: false
+                  platformAccess: false
                   users: null
         "401":
           description: Not authenticated
@@ -1372,13 +1371,13 @@ paths:
         
         **Assignment logic based on company platform access:**
         
-        - **Companies WITH platform access** (hasPlatformAccess=true):
+        - **Companies WITH platform access** (platformAccess=true):
           - Technical officer selects a specific maintainer user from the company
           - Request must include `externalMaintainerId`
           - The selected user can log into Participium and manage the report directly
           - User can update status to IN_PROGRESS and eventually RESOLVED
         
-        - **Companies WITHOUT platform access** (hasPlatformAccess=false):
+        - **Companies WITHOUT platform access** (platformAccess=false):
           - Technical officer assigns to the company as a whole
           - Request must include `externalCompanyId`
           - Company handles intervention outside the platform
@@ -1408,13 +1407,11 @@ paths:
                 value:
                   externalCompanyId: 10
                   externalMaintainerId: 501
-                  notes: "Urgent intervention required for non-functioning streetlight. Assigned to Marco Bianchi from Enel X."
               assignToCompanyWithoutAccess:
                 summary: Assign to company WITHOUT platform access (no specific user)
                 value:
                   externalCompanyId: 11
                   externalMaintainerId: null
-                  notes: "Assigned to AMIAT for waste management. Will track progress externally."
       responses:
         "200":
           description: Report assigned to external maintainer successfully
@@ -1427,64 +1424,85 @@ paths:
                     type: string
                   report:
                     $ref: "#/components/schemas/ReportResponse"
-              example:
-                message: "Report assigned to external maintainer successfully"
-                report:
-                  id: 1024
-                  title: "Non-functioning streetlight on Via Roma"
-                  description: "The streetlight at the corner of Via Roma is not working, creating safety issues at night."
-                  category: PUBLIC_LIGHTING
-                  latitude: 45.070339
-                  longitude: 7.686864
-                  status: ASSIGNED
-                  user:
-                    id: 201
-                    firstName: Mario
-                    lastName: Rossi
-                    email: mario.rossi@example.com
-                    role: CITIZEN
-                    telegramUsername: null
-                    emailNotificationsEnabled: true
-                  assignedOfficer:
-                    id: 305
-                    firstName: Luca
-                    lastName: Verdi
-                    email: luca.verdi@municipality.com
-                    role: MUNICIPAL_BUILDING_MAINTENANCE
-                  externalMaintainer:
-                    id: 501
-                    firstName: Marco
-                    lastName: Bianchi
-                    email: marco.bianchi@enelx.com
-                    role: EXTERNAL_MAINTAINER
-                    companyId: 10
-                    companyName: Enel X
-                  externalCompany: null
-                  messages:
-                    - id: 1
-                      content: "Initial report created by user"
-                      createdAt: "2025-11-11T10:12:34Z"
-                      senderId: 201
-                      senderRole: CITIZEN
-                    - id: 2
-                      content: "Report approved and assigned to technical office"
-                      createdAt: "2025-11-11T11:15:00Z"
-                      senderId: 123
-                      senderRole: PUBLIC_RELATIONS
-                    - id: 3
-                      content: "Assigned to external maintainer: Urgent intervention required for non-functioning streetlight. External company notified."
-                      createdAt: "2025-11-12T14:30:00Z"
-                      senderId: 305
-                      senderRole: MUNICIPAL_BUILDING_MAINTENANCE
-                  rejectedReason: null
-                  photos:
-                    - id: 301
-                      url: "https://cdn.example.com/reports/1024/photo1.jpg"
-                      filename: "photo1.jpg"
-                  createdAt: "2025-11-11T10:12:34Z"
-                  updatedAt: "2025-11-12T14:30:00Z"
-                  assignedAt: "2025-11-12T09:00:00Z"
-                  externalAssignedAt: "2025-11-12T14:30:00Z"
+              examples:
+                userAssignment:
+                  summary: Assigned to external maintainer user
+                  value:
+                    message: "Report assigned to external maintainer successfully"
+                    report:
+                      id: 1024
+                      title: "Non-functioning streetlight on Via Roma"
+                      description: "The streetlight at the corner of Via Roma is not working, creating safety issues at night."
+                      category: PUBLIC_LIGHTING
+                      latitude: 45.070339
+                      longitude: 7.686864
+                      status: ASSIGNED
+                      user:
+                        id: 201
+                        firstName: Mario
+                        lastName: Rossi
+                        email: mario.rossi@example.com
+                        role: CITIZEN
+                        telegramUsername: null
+                        emailNotificationsEnabled: true
+                      assignedOfficer:
+                        id: 305
+                        firstName: Luca
+                        lastName: Verdi
+                        email: luca.verdi@municipality.com
+                        role: MUNICIPAL_BUILDING_MAINTENANCE
+                      externalHandler:
+                        type: user
+                        user:
+                          id: 501
+                          firstName: Marco
+                          lastName: Bianchi
+                          email: marco.bianchi@enelx.com
+                          role: EXTERNAL_MAINTAINER
+                          company:
+                            id: 10
+                            name: Enel X
+                            categories:
+                              - PUBLIC_LIGHTING
+                            platformAccess: true
+                      
+                companyAssignment:
+                  summary: Assigned to external company
+                  value:
+                    message: "Report assigned to external company successfully"
+                    report:
+                      id: 1025
+                      title: "Waste collection overflow"
+                      description: "Overflowing bins in Piazza Castello."
+                      category: WASTE
+                      latitude: 45.073
+                      longitude: 7.687
+                      status: ASSIGNED
+                      user:
+                        id: 202
+                        firstName: Maria
+                        lastName: Bianchi
+                        email: maria.bianchi@example.com
+                        role: CITIZEN
+                        telegramUsername: null
+                        emailNotificationsEnabled: true
+                      assignedOfficer:
+                        id: 306
+                        firstName: Paolo
+                        lastName: Neri
+                        email: paolo.neri@municipality.com
+                        role: MUNICIPAL_BUILDING_MAINTENANCE
+                      externalHandler:
+                        type: company
+                        company:
+                          id: 11
+                          name: AMIAT Torino
+                          categories:
+                            - WASTE
+                            - ROADS_URBAN_FURNISHINGS
+                          platformAccess: false
+                      
+                  
         "400":
           description: Invalid request or report not in appropriate status
           content:
@@ -1646,7 +1664,7 @@ paths:
                       filename: "photo1.jpg"
                   createdAt: "2025-11-11T10:12:34Z"
                   updatedAt: "2025-11-11T11:15:00Z"
-                  assignedAt: "2025-11-12T09:00:00Z"
+                  
         "400":
           description: Invalid report ID or report not in PENDING_APPROVAL status
           content:
@@ -1783,7 +1801,7 @@ paths:
                       filename: "photo1.jpg"
                   createdAt: "2025-11-11T10:12:34Z"
                   updatedAt: "2025-11-11T11:15:00Z"
-                  assignedAt: null
+                  
         "400":
           description: Invalid report ID, missing rejection reason, or report not in PENDING_APPROVAL status
           content:
@@ -1948,7 +1966,7 @@ paths:
                       filename: "photo1.jpg"
                   createdAt: "2025-11-11T10:12:34Z"
                   updatedAt: "2025-11-12T09:00:00Z"
-                  assignedAt: "2025-11-12T09:00:00Z"
+                  
                 - id: 1026
                   title: "Broken street light"
                   description: "Street light not working on Via Torino"
@@ -1983,7 +2001,7 @@ paths:
                   photos: []
                   createdAt: "2025-11-10T09:00:00Z"
                   updatedAt: "2025-11-13T10:30:00Z"
-                  assignedAt: "2025-11-12T14:00:00Z"
+                  
         "401":
           description: Not authenticated
           content:
@@ -2733,45 +2751,10 @@ components:
           type: string
           enum:
             - EXTERNAL_MAINTAINER
-          description: Role is always EXTERNAL_MAINTAINER for external maintainers
-          example: EXTERNAL_MAINTAINER
-        companyId:
-          type: integer
-          format: int64
-          description: ID of the external company the maintainer belongs to
-          example: 10
-        companyName:
-          type: string
-          description: Name of the external company the maintainer belongs to
-          example: Enel X
-
-    ExternalMaintainerUserInfo:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-          description: Unique identifier for the external maintainer user
-          example: 501
-        firstName:
-          type: string
-          description: External maintainer's first name
-          example: Marco
-        lastName:
-          type: string
-          description: External maintainer's last name
-          example: Bianchi
-        email:
-          type: string
-          format: email
-          description: External maintainer's email address
-          example: marco.bianchi@enelx.com
-        role:
-          type: string
-          enum:
-            - EXTERNAL_MAINTAINER
           description: Role is always EXTERNAL_MAINTAINER
           example: EXTERNAL_MAINTAINER
+        company:
+          $ref: "#/components/schemas/ExternalCompanyResponse"
 
     ExternalCompanyResponse:
       type: object
@@ -2794,22 +2777,10 @@ components:
           maxItems: 2
           example:
             - PUBLIC_LIGHTING
-        hasPlatformAccess:
+        platformAccess:
           type: boolean
           description: Whether the company has access to the Participium platform
           example: true
-        users:
-          type: array
-          nullable: true
-          items:
-            $ref: "#/components/schemas/ExternalMaintainerUserInfo"
-          description: List of maintainer users from this company (only present if hasPlatformAccess is true, null otherwise)
-          example:
-            - id: 501
-              firstName: Marco
-              lastName: Bianchi
-              email: marco.bianchi@enelx.com
-              role: EXTERNAL_MAINTAINER
 
     AssignExternalRequest:
       type: object
@@ -2821,11 +2792,11 @@ components:
         **Validation rules:**
         
         - `externalCompanyId` is **always required**
-        - If the company has **platform access** (hasPlatformAccess=true):
+        - If the company has **platform access** (platformAccess=true):
           - `externalMaintainerId` **must be provided** (not null)
           - The user must belong to the specified company
           - The user must have role EXTERNAL_MAINTAINER
-        - If the company has **no platform access** (hasPlatformAccess=false):
+        - If the company has **no platform access** (platformAccess=false):
           - `externalMaintainerId` **must be null**
         
         The backend will validate these constraints and return 400 Bad Request if violated.
@@ -2843,16 +2814,12 @@ components:
           nullable: true
           description: |
             ID of the external maintainer user to assign.
-            - **Must be provided** (not null) if the company has platform access (hasPlatformAccess=true)
-            - **Must be null** if the company does NOT have platform access (hasPlatformAccess=false)
+            - **Must be provided** (not null) if the company has platform access (platformAccess=true)
+            - **Must be null** if the company does NOT have platform access (platformAccess=false)
             
             The user must belong to the specified company and have EXTERNAL_MAINTAINER role.
           example: 501
-        notes:
-          type: string
-          nullable: true
-          description: Optional notes or instructions for the external maintainer or company. These notes are for internal use between technical office and external maintainers, not visible to citizens.
-          example: "Urgent intervention required for non-functioning streetlight. External company notified."
+
 
     MunicipalityRole:
       type: string
@@ -3041,17 +3008,13 @@ components:
           allOf:
             - $ref: "#/components/schemas/MunicipalityUserResponse"
           type: object
+          nullable: true
           description: Details of the assigned officer (null if not assigned)
-        externalMaintainer:
+        externalHandler:
           allOf:
-            - $ref: "#/components/schemas/ExternalMaintainerResponse"
+            - $ref: "#/components/schemas/ExternalHandler"
           type: object
-          description: Details of the external maintainer user if assigned to a company with platform access (null if not assigned or assigned to company without access)
-        externalCompany:
-          allOf:
-            - $ref: "#/components/schemas/ExternalCompanyResponse"
-          type: object
-          description: Details of the external company if assigned to a company without platform access (null if not assigned or assigned to maintainer user)
+          nullable: true
         messages:
           type: array
           items:
@@ -3072,18 +3035,8 @@ components:
           type: string
           format: date-time
           example: "2025-11-11T10:12:34Z"
-        assignedAt:
-          type: string
-          format: date-time
-          nullable: true
-          description: Timestamp when the report was assigned (null if not assigned)
-          example: "2025-11-12T09:00:00Z"
-        externalAssignedAt:
-          type: string
-          format: date-time
-          nullable: true
-          description: Timestamp when the report was assigned to external maintainer (null if not assigned to external)
-          example: "2025-11-12T14:30:00Z"
+        
+      
 
     ReportStatus:
       type: string
@@ -3242,3 +3195,27 @@ components:
           type: string
           format: date-time
           example: "2025-11-24T14:30:00Z"
+
+    ExternalHandler:
+      description: Discriminated union representing the external entity handling the report
+      oneOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [user]
+            user:
+              $ref: "#/components/schemas/ExternalMaintainerResponse"
+          required: [type, user]
+          description: Assigned to a specific external maintainer user (company with platform access)
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [company]
+            company:
+              $ref: "#/components/schemas/ExternalCompanyResponse"
+          required: [type, company]
+          description: Assigned to an external company (without platform access)
+      discriminator:
+        propertyName: type

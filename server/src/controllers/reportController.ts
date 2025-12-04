@@ -1,59 +1,3 @@
-// Get reports assigned to the authenticated technical officer
-import { getAssignedReportsService } from "../services/reportService";
-export async function getAssignedReports(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const user = req.user as { id: number; role: string };
-  if (!user || !user.id) {
-    throw new UnauthorizedError("Authentication required");
-  }
-  // Only allow technical roles (not citizens, admins, public relations)
-  const technicalRoles = [
-    "CULTURE_EVENTS_TOURISM_SPORTS",
-    "LOCAL_PUBLIC_SERVICES",
-    "EDUCATION_SERVICES",
-    "PUBLIC_RESIDENTIAL_HOUSING",
-    "INFORMATION_SYSTEMS",
-    "MUNICIPAL_BUILDING_MAINTENANCE",
-    "PRIVATE_BUILDINGS",
-    "INFRASTRUCTURES",
-    "GREENSPACES_AND_ANIMAL_PROTECTION",
-    "WASTE_MANAGEMENT",
-    "ROAD_MAINTENANCE",
-    "CIVIL_PROTECTION",
-  ];
-  if (!technicalRoles.includes(user.role)) {
-    throw new ForbiddenError("Technical office staff privileges required");
-  }
-  const status =
-    typeof req.query.status === "string" ? req.query.status : undefined;
-  const sortBy =
-    typeof req.query.sortBy === "string" ? req.query.sortBy : undefined;
-  const order =
-    typeof req.query.order === "string" ? req.query.order : undefined;
-  // Validate status
-  let statusFilter;
-  if (status) {
-    const allowed = ["ASSIGNED", "IN_PROGRESS", "RESOLVED"];
-    if (!allowed.includes(status)) {
-      throw new BadRequestError("Invalid status filter");
-    }
-    statusFilter = status;
-  }
-  // Validate sortBy and order
-  const allowedSort = ["createdAt", "priority"];
-  const sortField = allowedSort.includes(sortBy ?? "") ? sortBy! : "createdAt";
-  const sortOrder = order === "asc" ? "asc" : "desc";
-  // Call service
-  const reports = await getAssignedReportsService(
-    user.id,
-    statusFilter,
-    sortField,
-    sortOrder
-  );
-  res.status(200).json(reports);
-}
 import { Request, Response } from "express";
 import path from "path";
 import {
@@ -65,17 +9,20 @@ import {
   getAssignableTechnicalsForReport as getAssignableTechnicalsForReportService,
   updateReportStatus as updateReportStatusService,
   sendMessageToCitizen as sendMessageToCitizenService,
-  getReportMessages as getReportMessagesService
+  getReportMessages as getReportMessagesService,
+  getAssignedReportsService
 } from "../services/reportService";
+import { getAssignableExternals as getAssignableExternalsService, assignReportToExternal as assignReportToExternalService } from "../services/reportService";
 import { ReportCategory, ReportStatus } from "../../../shared/ReportTypes";
+import { AssignReportToExternalResponse } from "../../../shared/ReportTypes";
 import { calculateAddress } from "../utils/addressFinder";
-import minioClient, { BUCKET_NAME, getMinioObjectUrl } from "../utils/minioClient";
+import minioClient, { BUCKET_NAME } from "../utils/minioClient";
 import { BadRequestError, UnauthorizedError, ForbiddenError } from "../utils";
 
 export async function createReport(req: Request, res: Response): Promise<void> {
   const user = req.user as { id: number };
   // Destructure fields from req.body and req.files
-  const { title, description, category, latitude, longitude, isAnonymous } =
+  const { title, description, category, latitude, longitude, isAnonymous, address } =
     req.body;
   // Multer stores files in req.files (array or object depending on config)
   let photos: any[] = [];
@@ -161,10 +108,24 @@ export async function createReport(req: Request, res: Response): Promise<void> {
       });
     }
   }
+  let newReport;
+  if (!address || address.trim() === "") {
+    const newAddress = await calculateAddress(parsedLatitude, parsedLongitude);
+    const reportData = {
+    title,
+    description,
+    category: category as ReportCategory,
+    latitude: parsedLatitude,
+    longitude: parsedLongitude,
+    address: newAddress,
+    isAnonymous: isAnonymous === "true",
+    photos: photoData,
+    userId: user.id,
+  };
+  newReport = await createReportService(reportData);
 
-  const address = await calculateAddress(parsedLatitude, parsedLongitude);
-
-  const reportData = {
+  }else{
+    const reportData = {
     title,
     description,
     category: category as ReportCategory,
@@ -176,7 +137,9 @@ export async function createReport(req: Request, res: Response): Promise<void> {
     userId: user.id,
   };
 
-  const newReport = await createReportService(reportData);
+  newReport = await createReportService(reportData);
+
+  }
 
   res.status(201).json({
     message: "Report created successfully",
@@ -335,4 +298,82 @@ export async function getReportMessages(req: Request, res: Response): Promise<vo
 
   const messages = await getReportMessagesService(reportId, user.id);
   res.status(200).json(messages);
+}
+
+export async function getAssignedReports(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const user = req.user as { id: number; role: string };
+  if (!user || !user.id) {
+    throw new UnauthorizedError("Authentication required");
+  }
+  const status =
+    typeof req.query.status === "string" ? req.query.status : undefined;
+  const sortBy =
+    typeof req.query.sortBy === "string" ? req.query.sortBy : undefined;
+  const order =
+    typeof req.query.order === "string" ? req.query.order : undefined;
+  // Validate status
+  let statusFilter;
+  if (status) {
+    const allowed = ["ASSIGNED", "IN_PROGRESS", "RESOLVED"];
+    if (!allowed.includes(status)) {
+      throw new BadRequestError("Invalid status filter");
+    }
+    statusFilter = status;
+  }
+  // Validate sortBy and order
+  const allowedSort = ["createdAt", "priority"];
+  const sortField = allowedSort.includes(sortBy ?? "") ? sortBy! : "createdAt";
+  const sortOrder = order === "asc" ? "asc" : "desc";
+  // Call service
+  const reports = await getAssignedReportsService(
+    user.id,
+    statusFilter,
+    sortField,
+    sortOrder
+  );
+  res.status(200).json(reports);
+}
+
+// List external companies and maintainers available for the report's category
+export async function getAssignableExternals(req: Request, res: Response): Promise<void> {
+  const reportId = parseInt(req.params.reportId);
+  if (isNaN(reportId)) {
+    throw new BadRequestError("Invalid report ID parameter");
+  }
+  const result = await getAssignableExternalsService(reportId);
+  res.status(200).json(result);
+}
+
+// Assign a report to an external maintainer or company
+export async function assignReportToExternal(req: Request, res: Response): Promise<void> {
+  const reportId = parseInt(req.params.reportId);
+  const user = req.user as { id: number };
+  const { externalCompanyId, externalMaintainerId } = req.body || {};
+
+  if (isNaN(reportId)) {
+    throw new BadRequestError("Invalid report ID parameter");
+  }
+  if (!externalCompanyId || isNaN(parseInt(externalCompanyId))) {
+    throw new BadRequestError("externalCompanyId is required and must be a valid integer");
+  }
+
+  const companyIdNum = parseInt(externalCompanyId);
+  const maintainerIdNum = externalMaintainerId !== null && externalMaintainerId !== undefined
+    ? parseInt(externalMaintainerId)
+    : null;
+
+  const updatedReport = await assignReportToExternalService(
+    reportId,
+    user.id,
+    companyIdNum,
+    maintainerIdNum
+  );
+  const response: AssignReportToExternalResponse = {
+    message: maintainerIdNum ? "Report assigned to external maintainer successfully" : "Report assigned to external company successfully",
+    report: updatedReport,
+  };
+  res.status(200).json(response);
 }

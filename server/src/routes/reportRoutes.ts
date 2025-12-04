@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import {query} from 'express-validator';
 import { asyncHandler } from '../middlewares/errorMiddleware';
 import { requireCitizen, requirePublicRelations, requireTechnicalStaff, isLoggedIn } from '../middlewares/routeProtection';
 import { validateTurinBoundaries } from '../middlewares/validateTurinBoundaries';
@@ -11,7 +12,10 @@ import {
   getAssignableTechnicals,
   updateReportStatus,
   sendMessageToCitizen,
-  getReportMessages
+  getReportMessages,
+  getAssignableExternals,
+  assignReportToExternal,
+  getAssignedReports
 } from '../controllers/reportController';
 import { upload } from '../middlewares/uploadsMiddleware';
 import { ApiValidationMiddleware } from '../middlewares/validationMiddlewere';
@@ -31,11 +35,10 @@ router.post(
 router.get("/", ApiValidationMiddleware, asyncHandler(getReports));
 
 // GET /api/reports/assigned - Get reports assigned to the authenticated technical officer
-import { getAssignedReports } from "../controllers/reportController";
-router.get("/assigned", asyncHandler(getAssignedReports));
+router.get("/assigned", requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(getAssignedReports));
 
 // GET /api/reports/pending - Get pending reports for review
-router.get("/pending", requirePublicRelations, asyncHandler(getPendingReports));
+router.get("/pending", requirePublicRelations, ApiValidationMiddleware, asyncHandler(getPendingReports));
 
 // POST /api/reports/:reportId/approve - Approve a report
 router.post('/:reportId/approve', requirePublicRelations, ApiValidationMiddleware, asyncHandler(approveReport));
@@ -53,10 +56,12 @@ router.post('/:reportId/messages', requireTechnicalStaff, ApiValidationMiddlewar
 router.get('/:reportId/messages', isLoggedIn, ApiValidationMiddleware, asyncHandler(getReportMessages));
 
 // GET /api/reports/:reportId/assignable-technicals - list technicals valid for this report
-router.get(
-  "/:reportId/assignable-technicals",
-  requirePublicRelations,
-  asyncHandler(getAssignableTechnicals)
-);
+router.get("/:reportId/assignable-technicals", requirePublicRelations, ApiValidationMiddleware, asyncHandler(getAssignableTechnicals));
+
+// GET /api/reports/:reportId/assignable-externals - list external companies and maintainers
+router.get("/:reportId/assignable-externals", requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(getAssignableExternals));
+
+// POST /api/reports/:reportId/assign-external - assign to external maintainer or company
+router.post("/:reportId/assign-external", requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(assignReportToExternal));
 
 export default router;
