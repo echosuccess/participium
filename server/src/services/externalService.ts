@@ -86,10 +86,19 @@ export async function listExternalCompanies(): Promise<ExternalCompanyWithUsersD
 /**
  * Get external companies that have platform access
  */
-export async function getExternalCompaniesWithAccess(): Promise<ExternalCompanyDTO[]> {
+export async function getExternalCompaniesWithAccess(): Promise<ExternalCompanyWithUsersDTO[]> {
   const companies = await externalCompanyRepository.findByPlatformAccess(true);
 
-  return companies.map(company => toExternalCompanyDTO(company));
+  return companies.map(company => ({
+    ...toExternalCompanyDTO(company),
+    users: company.maintainers?.map(user => ({
+      id: user.id,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      email: user.email,
+      role: user.role,
+    })) || null,
+  }));
 }
 
 /**

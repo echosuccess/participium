@@ -1104,16 +1104,16 @@ paths:
     get:
       tags:
         - Administration
-      summary: Get external companies with platform access
+      summary: Get external companies with platform access and their maintainers
       description: |
-        Returns external companies that have platform access and can have maintainer accounts created.
-        Used for dropdown/selection UI when creating external maintainers.
+        Returns external companies that have platform access and can have maintainer accounts created,
+        along with their existing maintainer users. Used for dropdown/selection UI and maintainer overview.
       operationId: getExternalCompaniesWithAccess
       security:
         - SessionAuth: []
       responses:
         "200":
-          description: Companies with platform access
+          description: Companies with platform access and their maintainers
           content:
             application/json:
               schema:
@@ -1131,11 +1131,39 @@ paths:
                         $ref: "#/components/schemas/ReportCategory"
                     platformAccess:
                       type: boolean
+                    users:
+                      type: array
+                      nullable: true
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          firstName:
+                            type: string
+                          lastName:
+                            type: string
+                          email:
+                            type: string
+                          role:
+                            type: string
+                            enum: ["EXTERNAL_MAINTAINER"]
               example:
                 - id: 1
                   name: "Green Tech Solutions"
                   categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
                   platformAccess: true
+                  users:
+                    - id: 10
+                      firstName: "Giuseppe"
+                      lastName: "Bianchi"
+                      email: "giuseppe.bianchi@greentech.com"
+                      role: "EXTERNAL_MAINTAINER"
+                - id: 2
+                  name: "Tech Services Inc"
+                  categories: ["INFRASTRUCTURE"]
+                  platformAccess: true
+                  users: null
         "401":
           description: Not authenticated
         "403":

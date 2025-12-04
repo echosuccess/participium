@@ -119,7 +119,7 @@ export async function listExternalMaintainersController(req: Request, res: Respo
 
 // Get external maintainer by ID
 export async function getExternalMaintainerController(req: Request, res: Response): Promise<void> {
-  const maintainerId = parseInt(req.params.maintainerId);
+  const maintainerId = parseInt(req.params.id);
   
   if (isNaN(maintainerId)) {
     throw new BadRequestError("Invalid maintainer ID format");
@@ -136,7 +136,7 @@ export async function getExternalMaintainerController(req: Request, res: Respons
 
 // Delete external maintainer
 export async function deleteExternalMaintainerController(req: Request, res: Response): Promise<void> {
-  const maintainerId = parseInt(req.params.maintainerId);
+  const maintainerId = parseInt(req.params.id);
   
   if (isNaN(maintainerId)) {
     throw new BadRequestError("Invalid maintainer ID format");

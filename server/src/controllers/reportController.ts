@@ -11,6 +11,7 @@ import {
   sendMessageToCitizen as sendMessageToCitizenService,
   getReportMessages as getReportMessagesService,
   getAssignedReportsService,
+  getAssignedReportsForExternalMaintainer,
   getReportById as getReportByIdService
 } from "../services/reportService";
 import { ReportCategory, ReportStatus } from "../../../shared/ReportTypes";
@@ -344,12 +345,25 @@ export async function getAssignedReports(
   const allowedSort = ["createdAt", "priority"];
   const sortField = allowedSort.includes(sortBy ?? "") ? sortBy! : "createdAt";
   const sortOrder = order === "asc" ? "asc" : "desc";
-  // Call service
-  const reports = await getAssignedReportsService(
-    user.id,
-    statusFilter,
-    sortField,
-    sortOrder
-  );
+  
+  // Call appropriate service based on user role
+  let reports;
+  if (user.role === "EXTERNAL_MAINTAINER") {
+    reports = await getAssignedReportsForExternalMaintainer(
+      user.id,
+      statusFilter,
+      sortField,
+      sortOrder
+    );
+  } else {
+    // For internal staff (TECHNICAL_STAFF, PUBLIC_RELATIONS_OFFICER, etc.)
+    reports = await getAssignedReportsService(
+      user.id,
+      statusFilter,
+      sortField,
+      sortOrder
+    );
+  }
+  
   res.status(200).json(reports);
 }

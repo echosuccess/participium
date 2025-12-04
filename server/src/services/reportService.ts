@@ -160,6 +160,30 @@ export async function getAssignedReportsService(
 }
 
 /**
+ * Get reports assigned to external maintainer
+ */
+export async function getAssignedReportsForExternalMaintainer(
+  externalMaintainerId: number,
+  status?: string,
+  sortBy: string = "createdAt",
+  order: "asc" | "desc" = "desc"
+): Promise<ReportDTO[]> {
+  // Only allow technical statuses
+  const allowedStatuses = [
+    ReportStatus.ASSIGNED,
+    ReportStatus.IN_PROGRESS,
+    ReportStatus.RESOLVED,
+  ];
+  let statusFilter: ReportStatus[] = allowedStatuses;
+  if (status && allowedStatuses.includes(status as ReportStatus)) {
+    statusFilter = [status as ReportStatus];
+  }
+  
+  const reports = await reportRepository.findAssignedToExternalMaintainer(externalMaintainerId, statusFilter);
+  return reports.map(toReportDTO);
+}
+
+/**
  * Crea un nuovo report
  */
 export async function createReport(data: CreateReportData) {

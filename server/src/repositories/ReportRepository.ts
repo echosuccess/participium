@@ -71,6 +71,26 @@ export class ReportRepository {
     });
   }
 
+  async findAssignedToExternalMaintainer(externalMaintainerId: number, statuses: ReportStatus[]): Promise<Report[]> {
+    return await this.repository.find({
+      where: {
+        externalMaintainerId: externalMaintainerId,
+        status: In(statuses)
+      },
+      relations: [
+        "user",
+        "assignedOfficer",
+        "photos",
+        "messages",
+        "messages.user",
+        "externalMaintainer",
+        "externalMaintainer.externalCompany",
+        "externalCompany"
+      ],
+      order: { createdAt: "DESC" }
+    });
+  }
+
   async create(reportData: Partial<Report>): Promise<Report> {
     const now = new Date();
     const reportWithDates = {

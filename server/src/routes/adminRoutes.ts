@@ -12,6 +12,9 @@ import {
   createExternalCompanyController,
   listExternalCompaniesController,
   createExternalMaintainerController,
+  listExternalMaintainersController,
+  getExternalMaintainerController,
+  deleteExternalMaintainerController,
   getExternalCompaniesWithAccessController,
   deleteExternalCompanyController
 } from "../controllers/externalController";
@@ -49,5 +52,14 @@ router.delete('/external-companies/:id', asyncHandler(deleteExternalCompanyContr
 
 // POST api/admin/external-maintainers - Create a new external maintainer
 router.post('/external-maintainers', asyncHandler(createExternalMaintainerController));
+
+// GET api/admin/external-maintainers - List all external maintainers
+router.get('/external-maintainers', asyncHandler(listExternalMaintainersController));
+
+// GET api/admin/external-maintainers/:id - Get specific external maintainer
+router.get('/external-maintainers/:id', asyncHandler(getExternalMaintainerController));
+
+// DELETE api/admin/external-maintainers/:id - Delete specific external maintainer
+router.delete('/external-maintainers/:id', asyncHandler(deleteExternalMaintainerController));
 
 export default router;

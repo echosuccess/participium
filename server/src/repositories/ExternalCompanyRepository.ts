@@ -11,7 +11,10 @@ export class ExternalCompanyRepository {
   }
 
   async findById(id: number): Promise<ExternalCompany | null> {
-    return await this.repository.findOne({ where: { id } });
+    return await this.repository.findOne({ 
+      where: { id },
+      relations: ["maintainers"]
+    });
   }
 
   async findByCategory(category: ReportCategory): Promise<ExternalCompany[]> {
@@ -35,7 +38,10 @@ export class ExternalCompanyRepository {
   }
 
   async findByPlatformAccess(platformAccess: boolean): Promise<ExternalCompany[]> {
-    return await this.repository.find({ where: { platformAccess } });
+    return await this.repository.find({ 
+      where: { platformAccess },
+      relations: ["maintainers"]
+    });
   }
 
   async deleteById(id: number): Promise<boolean> {
