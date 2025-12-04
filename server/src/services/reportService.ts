@@ -168,9 +168,9 @@ export async function getAssignedReportsForExternalMaintainer(
   sortBy: string = "createdAt",
   order: "asc" | "desc" = "desc"
 ): Promise<ReportDTO[]> {
-  // Only allow technical statuses
+  // Only allow external technical statuses
   const allowedStatuses = [
-    ReportStatus.ASSIGNED,
+    ReportStatus.EXTERNAL_ASSIGNED,
     ReportStatus.IN_PROGRESS,
     ReportStatus.RESOLVED,
   ];

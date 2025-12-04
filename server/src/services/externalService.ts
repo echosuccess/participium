@@ -225,12 +225,17 @@ export async function assignReportToExternal(
 ) {
   const report = await reportRepository.findByIdWithRelations(reportId);
   if (!report) throw new NotFoundError("Report not found");
+  
+  // Only reports assigned to tech officers can be reassigned to external
   if (report.status !== ReportStatus.ASSIGNED) {
     throw new BadRequestError("Report must be in ASSIGNED status to assign to external maintainer");
   }
+  
+  // Only the assigned tech officer can assign to external
   if (report.assignedOfficerId !== technicalUserId) {
     throw new ForbiddenError("Only the assigned technical officer can assign to external maintainers");
   }
+  
   if (report.externalMaintainerId || report.externalCompanyId) {
     throw new BadRequestError("Report is already assigned to an external entity");
   }
@@ -253,6 +258,7 @@ export async function assignReportToExternal(
     const updated = await reportRepository.update(reportId, {
       externalMaintainerId: maintainer.id,
       externalCompanyId: null,
+      status: ReportStatus.EXTERNAL_ASSIGNED,
     });
     await reportMessageRepository.create({
       content: `Assigned to external maintainer: ${maintainer.first_name} ${maintainer.last_name} of company ${company.name}`,
@@ -268,6 +274,7 @@ export async function assignReportToExternal(
     const updated = await reportRepository.update(reportId, {
       externalCompanyId: company.id,
       externalMaintainerId: null,
+      status: ReportStatus.EXTERNAL_ASSIGNED,
     });
     await reportMessageRepository.create({
       content: `Assigned to external company: ${company.name}`,

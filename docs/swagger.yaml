@@ -1669,6 +1669,7 @@ paths:
         Retrieve all approved reports for display on an interactive map. This endpoint returns only reports 
         that have been approved by public relations officers and are in one of the following statuses:
         - ASSIGNED (approved and assigned to technical staff)
+        - EXTERNAL_ASSIGNED (assigned to external company/maintainer)
         - IN_PROGRESS (being worked on)
         - RESOLVED (completed)
 
@@ -2072,8 +2073,9 @@ paths:
       summary: Assign a report to an external maintainer or company
       description: |
         Assign a report to an external entity for specialized intervention.
-        Only technical office staff members assigned to the report can perform this operation.
-        The report remains in ASSIGNED status but an external assignment is tracked.
+        Only technical office staff members can perform this operation.
+        The report status changes from PENDING_APPROVAL or ASSIGNED to EXTERNAL_ASSIGNED when assigned to external entities.
+        External assignment creates a specialized workflow for external company maintenance.
         
         **Assignment logic based on company platform access:**
         
@@ -2614,7 +2616,10 @@ paths:
       description: |
         Retrieve all reports assigned to the authenticated technical officer or external maintainer.
         Available for TECHNICAL_AND_EXTERNAL_ROLES (both municipality technical staff and external maintainers).
-        Returns reports with status ASSIGNED, IN_PROGRESS, or RESOLVED that are assigned to the current user.
+        Returns reports with status ASSIGNED, EXTERNAL_ASSIGNED, IN_PROGRESS, or RESOLVED that are assigned to the current user.
+        
+        For internal staff: filters by assignedOfficerId
+        For external maintainers: filters by externalMaintainerId
         The user ID is extracted from the session token, ensuring users can only see their own assigned reports.
 
         Optional query parameters allow filtering by status and sorting the results.
@@ -2630,6 +2635,7 @@ paths:
             type: string
             enum:
               - ASSIGNED
+              - EXTERNAL_ASSIGNED
               - IN_PROGRESS
               - RESOLVED
           example: ASSIGNED
@@ -3778,6 +3784,7 @@ components:
         - PENDING_APPROVAL
         - APPROVED
         - ASSIGNED
+        - EXTERNAL_ASSIGNED
         - IN_PROGRESS
         - SUSPENDED
         - REJECTED

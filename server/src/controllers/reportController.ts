@@ -335,7 +335,7 @@ export async function getAssignedReports(
   // Validate status
   let statusFilter;
   if (status) {
-    const allowed = ["ASSIGNED", "IN_PROGRESS", "RESOLVED"];
+    const allowed = ["ASSIGNED", "EXTERNAL_ASSIGNED", "IN_PROGRESS", "RESOLVED"];
     if (!allowed.includes(status)) {
       throw new BadRequestError("Invalid status filter");
     }
