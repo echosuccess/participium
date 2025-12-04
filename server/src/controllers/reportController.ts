@@ -351,7 +351,7 @@ export async function getAssignableExternals(req: Request, res: Response): Promi
 export async function assignReportToExternal(req: Request, res: Response): Promise<void> {
   const reportId = parseInt(req.params.reportId);
   const user = req.user as { id: number };
-  const { externalCompanyId, externalMaintainerId, notes } = req.body || {};
+  const { externalCompanyId, externalMaintainerId } = req.body || {};
 
   if (isNaN(reportId)) {
     throw new BadRequestError("Invalid report ID parameter");
@@ -369,8 +369,7 @@ export async function assignReportToExternal(req: Request, res: Response): Promi
     reportId,
     user.id,
     companyIdNum,
-    maintainerIdNum,
-    typeof notes === "string" ? notes : undefined
+    maintainerIdNum
   );
   const response: AssignReportToExternalResponse = {
     message: maintainerIdNum ? "Report assigned to external maintainer successfully" : "Report assigned to external company successfully",

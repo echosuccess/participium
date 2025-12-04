@@ -443,8 +443,7 @@ export async function assignReportToExternal(
   reportId: number,
   technicalUserId: number,
   externalCompanyId: number,
-  externalMaintainerId: number | null,
-  notes?: string
+  externalMaintainerId: number | null
 ) {
   const report = await reportRepository.findByIdWithRelations(reportId);
   if (!report) throw new NotFoundError("Report not found");

@@ -1407,13 +1407,11 @@ paths:
                 value:
                   externalCompanyId: 10
                   externalMaintainerId: 501
-                  notes: "Urgent intervention required for non-functioning streetlight. Assigned to Marco Bianchi from Enel X."
               assignToCompanyWithoutAccess:
                 summary: Assign to company WITHOUT platform access (no specific user)
                 value:
                   externalCompanyId: 11
                   externalMaintainerId: null
-                  notes: "Assigned to AMIAT for waste management. Will track progress externally."
       responses:
         "200":
           description: Report assigned to external maintainer successfully
@@ -2821,11 +2819,7 @@ components:
             
             The user must belong to the specified company and have EXTERNAL_MAINTAINER role.
           example: 501
-        notes:
-          type: string
-          nullable: true
-          description: Optional notes or instructions for the external maintainer or company. These notes are for internal use between technical office and external maintainers, not visible to citizens.
-          example: "Urgent intervention required for non-functioning streetlight. External company notified."
+
 
     MunicipalityRole:
       type: string
