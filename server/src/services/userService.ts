@@ -1,5 +1,7 @@
 import { UserRepository } from "../repositories/UserRepository";
 import { User, Role } from "../entities/User";
+import {randomInt} from "crypto";
+import { sendVerificationEmail } from "./emailService";
 
 const userRepository = new UserRepository();
 
@@ -21,7 +23,10 @@ export async function createUser(data: {
   telegram_username?: string | null;
   email_notifications_enabled?: boolean;
 }): Promise<User> {
-  return await userRepository.create({
+  const code = randomInt(100000, 999999).toString();
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000); //30m from now
+
+  const nonVerifiedUser ={
     email: data.email,
     first_name: data.first_name,
     last_name: data.last_name,
@@ -30,7 +35,16 @@ export async function createUser(data: {
     role: data.role,
     telegram_username: data.telegram_username ?? null,
     email_notifications_enabled: data.email_notifications_enabled ?? true,
-  });
+    isVerified: false,
+    verificationToken: code,
+    verificationCodeExpiresAt: expiresAt,
+  }
+  try{
+    await sendVerificationEmail(data.email, code);
+  }catch(error){
+    console.error("Failed to send verification email to:", data.email);
+  }
+  return await userRepository.create(nonVerifiedUser);
 }
 
 export async function updateUser(id: number, data: {
