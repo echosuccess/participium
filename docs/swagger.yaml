@@ -3007,10 +3007,13 @@ components:
         assignedOfficer:
           allOf:
             - $ref: "#/components/schemas/MunicipalityUserResponse"
+          type: object
           nullable: true
           description: Details of the assigned officer (null if not assigned)
         externalHandler:
-          $ref: "#/components/schemas/ExternalHandler"
+          allOf:
+            - $ref: "#/components/schemas/ExternalHandler"
+          type: object
           nullable: true
         messages:
           type: array
@@ -3216,4 +3219,3 @@ components:
           description: Assigned to an external company (without platform access)
       discriminator:
         propertyName: type
-      nullable: true
