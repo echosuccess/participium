@@ -458,6 +458,9 @@ export async function assignReportToExternal(
   if (report.assignedOfficerId !== technicalUserId) {
     throw new ForbiddenError("Only the assigned technical officer can assign to external maintainers");
   }
+  if (report.externalMaintainerId || report.externalCompanyId) {
+    throw new BadRequestError("Report is already assigned to an external entity");
+  }
 
   const company = await externalCompanyRepository.findById(externalCompanyId);
   if (!company) throw new NotFoundError("External company not found");

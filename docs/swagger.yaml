@@ -1555,6 +1555,12 @@ paths:
                     code: 400
                     error: "BadRequest"
                     message: "External maintainer does not belong to the specified company"
+                alreadyAssignedToExternal:
+                  summary: Report is already assigned to an external entity
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Report is already assigned to an external entity"
         "401":
           description: Not authenticated
           content:
