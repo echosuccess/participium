@@ -12,7 +12,11 @@ export const MUNICIPALITY_ROLES = [
   "WASTE_MANAGEMENT",
   "ROAD_MAINTENANCE",
   "CIVIL_PROTECTION",
-  "EXTERNAL_MAINTAINER",
+];
+
+export const MUNICIPALITY_AND_EXTERNAL_ROLES = [
+  ...MUNICIPALITY_ROLES,
+  "EXTERNAL_MAINTAINER"
 ];
 
 export function getRoleLabel(role: string) {

@@ -8,24 +8,8 @@ import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { getReports, getPendingReports, rejectReport, getAssignableTechnicals, approveReport, getAssignedReports } from "../../api/api"; 
 import type { Report as AppReport } from "../../types/report.types";
 import ReportCard from "../reports/ReportCard";
+import { MUNICIPALITY_AND_EXTERNAL_ROLES } from "../../utils/roles";
 import "../../styles/TechPanelstyle.css";
-
-const ALLOWED_ROLES = [
-  "PUBLIC_RELATIONS",
-  "CULTURE_EVENTS_TOURISM_SPORTS",
-  "LOCAL_PUBLIC_SERVICES",
-  "EDUCATION_SERVICES",
-  "PUBLIC_RESIDENTIAL_HOUSING",
-  "INFORMATION_SYSTEMS",
-  "MUNICIPAL_BUILDING_MAINTENANCE",
-  "PRIVATE_BUILDINGS",
-  "INFRASTRUCTURES",
-  "GREENSPACES_AND_ANIMAL_PROTECTION",
-  "WASTE_MANAGEMENT",
-  "ROAD_MAINTENANCE",
-  "CIVIL_PROTECTION",
-  "EXTERNAL_MAINTAINER"
-];
 
 export default function TechPanel() {
   const { user, isAuthenticated } = useAuth();
@@ -48,7 +32,7 @@ export default function TechPanel() {
   const isPublicRelations = user?.role === "PUBLIC_RELATIONS";
 
   useEffect(() => {
-    if (!isAuthenticated || (user?.role  && !ALLOWED_ROLES.includes(user.role))) { 
+    if (!isAuthenticated || (user?.role  && !MUNICIPALITY_AND_EXTERNAL_ROLES.includes(user.role))) { 
       navigate("/"); 
     }
     fetchReports();
@@ -209,10 +193,13 @@ export default function TechPanel() {
                   <Col key={report.id} lg={6} xl={4} className="mb-4">
                     <div className="h-100 shadow-sm report-card d-flex flex-column">
                       <ReportCard report={report} />
-                      <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid #f3f4f6', marginTop: 'auto', display: 'flex', gap: '0.5rem' }}>
-                        <Button variant="danger" className="flex-fill d-flex align-items-center justify-content-center" onClick={() => openRejectModal(report.id)} disabled={processingId === report.id}><XCircle className="me-2" /> Reject</Button>
-                        <Button variant="primary" className="flex-fill d-flex align-items-center justify-content-center" onClick={() => openAssignModal(report.id)} disabled={processingId === report.id} isLoading={processingId === report.id}><CheckCircle className="me-2" /> Accept</Button>
-                      </div>
+                      {/* Show approve/reject controls only for PUBLIC_RELATIONS */}
+                      {user && user.role === "PUBLIC_RELATIONS" && (
+                        <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid #f3f4f6', marginTop: 'auto', display: 'flex', gap: '0.5rem' }}>
+                          <Button variant="danger" className="flex-fill d-flex align-items-center justify-content-center" onClick={() => openRejectModal(report.id)} disabled={processingId === report.id}><XCircle className="me-2" /> Reject</Button>
+                          <Button variant="primary" className="flex-fill d-flex align-items-center justify-content-center" onClick={() => openAssignModal(report.id)} disabled={processingId === report.id} isLoading={processingId === report.id}><CheckCircle className="me-2" /> Accept</Button>
+                        </div>
+                      )}
                     </div>
                   </Col>
                 ))}

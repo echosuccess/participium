@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { BadRequestError } from "../utils/errors";
+import { BadRequestError, NotFoundError } from "../utils/errors";
 import {
   createExternalCompany,
   listExternalCompanies,
@@ -8,6 +8,9 @@ import {
   deleteExternalCompany,
   getAssignableExternals as getAssignableExternalsService,
   assignReportToExternal as assignReportToExternalService,
+  getAllExternalMaintainers,
+  getExternalMaintainerById,
+  deleteExternalMaintainer,
 } from "../services/externalService";
 import { AssignReportToExternalResponse } from "../../../shared/ExternalTypes";
 
@@ -106,4 +109,44 @@ export async function assignReportToExternal(req: Request, res: Response): Promi
     report: updatedReport,
   };
   res.status(200).json(response);
+}
+
+// Get all external maintainers
+export async function listExternalMaintainersController(req: Request, res: Response): Promise<void> {
+  const maintainers = await getAllExternalMaintainers();
+  res.status(200).json(maintainers);
+}
+
+// Get external maintainer by ID
+export async function getExternalMaintainerController(req: Request, res: Response): Promise<void> {
+  const maintainerId = parseInt(req.params.maintainerId);
+  
+  if (isNaN(maintainerId)) {
+    throw new BadRequestError("Invalid maintainer ID format");
+  }
+
+  const maintainer = await getExternalMaintainerById(maintainerId);
+  
+  if (!maintainer) {
+    throw new NotFoundError("External maintainer not found");
+  }
+
+  res.status(200).json(maintainer);
+}
+
+// Delete external maintainer
+export async function deleteExternalMaintainerController(req: Request, res: Response): Promise<void> {
+  const maintainerId = parseInt(req.params.maintainerId);
+  
+  if (isNaN(maintainerId)) {
+    throw new BadRequestError("Invalid maintainer ID format");
+  }
+
+  const deleted = await deleteExternalMaintainer(maintainerId);
+  
+  if (!deleted) {
+    throw new NotFoundError("External maintainer not found");
+  }
+
+  res.status(204).send();
 }

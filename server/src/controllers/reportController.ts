@@ -10,7 +10,8 @@ import {
   updateReportStatus as updateReportStatusService,
   sendMessageToCitizen as sendMessageToCitizenService,
   getReportMessages as getReportMessagesService,
-  getAssignedReportsService
+  getAssignedReportsService,
+  getReportById as getReportByIdService
 } from "../services/reportService";
 import { ReportCategory, ReportStatus } from "../../../shared/ReportTypes";
 import { calculateAddress } from "../utils/addressFinder";
@@ -158,10 +159,28 @@ export async function getReports(req: Request, res: Response): Promise<void> {
   }
 
   const reports = await getApprovedReportsService(
-    category as ReportCategory | undefined
+    category as ReportCategory
   );
   res.status(200).json(reports);
 }
+
+export async function getReportById(req: Request, res: Response): Promise<void> {
+  const reportId = parseInt(req.params.reportId);
+  const authReq = req as Request & { user?: any };
+  const user = authReq.user;
+
+  if (!user) {
+    throw new UnauthorizedError("Authentication required");
+  }
+
+  if (isNaN(reportId)) {
+    throw new BadRequestError("Invalid report ID format");
+  }
+
+  const report = await getReportByIdService(reportId, user.id);
+  res.status(200).json(report);
+}
+
 // Get pending reports (PUBLIC_RELATIONS only)
 export async function getPendingReports(
   req: Request,

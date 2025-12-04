@@ -414,3 +414,24 @@ export async function getReportMessages(
   }));
 }
 
+/**
+ * Get a single report by ID with access control
+ */
+export async function getReportById(reportId: number, userId: number): Promise<ReportDTO> {
+  const report = await reportRepository.findByIdWithRelations(reportId);
+  
+  if (!report) {
+    throw new NotFoundError("Report not found");
+  }
+
+  // Access control: users can only see reports they created or are assigned to
+  const isReportOwner = report.userId === userId;
+  const isAssignedTechnical = report.assignedOfficerId === userId;
+  
+  if (!isReportOwner && !isAssignedTechnical) {
+    throw new ForbiddenError("You are not authorized to view this report");
+  }
+
+  return toReportDTO(report);
+}
+

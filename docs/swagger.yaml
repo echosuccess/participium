@@ -9,9 +9,11 @@ info:
     System administrators can create, update and delete internal municipality user accounts.
     The system must have at least one administrator account pre-configured in the database.
 
-    Available municipality roles:
+    **Role Categories:**
+
+    **MUNICIPALITY_ROLES** (all internal municipality staff):
     - ADMINISTRATOR: System administrator with full privileges
-    - PUBLIC_RELATIONS: Public relations officer for citizen communication
+    - PUBLIC_RELATIONS: Public relations officer (only role that can approve/reject reports)
     - CULTURE_EVENTS_TOURISM_SPORTS: Culture, events, tourism and sports
     - LOCAL_PUBLIC_SERVICES: Local public services
     - EDUCATION_SERVICES: Education services
@@ -24,8 +26,14 @@ info:
     - WASTE_MANAGEMENT: Waste collection and management
     - ROAD_MAINTENANCE: Road maintenance
     - CIVIL_PROTECTION: Civil protection and emergency coordination
+
+    **TECHNICAL_ROLES** (municipality technical staff only, subset of MUNICIPALITY_ROLES):
+    - CULTURE_EVENTS_TOURISM_SPORTS through CIVIL_PROTECTION (excludes ADMINISTRATOR and PUBLIC_RELATIONS)
+
+    **TECHNICAL_AND_EXTERNAL_ROLES** (technical staff + external maintainers):
+    - All TECHNICAL_ROLES + EXTERNAL_MAINTAINER (for shared operations like viewing assigned reports)
     
-    External roles:
+    **External roles:**
     - EXTERNAL_MAINTAINER: External company maintainer with platform access for specialized interventions
   version: 1.1.0
   contact:
@@ -1254,6 +1262,252 @@ paths:
                 error: "NotFound"
                 message: "External company not found"
 
+    get:
+      tags:
+        - Administration
+      summary: List all external maintainers
+      description: |
+        Retrieve a list of all external maintainers with their company details.
+        Only administrators can perform this operation.
+      operationId: listExternalMaintainers
+      security:
+        - SessionAuth: []
+      responses:
+        "200":
+          description: List of external maintainers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    email:
+                      type: string
+                    role:
+                      type: string
+                    company:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        categories:
+                          type: array
+                          items:
+                            $ref: "#/components/schemas/ReportCategory"
+                        platformAccess:
+                          type: boolean
+              example:
+                - id: 101
+                  firstName: "Mario"
+                  lastName: "Rossi"
+                  email: "mario.rossi@greentech.com"
+                  role: "EXTERNAL_MAINTAINER"
+                  company:
+                    id: 1
+                    name: "Green Tech Solutions"
+                    categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                    platformAccess: true
+                - id: 102
+                  firstName: "Laura"
+                  lastName: "Bianchi"
+                  email: "laura.bianchi@aquafix.com"
+                  role: "EXTERNAL_MAINTAINER"
+                  company:
+                    id: 2
+                    name: "Aqua Fix Srl"
+                    categories: ["WATER_SUPPLY", "SEWER_SYSTEM"]
+                    platformAccess: true
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+
+  /admin/external-maintainers/{maintainerId}:
+    get:
+      tags:
+        - Administration
+      summary: Get external maintainer details
+      description: |
+        Retrieve details of a specific external maintainer by ID.
+        Only administrators can perform this operation.
+      operationId: getExternalMaintainer
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: maintainerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: External maintainer ID
+          example: 101
+      responses:
+        "200":
+          description: External maintainer details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                  role:
+                    type: string
+                  company:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      categories:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ReportCategory"
+                      platformAccess:
+                        type: boolean
+              example:
+                id: 101
+                firstName: "Mario"
+                lastName: "Rossi"
+                email: "mario.rossi@greentech.com"
+                role: "EXTERNAL_MAINTAINER"
+                company:
+                  id: 1
+                  name: "Green Tech Solutions"
+                  categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                  platformAccess: true
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+        "404":
+          description: External maintainer not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                error: "NotFound"
+                message: "External maintainer not found"
+
+    delete:
+      tags:
+        - Administration
+      summary: Delete an external maintainer
+      description: |
+        Delete an external maintainer by ID. The maintainer must not have any assigned reports.
+        Only administrators can perform this operation.
+      operationId: deleteExternalMaintainer
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: maintainerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: External maintainer ID to delete
+          example: 101
+      responses:
+        "204":
+          description: External maintainer deleted successfully
+        "400":
+          description: Invalid input or business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidId:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Invalid maintainer ID format"
+                hasAssignedReports:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Cannot delete external maintainer with assigned reports"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+        "404":
+          description: External maintainer not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                error: "NotFound"
+                message: "External maintainer not found"
+
   /reports:
     post:
       tags:
@@ -1515,9 +1769,10 @@ paths:
         - Reports
       summary: Get reports pending approval
       description: |
-        Retrieve all reports with status PENDING for review by public relations officers.
-        This is a specialized endpoint for PUBLIC_RELATIONS staff to review and process citizen reports.
-        Only public relations officers can access this endpoint.
+        Retrieve all reports with status PENDING for review by PUBLIC_RELATIONS officers.
+        This is a specialized endpoint for PUBLIC_RELATIONS staff only to review and process citizen reports.
+        Only PUBLIC_RELATIONS can approve, reject, or assign reports to technical staff.
+        Technical staff and external maintainers cannot access pending reports.
       operationId: getPendingReports
       security:
         - SessionAuth: []
@@ -1597,9 +1852,10 @@ paths:
         - Reports
       summary: List technicals available for this report's category
       description: |
-        Return the list of municipality technical users that are valid assignees for the given report.
+        Return the list of municipality technical users (TECHNICAL_ROLES) that are valid assignees for the given report.
         The backend filters available technicals according to the report's category. This endpoint is
-        intended for use by public relations officers when approving a report and choosing the responsible technical.
+        intended for use by PUBLIC_RELATIONS officers only when approving a report and choosing the responsible technical.
+        External maintainers cannot access this endpoint as they cannot approve reports.
       operationId: getAssignableTechnicals
       security:
         - SessionAuth: []
@@ -1685,7 +1941,8 @@ paths:
         - **Users**: For companies with platform access (has_platform_access=true), returns individual maintainer users
         - **Companies**: For companies without platform access (has_platform_access=false), returns only company information
         
-        This endpoint is intended for use by technical office staff members when they need to assign a report to an external entity.
+        This endpoint is intended for use by municipality TECHNICAL_ROLES staff members when they need to assign a report to an external entity.
+        External maintainers cannot access this endpoint as they cannot assign reports to other externals.
       operationId: getAssignableExternals
       security:
         - SessionAuth: []
@@ -2327,7 +2584,8 @@ paths:
         - Reports
       summary: Get reports assigned to the authenticated technical officer
       description: |
-        Retrieve all reports assigned to the authenticated technical office staff member.
+        Retrieve all reports assigned to the authenticated technical officer or external maintainer.
+        Available for TECHNICAL_AND_EXTERNAL_ROLES (both municipality technical staff and external maintainers).
         Returns reports with status ASSIGNED, IN_PROGRESS, or RESOLVED that are assigned to the current user.
         The user ID is extracted from the session token, ensuring users can only see their own assigned reports.
 
@@ -2487,7 +2745,8 @@ paths:
         - Reports
       summary: Update report status
       description: |
-        Update the status of an assigned report. Only technical office staff assigned to the report can perform this operation.
+        Update the status of an assigned report. Available for TECHNICAL_AND_EXTERNAL_ROLES.
+        Only technical staff or external maintainers assigned to the report can perform this operation.
         Valid status transitions:
         - ASSIGNED → IN_PROGRESS
         - IN_PROGRESS → RESOLVED
@@ -2594,8 +2853,9 @@ paths:
         - Reports
       summary: Send message to citizen
       description: |
-        Send a message to the citizen who created the report. Only technical office staff assigned 
-        to the report can send messages. A notification is automatically created for the citizen.
+        Send a message to the citizen who created the report. Available for TECHNICAL_AND_EXTERNAL_ROLES.
+        Only technical staff or external maintainers assigned to the report can send messages.
+        A notification is automatically created for the citizen.
       operationId: sendReportMessage
       security:
         - SessionAuth: []
@@ -2691,8 +2951,8 @@ paths:
         - Reports
       summary: Get report conversation history
       description: |
-        Retrieve all messages for a specific report. Both citizens (for their own reports) 
-        and assigned technical staff can access the conversation.
+        Retrieve all messages for a specific report. Citizens can access their own reports,
+        technical staff and external maintainers can access conversations for their assigned reports.
       operationId: getReportMessages
       security:
         - SessionAuth: []
@@ -2897,7 +3157,7 @@ paths:
       description: |
         Retrieve detailed information about a specific report including all messages.
         - Citizens can only view their own reports
-        - Technical staff can view reports assigned to them
+        - Technical staff and external maintainers can view reports assigned to them
         - Public relations can view any report
       operationId: getReportById
       security:

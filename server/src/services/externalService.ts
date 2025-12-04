@@ -1,7 +1,7 @@
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import { ExternalCompanyRepository } from "../repositories/ExternalCompanyRepository";
 import { UserRepository } from "../repositories/UserRepository";
-import { ReportCategory } from "../../../shared/ReportTypes";
+import { ReportCategory, ReportStatus } from "../../../shared/ReportTypes";
 import { Role } from "../../../shared/RoleTypes";
 import * as bcrypt from "bcrypt";
 import { 
@@ -14,7 +14,6 @@ import {
 import { ReportRepository } from "../repositories/ReportRepository";
 import { ForbiddenError } from "../utils/errors";
 import { ReportMessageRepository } from "../repositories/ReportMessageRepository";
-import { ReportStatus } from "../../../shared/ReportTypes";
 import { toReportDTO } from "../interfaces/ReportDTO";
 import { 
   CreateExternalCompanyData, 
@@ -268,4 +267,44 @@ export async function assignReportToExternal(
     });
     return toReportDTO(updated!);
   }
+}
+
+/**
+ * Get all external maintainers
+ */
+export async function getAllExternalMaintainers(): Promise<ExternalMaintainerDTO[]> {
+  const maintainers = await userRepository.findExternalMaintainersWithCompany();
+  
+  return maintainers
+    .map(toExternalMaintainerDTO)
+    .filter((dto): dto is ExternalMaintainerDTO => dto !== null);
+}
+
+/**
+ * Get external maintainer by ID
+ */
+export async function getExternalMaintainerById(id: number): Promise<ExternalMaintainerDTO | null> {
+  const maintainer = await userRepository.findExternalMaintainerByIdWithCompany(id);
+  if (!maintainer) {
+    return null;
+  }
+  return toExternalMaintainerDTO(maintainer);
+}
+
+/**
+ * Delete external maintainer
+ */
+export async function deleteExternalMaintainer(id: number): Promise<boolean> {
+  const maintainer = await userRepository.findById(id);
+  if (!maintainer || maintainer.role !== Role.EXTERNAL_MAINTAINER) {
+    return false;
+  }
+
+  // Check if maintainer has assigned reports
+  const assignedReports = await reportRepository.findAssignedToUser(id, [ReportStatus.ASSIGNED, ReportStatus.IN_PROGRESS, ReportStatus.RESOLVED]);
+  if (assignedReports.length > 0) {
+    throw new BadRequestError("Cannot delete external maintainer with assigned reports");
+  }
+
+  return await userRepository.delete(id);
 }
