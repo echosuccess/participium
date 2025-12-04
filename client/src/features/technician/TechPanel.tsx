@@ -44,6 +44,7 @@ export default function TechPanel() {
   const [processingId, setProcessingId] = useState<number | null>(null);
 
   const isPublicRelations = user?.role === "PUBLIC_RELATIONS";
+  const isExternalMaintainer = user?.role === "EXTERNAL_MAINTAINER";
 
   useEffect(() => {
     if (
@@ -77,6 +78,21 @@ export default function TechPanel() {
 
         setPendingReports(pendingNormalized);
         setOtherReports(otherNormalized);
+      } else if (isExternalMaintainer) {
+        // External maintainer: only show EXTERNAL_ASSIGNED reports as "Assigned to me"
+        const assignedData = (await getAssignedReports()) as AppReport[];
+        console.log("[TechPanel] Assigned reports fetched:", assignedData);
+
+        const pendingNormalized = (assignedData || [])
+          .filter((r: any) => r.status === "EXTERNAL_ASSIGNED")
+          .map((r: any) => ({
+            ...r,
+            latitude: Number(r.latitude),
+            longitude: Number(r.longitude),
+          }));
+
+        setPendingReports(pendingNormalized);
+        setOtherReports([]);
       } else {
         // Technical office: fetch assigned reports
         const assignedData = (await getAssignedReports()) as AppReport[];
@@ -385,38 +401,41 @@ export default function TechPanel() {
           </div>
         </>
       ) : (
-        // Non-PR technical office users: show both pending and other reports
+        // Non-PR technical office users and external maintainers
         <>
           <div>
             <h4>Assigned to me</h4>
             {pendingReports.length === 0 ? (
-              <p className="text-muted">No pending reports.</p>
+              <p className="text-muted">No reports assigned to you.</p>
             ) : (
               <Row>
                 {pendingReports.map((report) => (
                   <Col key={report.id} lg={6} xl={4} className="mb-4">
                     <div className="h-100 shadow-sm report-card d-flex flex-column">
                       <ReportCard report={report} />
-                      <div
-                        style={{
-                          padding: "0.75rem 1rem",
-                          borderTop: "1px solid #f3f4f6",
-                          marginTop: "auto",
-                          display: "flex",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <Button
-                          variant="primary"
-                          className="flex-fill d-flex align-items-center justify-content-center"
-                          onClick={() => openAssignModal(report.id)}
-                          disabled={processingId === report.id}
-                          isLoading={processingId === report.id}
+                      {/* Show assign button only for technical office users, not external maintainers */}
+                      {!isExternalMaintainer && (
+                        <div
+                          style={{
+                            padding: "0.75rem 1rem",
+                            borderTop: "1px solid #f3f4f6",
+                            marginTop: "auto",
+                            display: "flex",
+                            gap: "0.5rem",
+                          }}
                         >
-                          <CheckCircle className="me-2" />
-                          Assign to external maintainer
-                        </Button>
-                      </div>
+                          <Button
+                            variant="primary"
+                            className="flex-fill d-flex align-items-center justify-content-center"
+                            onClick={() => openAssignModal(report.id)}
+                            disabled={processingId === report.id}
+                            isLoading={processingId === report.id}
+                          >
+                            <CheckCircle className="me-2" />
+                            Assign to external maintainer
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </Col>
                 ))}
@@ -424,24 +443,27 @@ export default function TechPanel() {
             )}
           </div>
 
-          <div className="mt-5">
-            <h4>Assigned to External</h4>
-            {otherReports.length === 0 ? (
-              <p className="text-muted">
-                No reports assigned to externals yet.
-              </p>
-            ) : (
-              <Row>
-                {otherReports.map((report) => (
-                  <Col key={report.id} lg={6} xl={4} className="mb-4">
-                    <div className="h-100 shadow-sm report-card d-flex flex-column">
-                      <ReportCard report={report} />
-                    </div>
-                  </Col>
-                ))}
-              </Row>
-            )}
-          </div>
+          {/* Show 'Assigned to External' section only for technical office users, not external maintainers */}
+          {!isExternalMaintainer && (
+            <div className="mt-5">
+              <h4>Assigned to External</h4>
+              {otherReports.length === 0 ? (
+                <p className="text-muted">
+                  No reports assigned to externals yet.
+                </p>
+              ) : (
+                <Row>
+                  {otherReports.map((report) => (
+                    <Col key={report.id} lg={6} xl={4} className="mb-4">
+                      <div className="h-100 shadow-sm report-card d-flex flex-column">
+                        <ReportCard report={report} />
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+              )}
+            </div>
+          )}
         </>
       )}
 
