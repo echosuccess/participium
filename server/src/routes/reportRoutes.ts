@@ -13,10 +13,9 @@ import {
   updateReportStatus,
   sendMessageToCitizen,
   getReportMessages,
-  getAssignableExternals,
-  assignReportToExternal,
   getAssignedReports
 } from '../controllers/reportController';
+import { getAssignableExternals, assignReportToExternal } from '../controllers/externalController';
 import { upload } from '../middlewares/uploadsMiddleware';
 import { ApiValidationMiddleware } from '../middlewares/validationMiddlewere';
 

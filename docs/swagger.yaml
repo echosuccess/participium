@@ -842,6 +842,418 @@ paths:
                 error: "InternalServerError"
                 message: "Failed to retrieve roles"
 
+  /admin/external-companies:
+    post:
+      tags:
+        - Administration
+      summary: Create a new external company
+      description: |
+        Create a new external company that can potentially be assigned report maintenance tasks.
+        Only administrators can perform this operation.
+      operationId: createExternalCompany
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - categories
+                - platformAccess
+              properties:
+                name:
+                  type: string
+                  description: Company name
+                  example: "Green Tech Solutions"
+                categories:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ReportCategory"
+                  minItems: 1
+                  maxItems: 2
+                  description: Report categories this company can handle (max 2)
+                  example: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                platformAccess:
+                  type: boolean
+                  description: Whether this company can have maintainer accounts
+                  example: true
+      responses:
+        "201":
+          description: External company created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: "Green Tech Solutions"
+                  categories:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ReportCategory"
+                    example: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                  platformAccess:
+                    type: boolean
+                    example: true
+        "400":
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidName:
+                  value:
+                    code: 400
+                    error: "BadRequest" 
+                    message: "Company name is required"
+                invalidCategories:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Maximum 2 categories allowed"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+    
+    get:
+      tags:
+        - Administration
+      summary: List all external companies
+      description: |
+        Returns all external companies with their associated maintainer accounts.
+        Only administrators can perform this operation.
+      operationId: listExternalCompanies
+      security:
+        - SessionAuth: []
+      responses:
+        "200":
+          description: Array of external companies with maintainers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    categories:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/ReportCategory"
+                    platformAccess:
+                      type: boolean
+                    maintainers:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          firstName:
+                            type: string
+                          lastName:
+                            type: string
+                          email:
+                            type: string
+                          role:
+                            type: string
+              example:
+                - id: 1
+                  name: "Green Tech Solutions"
+                  categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                  platformAccess: true
+                  maintainers:
+                    - id: 101
+                      firstName: "Mario"
+                      lastName: "Rossi"
+                      email: "mario.rossi@greentech.com"
+                      role: "EXTERNAL_MAINTAINER"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+
+  /admin/external-companies/{id}:
+    delete:
+      tags:
+        - Administration
+      summary: Delete an external company
+      description: |
+        Delete an external company by ID. The company must not have any associated maintainers.
+        Only administrators can perform this operation.
+      operationId: deleteExternalCompany
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: External company ID to delete
+          example: 1
+      responses:
+        "204":
+          description: External company deleted successfully
+        "400":
+          description: Invalid input or business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidId:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Invalid company ID parameter"
+                hasMaintainers:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Cannot delete company with existing maintainers. Remove all maintainers first."
+                deleteFailed:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Failed to delete external company"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+        "404":
+          description: External company not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                error: "NotFound"
+                message: "External company not found"
+
+  /admin/external-companies/platform-access:
+    get:
+      tags:
+        - Administration
+      summary: Get external companies with platform access
+      description: |
+        Returns external companies that have platform access and can have maintainer accounts created.
+        Used for dropdown/selection UI when creating external maintainers.
+      operationId: getExternalCompaniesWithAccess
+      security:
+        - SessionAuth: []
+      responses:
+        "200":
+          description: Companies with platform access
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    categories:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/ReportCategory"
+                    platformAccess:
+                      type: boolean
+              example:
+                - id: 1
+                  name: "Green Tech Solutions"
+                  categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                  platformAccess: true
+        "401":
+          description: Not authenticated
+        "403":
+          description: Insufficient permissions
+
+  /admin/external-maintainers:
+    post:
+      tags:
+        - Administration
+      summary: Create an external maintainer account
+      description: |
+        Create a new external maintainer account linked to a company with platform access.
+        Only administrators can perform this operation.
+      operationId: createExternalMaintainer
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+                - email
+                - password
+                - externalCompanyId
+              properties:
+                firstName:
+                  type: string
+                  example: "Mario"
+                lastName:
+                  type: string
+                  example: "Rossi"
+                email:
+                  type: string
+                  format: email
+                  example: "mario.rossi@greentech.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "SecurePass123!"
+                externalCompanyId:
+                  type: string
+                  description: ID of external company (as string for form compatibility)
+                  example: "1"
+      responses:
+        "201":
+          description: External maintainer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                  role:
+                    type: string
+                  company:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      categories:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ReportCategory"
+                      platformAccess:
+                        type: boolean
+              example:
+                id: 101
+                firstName: "Mario"
+                lastName: "Rossi"
+                email: "mario.rossi@greentech.com"
+                role: "EXTERNAL_MAINTAINER"
+                company:
+                  id: 1
+                  name: "Green Tech Solutions"
+                  categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                  platformAccess: true
+        "400":
+          description: Invalid input or business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                emailExists:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Email already exists"
+                noPlatformAccess:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Cannot create maintainer for company without platform access"
+                weakPassword:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "password is required and must be at least 8 characters"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Insufficient permissions
+        "404":
+          description: External company not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                error: "NotFound"
+                message: "External company not found"
+
   /reports:
     post:
       tags:

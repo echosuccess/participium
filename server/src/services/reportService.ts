@@ -11,7 +11,6 @@ import { ReportRepository } from "../repositories/ReportRepository";
 import { ReportMessageRepository } from "../repositories/ReportMessageRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { ReportPhotoRepository } from "../repositories/ReportPhotoRepository";
-import { ExternalCompanyRepository } from "../repositories/ExternalCompanyRepository";
 
 // Services and utilities
 import { notifyReportStatusChange, notifyNewMessage, notifyReportAssigned, notifyReportApproved, notifyReportRejected } from "./notificationService";
@@ -25,7 +24,6 @@ const reportRepository = new ReportRepository();
 const reportMessageRepository = new ReportMessageRepository(); 
 const userRepository = new UserRepository();
 const reportPhotoRepository = new ReportPhotoRepository();
-const externalCompanyRepository = new ExternalCompanyRepository();
 
 // =========================
 // ENUMS AND TYPES
@@ -414,94 +412,5 @@ export async function getReportMessages(
     senderId: m.senderId,
     senderRole: m.user.role,
   }));
-}
-
-// =========================
-// EXTERNAL ASSIGNMENT FUNCTIONS
-// =========================
-
-export async function getAssignableExternals(reportId: number, technicalUserId: number) {
-  const report = await reportRepository.findByIdWithRelations(reportId);
-  if (!report) throw new NotFoundError("Report not found");
-  
-  if (report.assignedOfficerId !== technicalUserId) {
-    throw new ForbiddenError("Only the assigned technical officer can view assignable externals");
-  }
-
-  const companies = await externalCompanyRepository.findByCategory(report.category as ReportCategory);
-  return companies.map(c => ({
-    id: c.id,
-    name: c.name,
-    categories: c.categories,
-    hasPlatformAccess: c.platformAccess,
-    users: c.platformAccess ? c.maintainers?.map(u => ({
-      id: u.id,
-      firstName: u.first_name,
-      lastName: u.last_name,
-      email: u.email,
-      role: u.role,
-    })) ?? [] : null,
-  }));
-}
-
-export async function assignReportToExternal(
-  reportId: number,
-  technicalUserId: number,
-  externalCompanyId: number,
-  externalMaintainerId: number | null
-) {
-  const report = await reportRepository.findByIdWithRelations(reportId);
-  if (!report) throw new NotFoundError("Report not found");
-  if (report.status !== ReportStatus.ASSIGNED) {
-    throw new BadRequestError("Report must be in ASSIGNED status to assign to external maintainer");
-  }
-  if (report.assignedOfficerId !== technicalUserId) {
-    throw new ForbiddenError("Only the assigned technical officer can assign to external maintainers");
-  }
-  if (report.externalMaintainerId || report.externalCompanyId) {
-    throw new BadRequestError("Report is already assigned to an external entity");
-  }
-
-  const company = await externalCompanyRepository.findById(externalCompanyId);
-  if (!company) throw new NotFoundError("External company not found");
-
-  if (company.platformAccess) {
-    if (!externalMaintainerId) {
-      throw new BadRequestError("externalMaintainerId is required when company has platform access");
-    }
-    const maintainer = await userRepository.findById(externalMaintainerId);
-    if (!maintainer) throw new NotFoundError("User not found");
-    if (maintainer.role !== "EXTERNAL_MAINTAINER") {
-      throw new BadRequestError("User is not an external maintainer");
-    }
-    if (maintainer.externalCompanyId !== company.id) {
-      throw new BadRequestError("External maintainer does not belong to the specified company");
-    }
-    const updated = await reportRepository.update(reportId, {
-      externalMaintainerId: maintainer.id,
-      externalCompanyId: null,
-    });
-    await reportMessageRepository.create({
-      content: `Assigned to external maintainer: ${maintainer.first_name} ${maintainer.last_name} of company ${company.name}`,
-      senderId: technicalUserId,
-      reportId,
-    });
-    return toReportDTO(updated!);
-  } else {
-    // No platform access: must not include maintainer
-    if (externalMaintainerId) {
-      throw new BadRequestError("externalMaintainerId must be null when company does not have platform access");
-    }
-    const updated = await reportRepository.update(reportId, {
-      externalCompanyId: company.id,
-      externalMaintainerId: null,
-    });
-    await reportMessageRepository.create({
-      content: `Assigned to external company: ${company.name}`,
-      senderId: technicalUserId,
-      reportId,
-    });
-    return toReportDTO(updated!);
-  }
 }
 

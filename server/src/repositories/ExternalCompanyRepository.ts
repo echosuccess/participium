@@ -25,4 +25,21 @@ export class ExternalCompanyRepository {
       relations: ["maintainers"]
     });
   }
+
+  async create(data: Partial<ExternalCompany>): Promise<ExternalCompany> {
+    return await this.repository.save(data);
+  }
+
+  async findAll(): Promise<ExternalCompany[]> {
+    return await this.repository.find({ relations: ["maintainers"] });
+  }
+
+  async findByPlatformAccess(platformAccess: boolean): Promise<ExternalCompany[]> {
+    return await this.repository.find({ where: { platformAccess } });
+  }
+
+  async deleteById(id: number): Promise<boolean> {
+    const result = await this.repository.delete(id);
+    return (result.affected ?? 0) > 0;
+  }
 }

@@ -8,6 +8,13 @@ import {
   deleteMunicipalityUserController,
   listRolesController
 } from "../controllers/municipalityController";
+import {
+  createExternalCompanyController,
+  listExternalCompaniesController,
+  createExternalMaintainerController,
+  getExternalCompaniesWithAccessController,
+  deleteExternalCompanyController
+} from "../controllers/externalController";
 
 const router = Router();
 
@@ -27,5 +34,20 @@ router.delete('/municipality-users/:userId', asyncHandler(deleteMunicipalityUser
 
 // GET api/admin/roles - List all roles
 router.get('/roles', asyncHandler(listRolesController));
+
+// POST api/admin/external-companies - Create a new external company
+router.post('/external-companies', asyncHandler(createExternalCompanyController));
+
+// GET api/admin/external-companies - List all external companies with their maintainers
+router.get('/external-companies', asyncHandler(listExternalCompaniesController));
+
+// GET api/admin/external-companies/platform-access - Get companies with platform access (for maintainer creation)
+router.get('/external-companies/platform-access', asyncHandler(getExternalCompaniesWithAccessController));
+
+// DELETE api/admin/external-companies/:id - Delete an external company
+router.delete('/external-companies/:id', asyncHandler(deleteExternalCompanyController));
+
+// POST api/admin/external-maintainers - Create a new external maintainer
+router.post('/external-maintainers', asyncHandler(createExternalMaintainerController));
 
 export default router;

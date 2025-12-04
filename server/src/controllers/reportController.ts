@@ -12,12 +12,10 @@ import {
   getReportMessages as getReportMessagesService,
   getAssignedReportsService
 } from "../services/reportService";
-import { getAssignableExternals as getAssignableExternalsService, assignReportToExternal as assignReportToExternalService } from "../services/reportService";
 import { ReportCategory, ReportStatus } from "../../../shared/ReportTypes";
-import { AssignReportToExternalResponse } from "../../../shared/ReportTypes";
 import { calculateAddress } from "../utils/addressFinder";
 import minioClient, { BUCKET_NAME } from "../utils/minioClient";
-import { BadRequestError, UnauthorizedError, ForbiddenError } from "../utils";
+import { BadRequestError, UnauthorizedError } from "../utils";
 
 export async function createReport(req: Request, res: Response): Promise<void> {
   const user = req.user as { id: number };
@@ -335,48 +333,4 @@ export async function getAssignedReports(
     sortOrder
   );
   res.status(200).json(reports);
-}
-
-// List external companies and maintainers available for the report's category
-export async function getAssignableExternals(req: Request, res: Response): Promise<void> {
-  const reportId = parseInt(req.params.reportId);
-  const user = req.user as { id: number };
-  
-  if (isNaN(reportId)) {
-    throw new BadRequestError("Invalid report ID parameter");
-  }
-  
-  const result = await getAssignableExternalsService(reportId, user.id);
-  res.status(200).json(result);
-}
-
-// Assign a report to an external maintainer or company
-export async function assignReportToExternal(req: Request, res: Response): Promise<void> {
-  const reportId = parseInt(req.params.reportId);
-  const user = req.user as { id: number };
-  const { externalCompanyId, externalMaintainerId } = req.body || {};
-
-  if (isNaN(reportId)) {
-    throw new BadRequestError("Invalid report ID parameter");
-  }
-  if (!externalCompanyId || isNaN(parseInt(externalCompanyId))) {
-    throw new BadRequestError("externalCompanyId is required and must be a valid integer");
-  }
-
-  const companyIdNum = parseInt(externalCompanyId);
-  const maintainerIdNum = externalMaintainerId !== null && externalMaintainerId !== undefined
-    ? parseInt(externalMaintainerId)
-    : null;
-
-  const updatedReport = await assignReportToExternalService(
-    reportId,
-    user.id,
-    companyIdNum,
-    maintainerIdNum
-  );
-  const response: AssignReportToExternalResponse = {
-    message: maintainerIdNum ? "Report assigned to external maintainer successfully" : "Report assigned to external company successfully",
-    report: updatedReport,
-  };
-  res.status(200).json(response);
 }
