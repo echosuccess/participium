@@ -9,9 +9,11 @@ info:
     System administrators can create, update and delete internal municipality user accounts.
     The system must have at least one administrator account pre-configured in the database.
 
-    Available municipality roles:
+    **Role Categories:**
+
+    **MUNICIPALITY_ROLES** (all internal municipality staff):
     - ADMINISTRATOR: System administrator with full privileges
-    - PUBLIC_RELATIONS: Public relations officer for citizen communication
+    - PUBLIC_RELATIONS: Public relations officer (only role that can approve/reject reports)
     - CULTURE_EVENTS_TOURISM_SPORTS: Culture, events, tourism and sports
     - LOCAL_PUBLIC_SERVICES: Local public services
     - EDUCATION_SERVICES: Education services
@@ -24,8 +26,14 @@ info:
     - WASTE_MANAGEMENT: Waste collection and management
     - ROAD_MAINTENANCE: Road maintenance
     - CIVIL_PROTECTION: Civil protection and emergency coordination
+
+    **TECHNICAL_ROLES** (municipality technical staff only, subset of MUNICIPALITY_ROLES):
+    - CULTURE_EVENTS_TOURISM_SPORTS through CIVIL_PROTECTION (excludes ADMINISTRATOR and PUBLIC_RELATIONS)
+
+    **TECHNICAL_AND_EXTERNAL_ROLES** (technical staff + external maintainers):
+    - All TECHNICAL_ROLES + EXTERNAL_MAINTAINER (for shared operations like viewing assigned reports)
     
-    External roles:
+    **External roles:**
     - EXTERNAL_MAINTAINER: External company maintainer with platform access for specialized interventions
   version: 1.1.0
   contact:
@@ -842,6 +850,692 @@ paths:
                 error: "InternalServerError"
                 message: "Failed to retrieve roles"
 
+  /admin/external-companies:
+    post:
+      tags:
+        - Administration
+      summary: Create a new external company
+      description: |
+        Create a new external company that can potentially be assigned report maintenance tasks.
+        Only administrators can perform this operation.
+      operationId: createExternalCompany
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - categories
+                - platformAccess
+              properties:
+                name:
+                  type: string
+                  description: Company name
+                  example: "Green Tech Solutions"
+                categories:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ReportCategory"
+                  minItems: 1
+                  maxItems: 2
+                  description: Report categories this company can handle (max 2)
+                  example: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                platformAccess:
+                  type: boolean
+                  description: Whether this company can have maintainer accounts
+                  example: true
+      responses:
+        "201":
+          description: External company created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: "Green Tech Solutions"
+                  categories:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ReportCategory"
+                    example: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                  platformAccess:
+                    type: boolean
+                    example: true
+        "400":
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidName:
+                  value:
+                    code: 400
+                    error: "BadRequest" 
+                    message: "Company name is required"
+                invalidCategories:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Maximum 2 categories allowed"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+    
+    get:
+      tags:
+        - Administration
+      summary: List all external companies
+      description: |
+        Returns all external companies with their associated maintainer accounts.
+        Only administrators can perform this operation.
+      operationId: listExternalCompanies
+      security:
+        - SessionAuth: []
+      responses:
+        "200":
+          description: Array of external companies with maintainers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    categories:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/ReportCategory"
+                    platformAccess:
+                      type: boolean
+                    maintainers:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          firstName:
+                            type: string
+                          lastName:
+                            type: string
+                          email:
+                            type: string
+                          role:
+                            type: string
+              example:
+                - id: 1
+                  name: "Green Tech Solutions"
+                  categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                  platformAccess: true
+                  maintainers:
+                    - id: 101
+                      firstName: "Mario"
+                      lastName: "Rossi"
+                      email: "mario.rossi@greentech.com"
+                      role: "EXTERNAL_MAINTAINER"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+
+  /admin/external-companies/{id}:
+    delete:
+      tags:
+        - Administration
+      summary: Delete an external company
+      description: |
+        Delete an external company by ID. The company must not have any associated maintainers.
+        Only administrators can perform this operation.
+      operationId: deleteExternalCompany
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: External company ID to delete
+          example: 1
+      responses:
+        "204":
+          description: External company deleted successfully
+        "400":
+          description: Invalid input or business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidId:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Invalid company ID parameter"
+                hasMaintainers:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Cannot delete company with existing maintainers. Remove all maintainers first."
+                deleteFailed:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Failed to delete external company"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+        "404":
+          description: External company not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                error: "NotFound"
+                message: "External company not found"
+
+  /admin/external-companies/platform-access:
+    get:
+      tags:
+        - Administration
+      summary: Get external companies with platform access and their maintainers
+      description: |
+        Returns external companies that have platform access and can have maintainer accounts created,
+        along with their existing maintainer users. Used for dropdown/selection UI and maintainer overview.
+      operationId: getExternalCompaniesWithAccess
+      security:
+        - SessionAuth: []
+      responses:
+        "200":
+          description: Companies with platform access and their maintainers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    categories:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/ReportCategory"
+                    platformAccess:
+                      type: boolean
+                    users:
+                      type: array
+                      nullable: true
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          firstName:
+                            type: string
+                          lastName:
+                            type: string
+                          email:
+                            type: string
+                          role:
+                            type: string
+                            enum: ["EXTERNAL_MAINTAINER"]
+              example:
+                - id: 1
+                  name: "Green Tech Solutions"
+                  categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                  platformAccess: true
+                  users:
+                    - id: 10
+                      firstName: "Giuseppe"
+                      lastName: "Bianchi"
+                      email: "giuseppe.bianchi@greentech.com"
+                      role: "EXTERNAL_MAINTAINER"
+                - id: 2
+                  name: "Tech Services Inc"
+                  categories: ["INFRASTRUCTURE"]
+                  platformAccess: true
+                  users: null
+        "401":
+          description: Not authenticated
+        "403":
+          description: Insufficient permissions
+
+  /admin/external-maintainers:
+    post:
+      tags:
+        - Administration
+      summary: Create an external maintainer account
+      description: |
+        Create a new external maintainer account linked to a company with platform access.
+        Only administrators can perform this operation.
+      operationId: createExternalMaintainer
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+                - email
+                - password
+                - externalCompanyId
+              properties:
+                firstName:
+                  type: string
+                  example: "Mario"
+                lastName:
+                  type: string
+                  example: "Rossi"
+                email:
+                  type: string
+                  format: email
+                  example: "mario.rossi@greentech.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "SecurePass123!"
+                externalCompanyId:
+                  type: string
+                  description: ID of external company (as string for form compatibility)
+                  example: "1"
+      responses:
+        "201":
+          description: External maintainer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                  role:
+                    type: string
+                  company:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      categories:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ReportCategory"
+                      platformAccess:
+                        type: boolean
+              example:
+                id: 101
+                firstName: "Mario"
+                lastName: "Rossi"
+                email: "mario.rossi@greentech.com"
+                role: "EXTERNAL_MAINTAINER"
+                company:
+                  id: 1
+                  name: "Green Tech Solutions"
+                  categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                  platformAccess: true
+        "400":
+          description: Invalid input or business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                emailExists:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Email already exists"
+                noPlatformAccess:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Cannot create maintainer for company without platform access"
+                weakPassword:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "password is required and must be at least 8 characters"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Insufficient permissions
+        "404":
+          description: External company not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                error: "NotFound"
+                message: "External company not found"
+
+    get:
+      tags:
+        - Administration
+      summary: List all external maintainers
+      description: |
+        Retrieve a list of all external maintainers with their company details.
+        Only administrators can perform this operation.
+      operationId: listExternalMaintainers
+      security:
+        - SessionAuth: []
+      responses:
+        "200":
+          description: List of external maintainers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    email:
+                      type: string
+                    role:
+                      type: string
+                    company:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        categories:
+                          type: array
+                          items:
+                            $ref: "#/components/schemas/ReportCategory"
+                        platformAccess:
+                          type: boolean
+              example:
+                - id: 101
+                  firstName: "Mario"
+                  lastName: "Rossi"
+                  email: "mario.rossi@greentech.com"
+                  role: "EXTERNAL_MAINTAINER"
+                  company:
+                    id: 1
+                    name: "Green Tech Solutions"
+                    categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                    platformAccess: true
+                - id: 102
+                  firstName: "Laura"
+                  lastName: "Bianchi"
+                  email: "laura.bianchi@aquafix.com"
+                  role: "EXTERNAL_MAINTAINER"
+                  company:
+                    id: 2
+                    name: "Aqua Fix Srl"
+                    categories: ["WATER_SUPPLY", "SEWER_SYSTEM"]
+                    platformAccess: true
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+
+  /admin/external-maintainers/{maintainerId}:
+    get:
+      tags:
+        - Administration
+      summary: Get external maintainer details
+      description: |
+        Retrieve details of a specific external maintainer by ID.
+        Only administrators can perform this operation.
+      operationId: getExternalMaintainer
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: maintainerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: External maintainer ID
+          example: 101
+      responses:
+        "200":
+          description: External maintainer details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  email:
+                    type: string
+                  role:
+                    type: string
+                  company:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      categories:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ReportCategory"
+                      platformAccess:
+                        type: boolean
+              example:
+                id: 101
+                firstName: "Mario"
+                lastName: "Rossi"
+                email: "mario.rossi@greentech.com"
+                role: "EXTERNAL_MAINTAINER"
+                company:
+                  id: 1
+                  name: "Green Tech Solutions"
+                  categories: ["GREENSPACES", "ROAD_MAINTENANCE"]
+                  platformAccess: true
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+        "404":
+          description: External maintainer not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                error: "NotFound"
+                message: "External maintainer not found"
+
+    delete:
+      tags:
+        - Administration
+      summary: Delete an external maintainer
+      description: |
+        Delete an external maintainer by ID. The maintainer must not have any assigned reports.
+        Only administrators can perform this operation.
+      operationId: deleteExternalMaintainer
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: maintainerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: External maintainer ID to delete
+          example: 101
+      responses:
+        "204":
+          description: External maintainer deleted successfully
+        "400":
+          description: Invalid input or business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalidId:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Invalid maintainer ID format"
+                hasAssignedReports:
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Cannot delete external maintainer with assigned reports"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 401
+                error: "Unauthorized"
+                message: "Authentication required"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 403
+                error: "Forbidden"
+                message: "Administrator privileges required"
+        "404":
+          description: External maintainer not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                error: "NotFound"
+                message: "External maintainer not found"
+
   /reports:
     post:
       tags:
@@ -975,6 +1669,7 @@ paths:
         Retrieve all approved reports for display on an interactive map. This endpoint returns only reports 
         that have been approved by public relations officers and are in one of the following statuses:
         - ASSIGNED (approved and assigned to technical staff)
+        - EXTERNAL_ASSIGNED (assigned to external company/maintainer)
         - IN_PROGRESS (being worked on)
         - RESOLVED (completed)
 
@@ -1103,9 +1798,10 @@ paths:
         - Reports
       summary: Get reports pending approval
       description: |
-        Retrieve all reports with status PENDING for review by public relations officers.
-        This is a specialized endpoint for PUBLIC_RELATIONS staff to review and process citizen reports.
-        Only public relations officers can access this endpoint.
+        Retrieve all reports with status PENDING for review by PUBLIC_RELATIONS officers.
+        This is a specialized endpoint for PUBLIC_RELATIONS staff only to review and process citizen reports.
+        Only PUBLIC_RELATIONS can approve, reject, or assign reports to technical staff.
+        Technical staff and external maintainers cannot access pending reports.
       operationId: getPendingReports
       security:
         - SessionAuth: []
@@ -1185,9 +1881,10 @@ paths:
         - Reports
       summary: List technicals available for this report's category
       description: |
-        Return the list of municipality technical users that are valid assignees for the given report.
+        Return the list of municipality technical users (TECHNICAL_ROLES) that are valid assignees for the given report.
         The backend filters available technicals according to the report's category. This endpoint is
-        intended for use by public relations officers when approving a report and choosing the responsible technical.
+        intended for use by PUBLIC_RELATIONS officers only when approving a report and choosing the responsible technical.
+        External maintainers cannot access this endpoint as they cannot approve reports.
       operationId: getAssignableTechnicals
       security:
         - SessionAuth: []
@@ -1273,7 +1970,8 @@ paths:
         - **Users**: For companies with platform access (has_platform_access=true), returns individual maintainer users
         - **Companies**: For companies without platform access (has_platform_access=false), returns only company information
         
-        This endpoint is intended for use by technical office staff members when they need to assign a report to an external entity.
+        This endpoint is intended for use by municipality TECHNICAL_ROLES staff members when they need to assign a report to an external entity.
+        External maintainers cannot access this endpoint as they cannot assign reports to other externals.
       operationId: getAssignableExternals
       security:
         - SessionAuth: []
@@ -1329,15 +2027,24 @@ paths:
                 error: "Unauthorized"
                 message: "Authentication required"
         "403":
-          description: Insufficient permissions (Technical office role required)
+          description: Insufficient permissions (must be assigned technical officer)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                code: 403
-                error: "Forbidden"
-                message: "Technical office staff privileges required"
+              examples:
+                notTechnicalStaff:
+                  summary: User does not have technical staff role
+                  value:
+                    code: 403
+                    error: "Forbidden"
+                    message: "Technical office staff privileges required"
+                notAssignedOfficer:
+                  summary: User is not the assigned technical officer for this report
+                  value:
+                    code: 403
+                    error: "Forbidden"
+                    message: "Only the assigned technical officer can view assignable externals"
         "404":
           description: Report not found
           content:
@@ -1366,8 +2073,9 @@ paths:
       summary: Assign a report to an external maintainer or company
       description: |
         Assign a report to an external entity for specialized intervention.
-        Only technical office staff members assigned to the report can perform this operation.
-        The report remains in ASSIGNED status but an external assignment is tracked.
+        Only technical office staff members can perform this operation.
+        The report status changes from PENDING_APPROVAL or ASSIGNED to EXTERNAL_ASSIGNED when assigned to external entities.
+        External assignment creates a specialized workflow for external company maintenance.
         
         **Assignment logic based on company platform access:**
         
@@ -1528,12 +2236,30 @@ paths:
                     code: 400
                     error: "BadRequest"
                     message: "externalMaintainerId must be null when company does not have platform access"
+                userNotFound:
+                  summary: User not found
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "User not found"
+                notExternalMaintainer:
+                  summary: User is not an external maintainer
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "User is not an external maintainer"
                 maintainerNotInCompany:
                   summary: Maintainer does not belong to specified company
                   value:
                     code: 400
                     error: "BadRequest"
                     message: "External maintainer does not belong to the specified company"
+                alreadyAssignedToExternal:
+                  summary: Report is already assigned to an external entity
+                  value:
+                    code: 400
+                    error: "BadRequest"
+                    message: "Report is already assigned to an external entity"
         "401":
           description: Not authenticated
           content:
@@ -1550,10 +2276,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                code: 403
-                error: "Forbidden"
-                message: "Only the assigned technical officer can assign to external maintainers"
+              examples:
+                notTechnicalStaff:
+                  summary: User does not have technical staff role
+                  value:
+                    code: 403
+                    error: "Forbidden"
+                    message: "Technical office staff privileges required"
+                notAssignedOfficer:
+                  summary: User is not the assigned technical officer for this report
+                  value:
+                    code: 403
+                    error: "Forbidden"
+                    message: "Only the assigned technical officer can assign to external maintainers"
         "404":
           description: Report or external maintainer not found
           content:
@@ -1879,8 +2614,12 @@ paths:
         - Reports
       summary: Get reports assigned to the authenticated technical officer
       description: |
-        Retrieve all reports assigned to the authenticated technical office staff member.
-        Returns reports with status ASSIGNED, IN_PROGRESS, or RESOLVED that are assigned to the current user.
+        Retrieve all reports assigned to the authenticated technical officer or external maintainer.
+        Available for TECHNICAL_AND_EXTERNAL_ROLES (both municipality technical staff and external maintainers).
+        Returns reports with status ASSIGNED, EXTERNAL_ASSIGNED, IN_PROGRESS, or RESOLVED that are assigned to the current user.
+        
+        For internal staff: filters by assignedOfficerId
+        For external maintainers: filters by externalMaintainerId
         The user ID is extracted from the session token, ensuring users can only see their own assigned reports.
 
         Optional query parameters allow filtering by status and sorting the results.
@@ -1896,6 +2635,7 @@ paths:
             type: string
             enum:
               - ASSIGNED
+              - EXTERNAL_ASSIGNED
               - IN_PROGRESS
               - RESOLVED
           example: ASSIGNED
@@ -2039,7 +2779,8 @@ paths:
         - Reports
       summary: Update report status
       description: |
-        Update the status of an assigned report. Only technical office staff assigned to the report can perform this operation.
+        Update the status of an assigned report. Available for TECHNICAL_AND_EXTERNAL_ROLES.
+        Only technical staff or external maintainers assigned to the report can perform this operation.
         Valid status transitions:
         - ASSIGNED → IN_PROGRESS
         - IN_PROGRESS → RESOLVED
@@ -2146,8 +2887,9 @@ paths:
         - Reports
       summary: Send message to citizen
       description: |
-        Send a message to the citizen who created the report. Only technical office staff assigned 
-        to the report can send messages. A notification is automatically created for the citizen.
+        Send a message to the citizen who created the report. Available for TECHNICAL_AND_EXTERNAL_ROLES.
+        Only technical staff or external maintainers assigned to the report can send messages.
+        A notification is automatically created for the citizen.
       operationId: sendReportMessage
       security:
         - SessionAuth: []
@@ -2243,8 +2985,8 @@ paths:
         - Reports
       summary: Get report conversation history
       description: |
-        Retrieve all messages for a specific report. Both citizens (for their own reports) 
-        and assigned technical staff can access the conversation.
+        Retrieve all messages for a specific report. Citizens can access their own reports,
+        technical staff and external maintainers can access conversations for their assigned reports.
       operationId: getReportMessages
       security:
         - SessionAuth: []
@@ -2449,7 +3191,7 @@ paths:
       description: |
         Retrieve detailed information about a specific report including all messages.
         - Citizens can only view their own reports
-        - Technical staff can view reports assigned to them
+        - Technical staff and external maintainers can view reports assigned to them
         - Public relations can view any report
       operationId: getReportById
       security:
@@ -3005,16 +3747,14 @@ components:
         user:
           $ref: "#/components/schemas/UserInfo"
         assignedOfficer:
-          allOf:
+          oneOf:
             - $ref: "#/components/schemas/MunicipalityUserResponse"
-          type: object
-          nullable: true
+            - enum: [null]
           description: Details of the assigned officer (null if not assigned)
         externalHandler:
-          allOf:
+          oneOf:
             - $ref: "#/components/schemas/ExternalHandler"
-          type: object
-          nullable: true
+            - enum: [null]
         messages:
           type: array
           items:
@@ -3044,6 +3784,7 @@ components:
         - PENDING_APPROVAL
         - APPROVED
         - ASSIGNED
+        - EXTERNAL_ASSIGNED
         - IN_PROGRESS
         - SUSPENDED
         - REJECTED

@@ -53,4 +53,18 @@ export class UserRepository {
       relations: ["photo"]
     });
   }
+
+  async findExternalMaintainersWithCompany(): Promise<User[]> {
+    return await this.repository.find({
+      where: { role: Role.EXTERNAL_MAINTAINER },
+      relations: ["externalCompany"]
+    });
+  }
+
+  async findExternalMaintainerByIdWithCompany(id: number): Promise<User | null> {
+    return await this.repository.findOne({
+      where: { id, role: Role.EXTERNAL_MAINTAINER },
+      relations: ["externalCompany"]
+    });
+  }
 }

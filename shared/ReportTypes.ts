@@ -13,6 +13,7 @@ export enum ReportCategory {
 export enum ReportStatus {
   PENDING_APPROVAL = "PENDING_APPROVAL",
   ASSIGNED = "ASSIGNED",
+  EXTERNAL_ASSIGNED = "EXTERNAL_ASSIGNED",
   REJECTED = "REJECTED",
   IN_PROGRESS = "IN_PROGRESS",
   SUSPENDED = "SUSPENDED",
@@ -51,9 +52,4 @@ export interface CreateReportResponse {
 // Story 6 interfaces
 export interface RejectReportRequest {
   reason: string;
-}
-
-export interface AssignReportToExternalResponse {
-  message: string;
-  report: any;
 }

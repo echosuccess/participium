@@ -11,7 +11,10 @@ export class ExternalCompanyRepository {
   }
 
   async findById(id: number): Promise<ExternalCompany | null> {
-    return await this.repository.findOne({ where: { id } });
+    return await this.repository.findOne({ 
+      where: { id },
+      relations: ["maintainers"]
+    });
   }
 
   async findByCategory(category: ReportCategory): Promise<ExternalCompany[]> {
@@ -24,5 +27,25 @@ export class ExternalCompanyRepository {
       where: { id: In(ids) },
       relations: ["maintainers"]
     });
+  }
+
+  async create(data: Partial<ExternalCompany>): Promise<ExternalCompany> {
+    return await this.repository.save(data);
+  }
+
+  async findAll(): Promise<ExternalCompany[]> {
+    return await this.repository.find({ relations: ["maintainers"] });
+  }
+
+  async findByPlatformAccess(platformAccess: boolean): Promise<ExternalCompany[]> {
+    return await this.repository.find({ 
+      where: { platformAccess },
+      relations: ["maintainers"]
+    });
+  }
+
+  async deleteById(id: number): Promise<boolean> {
+    const result = await this.repository.delete(id);
+    return (result.affected ?? 0) > 0;
   }
 }
