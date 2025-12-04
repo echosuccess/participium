@@ -17,7 +17,16 @@ export class ReportRepository {
   async findByIdWithRelations(id: number): Promise<Report | null> {
     return await this.repository.findOne({
       where: { id },
-      relations: ["user", "assignedTo", "photos", "messages", "messages.user"]
+        relations: [
+          "user",
+          "assignedOfficer",
+          "photos",
+          "messages",
+          "messages.user",
+          "externalMaintainer",
+          "externalMaintainer.externalCompany",
+          "externalCompany"
+        ]
     });
   }
 
@@ -45,10 +54,39 @@ export class ReportRepository {
   async findAssignedToUser(userId: number, statuses: ReportStatus[]): Promise<Report[]> {
     return await this.repository.find({
       where: {
-        assignedToId: userId,
+          assignedOfficerId: userId,
         status: In(statuses)
       },
-      relations: ["user", "assignedTo", "photos", "messages", "messages.user"],
+        relations: [
+          "user",
+          "assignedOfficer",
+          "photos",
+          "messages",
+          "messages.user",
+          "externalMaintainer",
+          "externalMaintainer.externalCompany",
+          "externalCompany"
+        ],
+      order: { createdAt: "DESC" }
+    });
+  }
+
+  async findAssignedToExternalMaintainer(externalMaintainerId: number, statuses: ReportStatus[]): Promise<Report[]> {
+    return await this.repository.find({
+      where: {
+        externalMaintainerId: externalMaintainerId,
+        status: In(statuses)
+      },
+      relations: [
+        "user",
+        "assignedOfficer",
+        "photos",
+        "messages",
+        "messages.user",
+        "externalMaintainer",
+        "externalMaintainer.externalCompany",
+        "externalCompany"
+      ],
       order: { createdAt: "DESC" }
     });
   }

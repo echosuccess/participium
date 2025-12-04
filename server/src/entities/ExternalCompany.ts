@@ -3,30 +3,30 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
+  Index
 } from "typeorm";
 import { ReportCategory } from "../../../shared/ReportTypes";
+import { User } from "./User";
 import { Report } from "./Report";
-import { ExternalCompanyUser } from "./ExternalCompanyUser";
 
 @Entity("ExternalCompany")
 export class ExternalCompany {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Index({ unique: true })
+  @Column({ type: "varchar" })
   name: string;
 
-  @Column({
-    type: "enum",
-    enum: ReportCategory,
-  })
-  category: ReportCategory;
+  // Stores the categories handled by the company as an array
+  @Column({ type: "simple-json" })
+  categories: ReportCategory[];
 
-  @Column({ default: false })
-  hasPlatformAccess: boolean;
+  @Column({ type: "boolean", default: false })
+  platformAccess: boolean;
 
-  @OneToMany("ExternalCompanyUser", "company")
-  companyUsers: ExternalCompanyUser[];
+  @OneToMany("User", "externalCompany")
+  maintainers: User[];
 
   @OneToMany("Report", "externalCompany")
   reports: Report[];

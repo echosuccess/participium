@@ -18,7 +18,7 @@ export const MUNICIPALITY_ROLES: Role[] = [
   Role.GREENSPACES_AND_ANIMAL_PROTECTION,
   Role.WASTE_MANAGEMENT,
   Role.ROAD_MAINTENANCE,
-  Role.CIVIL_PROTECTION,
+  Role.CIVIL_PROTECTION
 ];
 
 export const TECHNICAL_ROLES: Role[] = [
@@ -33,7 +33,12 @@ export const TECHNICAL_ROLES: Role[] = [
   Role.GREENSPACES_AND_ANIMAL_PROTECTION,
   Role.WASTE_MANAGEMENT,
   Role.ROAD_MAINTENANCE,
-  Role.CIVIL_PROTECTION,
+  Role.CIVIL_PROTECTION
+];
+
+export const TECHNICAL_AND_EXTERNAL_ROLES: Role[] = [
+  ...TECHNICAL_ROLES,
+  Role.EXTERNAL_MAINTAINER
 ];
 
 export function isValidRole(v: unknown): v is Role {

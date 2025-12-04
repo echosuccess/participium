@@ -55,16 +55,13 @@ export class Report {
   userId: number;
 
   @Column({ type: "int", nullable: true })
-  assignedToId: number;
-
-  @Column({ type: "int", nullable: true })
-  externalCompanyId: number | null;
+  assignedOfficerId: number | null;
 
   @Column({ type: "int", nullable: true })
   externalMaintainerId: number | null;
 
-  @Column({ type: "datetime", nullable: true })
-  externalAssignedAt: Date | null;
+  @Column({ type: "int", nullable: true })
+  externalCompanyId: number | null;
 
   @Column({ type: "text", nullable: true })
   rejectedReason: string;
@@ -80,8 +77,8 @@ export class Report {
   user: User;
 
   @ManyToOne("User", "assignedReports", { nullable: true })
-  @JoinColumn({ name: "assignedToId" })
-  assignedTo: User;
+  @JoinColumn({ name: "assignedOfficerId" })
+  assignedOfficer: User | null;
 
   @OneToMany("ReportPhoto", "report")
   photos: ReportPhoto[];
@@ -92,11 +89,11 @@ export class Report {
   @OneToMany("Notification", "report")
   notifications: Notification[];
 
+  @ManyToOne("User", "reports", { nullable: true })
+  @JoinColumn({ name: "externalMaintainerId" })
+  externalMaintainer: User | null;
+
   @ManyToOne("ExternalCompany", "reports", { nullable: true })
   @JoinColumn({ name: "externalCompanyId" })
   externalCompany: ExternalCompany | null;
-
-  @ManyToOne("User", "externalReports", { nullable: true })
-  @JoinColumn({ name: "externalMaintainerId" })
-  externalMaintainer: User | null;
 }
