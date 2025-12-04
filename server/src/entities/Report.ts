@@ -63,9 +63,6 @@ export class Report {
   @Column({ type: "int", nullable: true })
   externalCompanyId: number | null;
 
-  @Column({ type: "datetime", nullable: true })
-  externalAssignedAt: Date | null;
-
   @Column({ type: "text", nullable: true })
   rejectedReason: string;
 

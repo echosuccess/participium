@@ -52,3 +52,8 @@ export interface CreateReportResponse {
 export interface RejectReportRequest {
   reason: string;
 }
+
+export interface AssignReportToExternalResponse {
+  message: string;
+  report: any;
+}

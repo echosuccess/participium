@@ -15,8 +15,6 @@ export class ExternalCompanyRepository {
   }
 
   async findByCategory(category: ReportCategory): Promise<ExternalCompany[]> {
-    // categories stored as simple-json array; filter in memory after fetching all could be heavy.
-    // Fetch all, then filter by includes.
     const companies = await this.repository.find({ relations: ["maintainers"] });
     return companies.filter(c => Array.isArray(c.categories) && c.categories.includes(category));
   }

@@ -1,5 +1,5 @@
 import { ReportCategory } from "../../../shared/ReportTypes";
-import { UserDTO, Role } from "./UserDTO";
+import { MunicipalityUserDTO, Role } from "./UserDTO";
 
 export type ExternalCompanyDTO = {
   id: number;
@@ -8,7 +8,11 @@ export type ExternalCompanyDTO = {
   platformAccess: boolean;
 };
 
-export type ExternalMaintainerDTO = UserDTO & {
+export type ExternalCompanyWithUsersDTO = ExternalCompanyDTO & {
+  users: MunicipalityUserDTO[] | null;
+};
+
+export type ExternalMaintainerDTO = MunicipalityUserDTO & {
   company: ExternalCompanyDTO;
 };
 
@@ -35,8 +39,6 @@ export function toExternalMaintainerDTO(u: any): ExternalMaintainerDTO | null {
     lastName: u.last_name,
     email: u.email,
     role: u.role as Role,
-    telegramUsername: u.telegram_username ?? null,
-    emailNotificationsEnabled: u.email_notifications_enabled ?? true,
     company: {
       id: u.externalCompany.id,
       name: u.externalCompany.name,
