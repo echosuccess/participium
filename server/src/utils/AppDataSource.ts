@@ -10,17 +10,27 @@ import { Notification } from "../entities/Notification";
 export const AppDataSource = new DataSource({
   type: "postgres",
   url: process.env.DATABASE_URL,
+  
+  // All entity definitions (User includes PT27 verification fields)
   entities: [User, CitizenPhoto, Report, ReportPhoto, ReportMessage, Notification],
+  
+  // Migration files location (not currently used - using synchronize instead)
   migrations: ["dist/app/src/migrations/*.js"],
-  // Force synchronization in Docker/production for setup
+  
+  // Auto-sync schema with entity changes (e.g., PT27 adds isVerified, verificationToken, verificationCodeExpiresAt)
+  // Set TYPEORM_SYNCHRONIZE=true in .env to enable automatic schema updates
   synchronize: process.env.TYPEORM_SYNCHRONIZE === "true", 
+  
+  // SQL query logging for debugging
   logging: process.env.NODE_ENV === "development" || process.env.TYPEORM_LOGGING === "true",
-  // Enable schema creation in Docker environment
+  
+  // Preserve existing data - never drop schema
   dropSchema: false,
-  // Additional connection options for Docker
+  
+  // Connection timeout and pooling settings for Docker environment
   connectTimeoutMS: 20000,
   extra: {
-    max: 10,
+    max: 10, // Maximum connection pool size
     connectionTimeoutMillis: 10000,
   },
 });
