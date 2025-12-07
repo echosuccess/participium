@@ -14,8 +14,8 @@ import type {
   CreateExternalMaintainerData,
   CreateExternalCompanyData,
   ExternalCompanyResponse,
-  ExternalMaintainerResponse
- } from "../../../shared/ExternalTypes";
+  ExternalMaintainerResponse,
+} from "../../../shared/ExternalTypes";
 
 const API_PREFIX = import.meta.env.VITE_API_URL || "/api";
 
@@ -311,7 +311,7 @@ export async function assignReportToExternal(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ externalCompanyId, externalMaintainerId }),
   });
-  return handleResponse<any>(res);
+  return handleResponse<AssignReportToExternalResponse>(res);
 }
 
 export async function approveReport(

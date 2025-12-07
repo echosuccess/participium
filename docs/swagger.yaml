@@ -3410,30 +3410,7 @@ components:
           example: SecurePass123!
 
     CitizenRegistrationResponse:
-      type: object
-      properties:
-        firstName:
-          type: string
-          example: Mario
-        lastName:
-          type: string
-          example: Rossi
-        email:
-          type: string
-          example: mario.rossi@example.com
-        role:
-          type: string
-          enum: [CITIZEN]
-          example: CITIZEN
-        telegramUsername:
-          type: string
-          nullable: true
-          description: Telegram username for bot notifications
-          example: null
-        emailNotificationsEnabled:
-          type: boolean
-          description: Whether email notifications are enabled
-          example: true
+      $ref: "#/components/schemas/UserInfo"
 
     LoginRequest:
       type: object
@@ -3518,6 +3495,10 @@ components:
         emailNotificationsEnabled:
           type: boolean
           description: Whether email notifications are enabled
+          example: true
+        isVerified:
+          type: boolean
+          description: Whether the user's email has been verified
           example: true
 
     ErrorResponse:

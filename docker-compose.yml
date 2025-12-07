@@ -95,6 +95,7 @@ services:
       DB_RETRY_DELAY: 3000
       # TypeORM settings for Docker
       TYPEORM_SYNCHRONIZE: "true"
+      RESEND_API_KEY: ${RESENDER_API_KEY:-re_WLzoZpsq_B33rsT3EjxLfa6gWCHhwiQyG}
       TYPEORM_LOGGING: "true"
     ports:
       - "${SERVER_PORT:-4000}:4000"

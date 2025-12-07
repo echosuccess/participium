@@ -1,4 +1,4 @@
-import { useState, useEffect, act } from "react";
+import { useState, useEffect } from "react";
 import { Container, Table, Form, Alert, Badge, Nav } from 'react-bootstrap';
 import { useNavigate } from "react-router";
 import { useAuth, useForm, useLoadingState } from "../../hooks";
@@ -14,8 +14,7 @@ import {
   getExternalCompanies,
   createExternalCompany,
   deleteExternalCompany,
-  deleteExternalMaintainer,
-  getExternalCompaniesWithAccess
+  deleteExternalMaintainer
 } from "../../api/api";
 import type { 
   MunicipalityUserRequest, 
@@ -175,7 +174,6 @@ export default function AdminPanel() {
   };
 
   const handleDelete = async (userId: number) => {
-    const itemType = activeTab === 'internal' ? 'user' : activeTab === 'external' ? 'maintainer' : 'company';
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
     try {
