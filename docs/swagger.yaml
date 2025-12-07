@@ -3055,7 +3055,7 @@ paths:
       summary: Get user notifications
       description: |
         Retrieve all notifications for the authenticated user. 
-        Frontend should poll this endpoint every 30-60 seconds to check for new notifications.
+        Frontend should poll this endpoint only when the page refreshes.
         
         Notifications are generated when:
         - Report status changes (for citizens)
