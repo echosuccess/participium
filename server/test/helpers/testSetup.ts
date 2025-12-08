@@ -5,7 +5,6 @@ import { Report } from '../../src/entities/Report';
 import { CitizenPhoto } from '../../src/entities/CitizenPhoto';
 import { Notification } from '../../src/entities/Notification';
 import { User } from '../../src/entities/User';
-import { ExternalCompanyUser } from '../../src/entities/ExternalCompanyUser';
 import { ExternalCompany } from '../../src/entities/ExternalCompany';
 
 /**
@@ -17,14 +16,14 @@ export async function cleanDatabase() {
   }
   
   // Delete in order to respect foreign key constraints
-  await AppDataSource.getRepository(ReportMessage).delete({});
-  await AppDataSource.getRepository(ReportPhoto).delete({});
-  await AppDataSource.getRepository(Report).delete({});
-  await AppDataSource.getRepository(CitizenPhoto).delete({});
-  await AppDataSource.getRepository(Notification).delete({});
-  await AppDataSource.getRepository(ExternalCompanyUser).delete({});
-  await AppDataSource.getRepository(ExternalCompany).delete({});
-  await AppDataSource.getRepository(User).delete({});
+  // Use createQueryBuilder to delete all records (TypeORM doesn't allow empty criteria)
+  await AppDataSource.getRepository(ReportMessage).createQueryBuilder().delete().execute();
+  await AppDataSource.getRepository(ReportPhoto).createQueryBuilder().delete().execute();
+  await AppDataSource.getRepository(Notification).createQueryBuilder().delete().execute();
+  await AppDataSource.getRepository(Report).createQueryBuilder().delete().execute();
+  await AppDataSource.getRepository(CitizenPhoto).createQueryBuilder().delete().execute();
+  await AppDataSource.getRepository(User).createQueryBuilder().delete().execute();
+  await AppDataSource.getRepository(ExternalCompany).createQueryBuilder().delete().execute();
 }
 
 /**
