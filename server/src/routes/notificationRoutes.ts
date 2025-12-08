@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middlewares/errorMiddleware';
-import { requireCitizenOrTechnical } from '../middlewares/routeProtection';
-import { ApiValidationMiddleware } from '../middlewares/validationMiddlewere';
+import { requireCitizenOrTechnicalOrExternal } from '../middlewares/routeProtection';
 import {
   getUserNotifications,
   markNotificationAsRead,
@@ -10,9 +9,9 @@ import {
 const router = Router();
 
 // GET /api/notifications - Get user notifications
-router.get('/', requireCitizenOrTechnical, asyncHandler(getUserNotifications));
+router.get('/', requireCitizenOrTechnicalOrExternal, asyncHandler(getUserNotifications));
 
 // PATCH /api/notifications/:notificationId/read - Mark notification as read
-router.patch('/:notificationId/read', requireCitizenOrTechnical, asyncHandler(markNotificationAsRead));
+router.patch('/:notificationId/read', requireCitizenOrTechnicalOrExternal, asyncHandler(markNotificationAsRead));
 
 export default router;
