@@ -212,7 +212,7 @@ export default function HomePage() {
                   user.email === report.user.email;
                 return (
                   <div key={report.id} style={{ position: "relative" }}>
-                    {isOwnReport && (
+                      {isOwnReport && (
                       <div
                         style={{
                           position: "absolute",
@@ -223,7 +223,7 @@ export default function HomePage() {
                           fontWeight: 700,
                           fontSize: "0.85rem",
                           padding: "2px 8px",
-                          borderRadius: "0.5rem 0 0.5rem 0",
+                          borderRadius: "0 0 0.5rem 0",
                           zIndex: 2,
                         }}
                       >
