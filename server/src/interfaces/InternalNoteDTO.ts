@@ -1,8 +1,4 @@
-/**
- * DTO interfaces for Internal Notes (PT26)
- * Internal notes are used for coordination between technical staff
- * and are NOT visible to citizens
- */
+import { InternalNote } from "../entities/InternalNote";
 
 export interface InternalNoteDTO {
   id: number;
@@ -14,6 +10,14 @@ export interface InternalNoteDTO {
   updatedAt: Date;
 }
 
-export interface CreateInternalNoteDTO {
-  content: string;
+export function toInternalNoteDTO(internalNote: InternalNote): InternalNoteDTO {
+  return {
+    id: internalNote.id,
+    content: internalNote.content,
+    authorId: internalNote.authorId,
+    authorName: `${internalNote.author.first_name} ${internalNote.author.last_name}`,
+    authorRole: internalNote.author.role,
+    createdAt: internalNote.createdAt,
+    updatedAt: internalNote.updatedAt,
+  };
 }
