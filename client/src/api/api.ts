@@ -244,6 +244,17 @@ export async function createInternalNote(
   return handleResponse<CreateInternalNoteResponse>(res);
 }
 
+export async function getInternalNotes( 
+  reportId: number
+): Promise<InternalNote[]> {
+  const res = await fetch(`${API_PREFIX}/reports/${reportId}/internal-notes`, {
+    method: "GET",
+    credentials: "include",
+  });
+  return handleResponse<InternalNote[]>(res);
+} 
+
+
 export default {
   getSession,
   login,
