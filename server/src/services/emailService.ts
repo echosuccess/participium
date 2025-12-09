@@ -1,25 +1,34 @@
+import nodemailer from "nodemailer";
 import { VerificationEmailError } from "../interfaces/errors/VerificationEmailError";
 
-let resendClient: any = { emails: { send: async () => {} } };
+const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+const smtpPort = Number(process.env.SMTP_PORT || 587);
+const smtpUser = process.env.SMTP_USER;
+const smtpPass = process.env.SMTP_PASS;
+const smtpFrom = process.env.SMTP_FROM || smtpUser || "no-reply@participium.com";
 
-try {
-    // Dynamically require to avoid TypeScript resolution errors when the package
-    // is not installed in the test environment.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const Resend = require("resend").Resend;
-    resendClient = new Resend(process.env.RESEND_API_KEY!);
-} catch (err) {
-    // If `resend` is not available, keep a noop client so tests and CI don't crash.
+function getTransport() {
+    if (!smtpUser || !smtpPass) {
+        throw new Error("SMTP_USER and SMTP_PASS must be set in environment");
+    }
+
+    return nodemailer.createTransport({
+        host: smtpHost,
+        port: smtpPort,
+        secure: false,
+        auth: { user: smtpUser, pass: smtpPass },
+    });
 }
 
 export async function sendVerificationEmail(email: string, code: string) {
     try {
-        await resendClient.emails.send({
-            from: "no-reply@participium.com",
+        const transporter = getTransport();
+        await transporter.sendMail({
+            from: smtpFrom,
             to: email,
             subject: "Verify your email address",
             html: `<p>Your verification code is: <strong>${code}</strong></p>
-                    <p>this code will expire in 30 minutes.</p>`,
+                   <p>This code will expire in 30 minutes.</p>`,
         });
     } catch (error) {
         console.error("Error sending verification email:", error);
