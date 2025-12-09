@@ -13,9 +13,18 @@ export class InternalNoteRepository {
     content: string;
     reportId: number;
     authorId: number;
+    authorRole: string;
   }): Promise<InternalNote> {
     const note = this.repository.create(noteData);
-    return await this.repository.save(note);
+    const savedNote = await this.repository.save(note);
+    
+    // Ricarica con le relazioni
+    const noteWithRelations = await this.repository.findOne({
+      where: { id: savedNote.id },
+      relations: ["author"]
+    });
+    
+    return noteWithRelations!;
   }
 
   async findByReportId(reportId: number): Promise<InternalNote[]> {

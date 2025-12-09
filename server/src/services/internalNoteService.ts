@@ -39,6 +39,7 @@ export async function createInternalNote(
     content: content.trim(),
     reportId,
     authorId,
+    authorRole
   });
 
   return toInternalNoteDTO(note);
@@ -49,10 +50,6 @@ export async function getInternalNotes(reportId: number, userId: number): Promis
  
   if (!report) {
     throw new NotFoundError("Report not found");
-  }
-
-  if (report.assignedToId !== userId) {
-    throw new ForbiddenError("You are not assigned to this report");
   }
 
   const notes = await internalNoteRepository.findByReportId(reportId);

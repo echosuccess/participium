@@ -14,6 +14,7 @@ import {
   sendMessageToCitizen,
   getReportMessages,
   createInternalNote,
+  getInternalNote
 } from '../controllers/reportController';
 import { upload } from '../middlewares/uploadsMiddleware';
 import { ApiValidationMiddleware } from '../middlewares/validationMiddlewere';
@@ -60,6 +61,9 @@ router.get(
   requirePublicRelations,
   asyncHandler(getAssignableTechnicals)
 );
+
+
+//FIXME: add the logic with the external users
 
 // POST /api/reports/:reportId/internal-notes - Create internal note
 router.post('/:reportId/internal-notes', requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(createInternalNote));
