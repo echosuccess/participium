@@ -16,7 +16,8 @@ export const initializeDatabase = async (): Promise<void> => {
       await AppDataSource.initialize();
       console.log("✅ Database connection initialized successfully");
       
-      // Run synchronization if enabled (creates tables)
+      // Run synchronization if enabled - automatically creates/updates tables and columns
+      // This is useful in development to apply entity changes (e.g., PT27 verification fields)
       if (process.env.TYPEORM_SYNCHRONIZE === "true") {
         console.log("🔄 Synchronizing database schema...");
         await AppDataSource.synchronize();

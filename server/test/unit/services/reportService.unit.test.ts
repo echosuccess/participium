@@ -3,6 +3,7 @@ import {
   NotFoundError,
   BadRequestError,
   UnprocessableEntityError,
+  ForbiddenError,
 } from "../../../src/utils/errors";
 
 // Create mock functions at module level
@@ -70,12 +71,39 @@ import {
 } from "../../../src/services/reportService";
 
 describe("reportService", () => {
+  let reportService: any;
+  const mockDate = new Date("2023-01-01T00:00:00.000Z");
+
+  // Helper to generate a "DB Entity"
+  const createMockReportEntity = (overrides: any = {}) => ({
+    id: 1,
+    title: "Test Report",
+    description: "Desc",
+    category: ReportCategory.OTHER,
+    latitude: 10,
+    longitude: 10,
+    status: ReportStatus.PENDING_APPROVAL,
+    userId: 1,
+    createdAt: mockDate,
+    updatedAt: mockDate,
+    user: { id: 1, role: "CITIZEN", email: "c@test.com" },
+    photos: [],
+    messages: [],
+    ...overrides,
+  });
+
+  // 5. Import the service dynamically BEFORE tests run
+  beforeAll(async () => {
+    reportService = await import("../../../src/services/reportService");
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  // --- 1. Create Report ---
   describe("createReport", () => {
-    it("should create basic report", async () => {
+    it("should create a report and photos successfully", async () => {
       const input = {
         title: "T",
         description: "D",
@@ -83,7 +111,15 @@ describe("reportService", () => {
         latitude: 1,
         longitude: 1,
         userId: 1,
-        photos: [],
+        photos: [{ 
+            id: 0, 
+            filename: "f.jpg", 
+            url: "http://u", 
+            size: 100, 
+            mimetype: "image/jpeg", 
+            originalname: "o", 
+            buffer: Buffer.from([]) 
+        }],
         isAnonymous: false,
       };
 
@@ -112,6 +148,7 @@ describe("reportService", () => {
     });
   });
 
+  // --- 2. Get Lists ---
   describe("getApprovedReports", () => {
     it("should filter by category if provided", async () => {
       mockReportFindByStatusAndCategory.mockResolvedValue([]);
@@ -128,6 +165,7 @@ describe("reportService", () => {
     });
   });
 
+  // --- 3. Get Assignable Technicals ---
   describe("getAssignableTechnicalsForReport", () => {
     it("should throw NotFoundError if report missing", async () => {
       mockReportFindById.mockResolvedValue(null);
@@ -151,6 +189,7 @@ describe("reportService", () => {
     });
   });
 
+  // --- 4. Approve Report ---
   describe("approveReport", () => {
     it("should throw NotFoundError if report not found", async () => {
       mockReportFindByIdWithRelations.mockResolvedValue(null);
@@ -173,9 +212,11 @@ describe("reportService", () => {
       });
       mockUserFindById.mockResolvedValue(null);
 
-      await expect(approveReport(1, 2, 99)).rejects.toThrow(
-        UnprocessableEntityError
-      );
+    it("should throw UnprocessableEntityError if technical has wrong role", async () => {
+      mockReportRepo.findByIdWithRelations.mockResolvedValue(createMockReportEntity({ category: ReportCategory.WATER_SUPPLY_DRINKING_WATER }));
+      mockUserRepo.findById.mockResolvedValue({ id: 99, role: "WRONG_ROLE" });
+
+      await expect(reportService.approveReport(1, 2, 99)).rejects.toThrow(UnprocessableEntityError);
     });
 
     it("should throw UnprocessableEntityError if technical role invalid for category", async () => {
@@ -189,9 +230,17 @@ describe("reportService", () => {
         role: TechnicalType.WASTE_MANAGEMENT,
       });
 
-      await expect(approveReport(1, 2, 99)).rejects.toThrow(
-        UnprocessableEntityError
-      );
+    it("should succeed, update status, and notify", async () => {
+      mockReportRepo.findByIdWithRelations.mockResolvedValue(createMockReportEntity());
+      mockUserRepo.findById.mockResolvedValue({ id: 99, role: TechnicalType.MUNICIPAL_BUILDING_MAINTENANCE });
+      mockReportRepo.update.mockResolvedValue(createMockReportEntity({ 
+        status: ReportStatus.ASSIGNED, 
+        assignedOfficerId: 99 
+      }));
+
+      const res = await reportService.approveReport(1, 2, 99);
+      expect(mockReportRepo.update).toHaveBeenCalled();
+      expect(res.status).toBe(ReportStatus.ASSIGNED);
     });
   });
 
