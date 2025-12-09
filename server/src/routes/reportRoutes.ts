@@ -61,12 +61,10 @@ router.get(
   asyncHandler(getAssignableTechnicals)
 );
 
-// POST /api/reports/:reportId/internal-notes - Create internal note (PT26)
-router.post(
-  '/:reportId/internal-notes',
-  requireTechnicalStaff,
-  ApiValidationMiddleware,
-  asyncHandler(createInternalNote)
-);
+// POST /api/reports/:reportId/internal-notes - Create internal note
+router.post('/:reportId/internal-notes', requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(createInternalNote));
+
+// GET /api/reports/:reportId/internal-notes - See internal note 
+router.get('/:reportId/internal-notes', requireTechnicalStaff, ApiValidationMiddleware, asyncHandler(getInternalNote));
 
 export default router;

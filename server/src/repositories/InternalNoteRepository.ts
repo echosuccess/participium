@@ -9,9 +9,6 @@ export class InternalNoteRepository {
     this.repository = AppDataSource.getRepository(InternalNote);
   }
 
-  /**
-   * Create a new internal note
-   */
   async create(noteData: {
     content: string;
     reportId: number;
@@ -21,10 +18,6 @@ export class InternalNoteRepository {
     return await this.repository.save(note);
   }
 
-  /**
-   * Find all internal notes for a specific report
-   * Includes author information for display
-   */
   async findByReportId(reportId: number): Promise<InternalNote[]> {
     return await this.repository.find({
       where: { reportId },
@@ -33,9 +26,6 @@ export class InternalNoteRepository {
     });
   }
 
-  /**
-   * Find a single internal note by ID
-   */
   async findById(id: number): Promise<InternalNote | null> {
     return await this.repository.findOne({
       where: { id },
@@ -43,9 +33,6 @@ export class InternalNoteRepository {
     });
   }
 
-  /**
-   * Update an internal note
-   */
   async update(id: number, content: string): Promise<InternalNote | null> {
     const note = await this.findById(id);
     if (!note) {
@@ -55,9 +42,6 @@ export class InternalNoteRepository {
     return await this.repository.save(note);
   }
 
-  /**
-   * Delete an internal note
-   */
   async delete(id: number): Promise<boolean> {
     const result = await this.repository.delete(id);
     return (result.affected ?? 0) > 0;
