@@ -1,49 +1,15 @@
-import { Role } from "../../../../shared/RoleTypes";
-import { BadRequestError } from "../../../src/utils";
+// Mock UserRepository
+const mockUserRepository = {
+  countByRole: jest.fn(),
+};
 
-// Create mock functions for UserRepository
-const mockCountByRole = jest.fn();
-
-// Mock UserRepository BEFORE imports
-jest.mock("../../../src/repositories/UserRepository", () => {
-  return {
-    UserRepository: jest.fn().mockImplementation(() => ({
-      countByRole: mockCountByRole,
-    })),
-  };
-});
-
-// Mock userService
-const mockCreateUser = jest.fn();
-const mockFindById = jest.fn();
-const mockFindByEmail = jest.fn();
-const mockUpdateUser = jest.fn();
-const mockDeleteUser = jest.fn();
-const mockFindUsersByRoles = jest.fn();
-
-jest.mock("../../../src/services/userService", () => ({
-  createUser: (...args: any[]) => mockCreateUser(...args),
-  findById: (...args: any[]) => mockFindById(...args),
-  findByEmail: (...args: any[]) => mockFindByEmail(...args),
-  updateUser: (...args: any[]) => mockUpdateUser(...args),
-  deleteUser: (...args: any[]) => mockDeleteUser(...args),
-  findUsersByRoles: (...args: any[]) => mockFindUsersByRoles(...args),
+jest.mock("../../../src/repositories/UserRepository", () => ({
+  UserRepository: jest.fn().mockImplementation(() => mockUserRepository),
 }));
 
-// Mock UserDTO to ensure ADMINISTRATOR is considered a municipality role
-jest.mock("../../../src/interfaces/UserDTO", () => {
-  const original = jest.requireActual("../../../src/interfaces/UserDTO");
-  return {
-    ...original,
-    MUNICIPALITY_ROLES: [
-      "ADMINISTRATOR",
-      "PUBLIC_RELATIONS",
-      "MUNICIPAL_BUILDING_MAINTENANCE",
-    ],
-  };
-});
+// Mock userService
+jest.mock("../../../src/services/userService");
 
-// Import services after mocks
 import {
   createMunicipalityUser,
   getAllMunicipalityUsers,
@@ -52,6 +18,11 @@ import {
   deleteMunicipalityUser,
   findMunicipalityUserByEmail,
 } from "../../../src/services/municipalityUserService";
+import { Roles } from "../../../src/interfaces/UserDTO";
+import { BadRequestError } from "../../../src/utils";
+import * as userService from "../../../src/services/userService";
+
+const mockUserService = userService as jest.Mocked<typeof userService>;
 
 describe("municipalityUserService", () => {
   beforeEach(() => {
@@ -147,7 +118,7 @@ describe("municipalityUserService", () => {
         id: 1,
         role: Role.ADMINISTRATOR,
       } as any);
-      mockCountByRole.mockResolvedValue(1);
+      mockUserRepository.countByRole.mockResolvedValue(1);
 
       await expect(deleteMunicipalityUser(1)).rejects.toThrow(BadRequestError);
     });
@@ -157,8 +128,8 @@ describe("municipalityUserService", () => {
         id: 1,
         role: Role.ADMINISTRATOR,
       } as any);
-      mockCountByRole.mockResolvedValue(2);
-      mockDeleteUser.mockResolvedValue(true);
+      mockUserRepository.countByRole.mockResolvedValue(2);
+      mockUserService.deleteUser.mockResolvedValue(true);
 
       const res = await deleteMunicipalityUser(1);
       expect(res).toBe(true);
@@ -172,8 +143,8 @@ describe("municipalityUserService", () => {
       mockDeleteUser.mockResolvedValue(true);
 
       await deleteMunicipalityUser(1);
-      expect(mockCountByRole).not.toHaveBeenCalled();
-      expect(mockDeleteUser).toHaveBeenCalledWith(1);
+      expect(mockUserRepository.countByRole).not.toHaveBeenCalled();
+      expect(mockUserService.deleteUser).toHaveBeenCalledWith(1);
     });
   });
 

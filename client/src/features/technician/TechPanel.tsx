@@ -21,7 +21,7 @@ import {
 import type { Report as AppReport, InternalNote } from "../../types/report.types";
 import ReportCard from "../reports/ReportCard";
 import ReportDetailsModal from "../reports/ReportDetailsModal";
-import { MUNICIPALITY_AND_EXTERNAL_ROLES,  TECHNICIAN_ROLES} from "../../utils/roles";
+import { MUNICIPALITY_AND_EXTERNAL_ROLES,  TECHNICIAN_ROLES, getRoleLabel } from "../../utils/roles";
 import { Role } from "../../../../shared/RoleTypes";
 import { ReportStatus } from "../../../../shared/ReportTypes";
 import "../../styles/TechPanelstyle.css";
@@ -113,15 +113,17 @@ export default function TechPanel() {
         setPendingReports(pendingNormalized);
         setOtherReports(otherNormalized);
       } else if (isExternalMaintainer) {
-        // External maintainer: only show EXTERNAL_ASSIGNED reports as "Assigned to me"
+        // External maintainer: show reports assigned to this external maintainer
         const assignedData = (await getAssignedReports()) as AppReport[];
 
         const pendingNormalized = (assignedData || [])
-          .filter(
-            (r: any) =>
-              r.status === ReportStatus.EXTERNAL_ASSIGNED.toString() ||
-              TECHNICAL_ALLOWED_STATUSES.map((s) => s.value).includes(r.status)
-          )
+          .filter((r: any) => {
+            const handlerUserId =
+              r.externalHandler && r.externalHandler.user && "id" in r.externalHandler.user
+                ? r.externalHandler.user.id
+                : undefined;
+            return Boolean(handlerUserId && user && (user as any).id != null && handlerUserId === (user as any).id);
+          })
           .map((r: any) => ({
             ...r,
             latitude: Number(r.latitude),
@@ -138,9 +140,9 @@ export default function TechPanel() {
         const pendingNormalized = (assignedData || [])
           .filter(
             (r: any) =>
-              r.status === ReportStatus.ASSIGNED.toString() ||
-              TECHNICAL_ALLOWED_STATUSES.map((s) => s.value).includes(r.status) &&
-              !r.externalHandler 
+              (r.status === ReportStatus.ASSIGNED.toString() ||
+                TECHNICAL_ALLOWED_STATUSES.map((s) => s.value).includes(r.status)) &&
+              !Boolean(r.externalHandler)
           )
           .map((r: any) => ({
             ...r,
@@ -149,9 +151,7 @@ export default function TechPanel() {
           }));
 
         const otherNormalized = (assignedData || [])
-          .filter((r: any) => r.status === ReportStatus.EXTERNAL_ASSIGNED.toString() ||
-            r.externalHandler 
-        )
+          .filter((r: any) => Boolean(r.externalHandler))
           .map((r: any) => ({
             ...r,
             latitude: Number(r.latitude),
@@ -309,6 +309,15 @@ export default function TechPanel() {
   const handleStatusConfirm = async () => {
     if (!selectedReportId || !targetStatus) return;
 
+    // Prevent updating to the same status
+    const currentReport = [...pendingReports, ...otherReports].find(
+      (r) => r.id === selectedReportId
+    );
+    if (currentReport && currentReport.status === targetStatus) {
+      alert("The selected status is the same as the current status.");
+      return;
+    }
+
     try {
       setProcessingId(selectedReportId);
       await updateReportStatus(selectedReportId, targetStatus);
@@ -455,7 +464,7 @@ export default function TechPanel() {
                   {pendingReports.map((report) => (
                     <Col key={report.id} lg={6} xl={4} className="mb-4">
                       <div className="h-100 shadow-sm report-card d-flex flex-column">
-                        <ReportCard report={report} />
+                        <ReportCard report={report} onOpenDetails={handleReportDetailsClick} />
                         <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid #f3f4f6', marginTop: 'auto', display: 'flex', gap: '0.5rem' }}>
                           <Button variant="danger" className="flex-fill d-flex align-items-center justify-content-center" onClick={() => openRejectModal(report.id)} disabled={processingId === report.id}><XCircle className="me-2" /> Reject</Button>
                           <Button variant="primary" className="flex-fill d-flex align-items-center justify-content-center" onClick={() => openAssignModal(report.id)} disabled={processingId === report.id} isLoading={processingId === report.id}><CheckCircle className="me-2" /> Accept</Button>
@@ -544,7 +553,7 @@ export default function TechPanel() {
                         {!isPublicRelations && (
                         <Button 
                           variant="primary" 
-                          className="mt-2 w-100 d-flex align-items-center justify-content-center"
+                          className="w-100 d-flex align-items-center justify-content-center"
                           onClick={() => openNoteModal(report.id)}
                           disabled={processingId === report.id}
                           >
@@ -562,7 +571,7 @@ export default function TechPanel() {
           {/* Show 'Assigned to External' only for technical office */}
           {!isExternalMaintainer && (
             <div className="mt-5">
-              <h4>Assigned to External</h4>
+              <h4>Assigned by me to External</h4>
               {otherReports.length === 0 ? (
                 <p className="text-muted">
                   No reports assigned to externals yet.
@@ -572,16 +581,19 @@ export default function TechPanel() {
                         {otherReports.map((report) => (
                     <Col key={report.id} lg={6} xl={4} className="mb-4">
                       <div className="h-100 shadow-sm report-card d-flex flex-column">
-                        <ReportCard report={report} onOpenDetails={handleReportDetailsClick} />
-                        <Button 
-                          variant="primary" 
-                          className="mt-2 w-100 d-flex align-items-center justify-content-center"
-                          onClick={() => openNoteModal(report.id)}
-                          disabled={processingId === report.id}
-                          >
-                          <FileText className="me-2" /> Internal Notes
-                      </Button>
-                      </div>
+                          <ReportCard report={report} onOpenDetails={handleReportDetailsClick} />
+
+                          <div style={{ padding: "0.75rem 1rem", borderTop: "1px solid #f3f4f6", marginTop: "auto", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            <Button 
+                              variant="primary" 
+                              className="w-100 d-flex align-items-center justify-content-center"
+                              onClick={() => openNoteModal(report.id)}
+                              disabled={processingId === report.id}
+                              >
+                              <FileText className="me-2" /> Internal Notes
+                            </Button>
+                          </div>
+                        </div>
                     </Col>
                   ))}
                 </Row>
@@ -772,11 +784,16 @@ export default function TechPanel() {
               onChange={(e) => setTargetStatus(e.target.value)}
             >
               <option value="">-- Select Status --</option>
-              {TECHNICAL_ALLOWED_STATUSES.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
+                {(() => {
+                  const currentStatus = [...pendingReports, ...otherReports].find((r) => r.id === selectedReportId)?.status;
+                  return TECHNICAL_ALLOWED_STATUSES
+                    .filter((s) => s.value !== currentStatus)
+                    .map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    ));
+                })()}
             </Form.Select>
           </Form.Group>
         </Modal.Body>
@@ -831,7 +848,7 @@ export default function TechPanel() {
                 {internalNotes.map((note) => (
                   <div key={note.id} className="mb-3 pb-3 border-bottom last-child-no-border">
                     <div className="d-flex justify-content-between align-items-start mb-1">
-                      <strong>{note.authorName} <span className="text-muted" style={{ fontSize: '0.85em', fontWeight: 'normal' }}>({note.authorRole})</span></strong>
+                      <strong>{note.authorName} <span className="text-muted" style={{ fontSize: '0.85em', fontWeight: 'normal' }}>({getRoleLabel(note.authorRole)})</span></strong>
                       <span className="text-muted small" style={{ fontSize: '0.8em' }}>{formatDate(note.createdAt)}</span>
                     </div>
                     <p className="mb-0 small" style={{ whiteSpace: 'pre-wrap' }}>{note.content}</p>

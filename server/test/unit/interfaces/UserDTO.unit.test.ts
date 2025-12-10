@@ -88,7 +88,15 @@ describe("UserDTO", () => {
         role: Role.CITIZEN,
         telegram_username: "telegram",
         email_notifications_enabled: false,
-      });
+        reports: [],
+        messages: [],
+        assignedReports: [],
+        notifications: [],
+        internalNotes: [],
+        photo: undefined,
+        externalCompanyId: null,
+        externalCompany: null,
+      } as any;
 
       const result = toUserDTO(user);
 
@@ -106,7 +114,16 @@ describe("UserDTO", () => {
     it("should handle null telegram_username", () => {
       const user = createMockUser({
         telegram_username: null,
-      });
+        email_notifications_enabled: true,
+        reports: [],
+        messages: [],
+        assignedReports: [],
+        notifications: [],
+        internalNotes: [],
+        photo: undefined,
+        externalCompanyId: null,
+        externalCompany: null,
+      } as any;
 
       const result = toUserDTO(user);
 
@@ -116,7 +133,15 @@ describe("UserDTO", () => {
     it("should handle null email_notifications_enabled (default to true)", () => {
       const user = createMockUser({
         email_notifications_enabled: null as any,
-      });
+        reports: [],
+        messages: [],
+        assignedReports: [],
+        notifications: [],
+        internalNotes: [],
+        photo: undefined,
+        externalCompanyId: null,
+        externalCompany: null,
+      } as any;
 
       const result = toUserDTO(user);
 
@@ -144,8 +169,24 @@ describe("UserDTO", () => {
     });
 
     it("should handle edge cases with empty strings", () => {
-      const user = createMockUser({
-        id: 2,
+      const prismaUser = {
+        id: 1,
+        email: "test@example.com",
+        first_name: "Test",
+        last_name: "User",
+        password: "hashed",
+        salt: "salt",
+        role: Roles.CITIZEN,
+        telegram_username: null,
+        email_notifications_enabled: true,
+        reports: [],
+        messages: [],
+        assignedReports: [],
+        notifications: [],
+        internalNotes: [],
+        photo: null,
+        externalCompanyId: null,
+        externalCompany: null,
         email: "",
         first_name: "",
         last_name: "",
@@ -172,10 +213,24 @@ describe("UserDTO", () => {
         const user = createMockUser({
           id: index + 10,
           email: `test${index}@example.com`,
-          role: role,
-        });
+          first_name: "Test",
+          last_name: "User",
+          password: "hashed",
+          salt: "salt",
+          role: role as any,
+          telegram_username: null,
+          email_notifications_enabled: true,
+          reports: [],
+          messages: [],
+          assignedReports: [],
+          notifications: [],
+          internalNotes: [],
+          photo: undefined,
+          externalCompanyId: null,
+          externalCompany: null,
+        } as any;
 
-        const result = toUserDTO(user);
+        const result = toUserDTO(prismaUser);
         expect(result.role).toBe(role);
       });
     });

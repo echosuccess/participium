@@ -39,10 +39,6 @@ export async function sendMessageToCitizen(
   const isInternalTech = report.assignedOfficerId === technicalUserId;
   const isExternalTech = report.externalMaintainerId === technicalUserId;
 
-  if (!report) {
-    throw new NotFoundError("Report not found");
-  }
-
   // Permetti anche al cittadino autore del report di inviare messaggi
   const isCitizenOwner = report.userId === technicalUserId;
   const senderRole =
@@ -63,16 +59,24 @@ export async function sendMessageToCitizen(
     senderId: technicalUserId,
   });
 
-  let senderName = "";
-  // Notifica il cittadino del nuovo messaggio
-  if (report.assignedOfficer) {
-    senderName = `${report.assignedOfficer?.first_name} ${report.assignedOfficer?.last_name} (Technical)`;
-  } else if (report.externalMaintainer) {
-    senderName = `${report.externalMaintainer?.first_name} ${report.externalMaintainer?.last_name} (External Maintainer)`;
+  // Inoltra la notifica al destinatario corretto in base al mittente
+  if (isCitizenOwner) {
+    // Mittente: cittadino -> notifica il tecnico assegnato o l'esterno assegnato
+    const recipientId = report.externalMaintainerId? report.externalMaintainerId : report.assignedOfficerId;
+    if (recipientId) {
+      const citizenName = `${report.user?.first_name ?? "Citizen"} ${report.user?.last_name ?? ""}`.trim();
+      await notifyNewMessage(report.id, recipientId, citizenName);
+    }
   } else {
-    senderName = "Technical Staff";
+    // Mittente: tecnico o esterno -> notifica il cittadino
+    let senderName = "Technical Staff";
+    if (isInternalTech && report.assignedOfficer) {
+      senderName = `${report.assignedOfficer.first_name} ${report.assignedOfficer.last_name} (Technical)`;
+    } else if (isExternalTech && report.externalMaintainer) {
+      senderName = `${report.externalMaintainer.first_name} ${report.externalMaintainer.last_name} (External Maintainer)`;
+    }
+    await notifyNewMessage(report.id, report.userId, senderName);
   }
-  await notifyNewMessage(report.id, report.userId, senderName);
 
   return {
     id: savedMessage.id,

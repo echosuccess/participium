@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { Navbar, Container, Nav, Button, Badge, Image } from "react-bootstrap";
 import { useAuth } from "../hooks/useAuth";
-import { MUNICIPALITY_AND_EXTERNAL_ROLES, getRoleLabel } from "../utils/roles";
+import { MUNICIPALITY_AND_EXTERNAL_ROLES, getRoleLabel, TECHNICIAN_ROLES } from "../utils/roles";
 import {
   PersonCircle,
   ArrowLeft,
@@ -43,7 +43,13 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
     async function pollNotifications() {
-      if (isAuthenticated && user?.role === "CITIZEN") {
+      const canSeeNotifications =
+        isAuthenticated && user &&
+        (user.role === "CITIZEN" ||
+          TECHNICIAN_ROLES.includes(user.role) ||
+          user.role === "EXTERNAL_MAINTAINER");
+
+      if (canSeeNotifications) {
         try {
           const notifs = await getNotifications();
           // Filtra le notifiche già lette
@@ -295,7 +301,7 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
                   </button>
                 )}
                 {/* Campanella notifiche mobile */}
-                {user.role === "CITIZEN" && (
+                {(user && (user.role === "CITIZEN" || TECHNICIAN_ROLES.includes(user.role) || user.role === "EXTERNAL_MAINTAINER")) && (
                   <button
                     onClick={() => setShowNotifications(true)}
                     className="border-0 bg-transparent d-flex align-items-center justify-content-center position-relative"
@@ -452,7 +458,7 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
                       </button>
                     )}
                     {/* Campanella notifiche desktop */}
-                    {user.role === "CITIZEN" && (
+                    {(user && (user.role === "CITIZEN" || TECHNICIAN_ROLES.includes(user.role) || user.role === "EXTERNAL_MAINTAINER")) && (
                       <button
                         onClick={() => setShowNotifications(true)}
                         className="border-0 bg-transparent d-flex align-items-center justify-content-center position-relative"
