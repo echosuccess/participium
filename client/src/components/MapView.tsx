@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { getReports } from "../api/api";
 import L from "leaflet";
 import "leaflet.markercluster/dist/leaflet.markercluster.js";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import type { Report } from "../types/report.types";
 import "../styles/MapView.css";
+import InfoModal from "./InfoModal";
 
 // Torino coordinates fallback
 const TURIN: [number, number] = [45.0703, 7.6869];
@@ -18,6 +20,8 @@ const getStatusColor = (status: string): string => {
       return "#ffc107";
     case "assigned":
       return "#007bff";
+    case "external_assigned":
+      return "#8b5cf6"; // purple for external
     default:
       return "#6c757d";
   }
@@ -83,15 +87,17 @@ interface MapViewProps {
   selectedReportId?: number | null;
   customSelectedIcon?: L.DivIcon | null;
   onReportDetailsClick?: (reportId: number) => void;
+  hideInfoButton?: boolean;
 }
 
 export default function MapView({
   onLocationSelect,
   selectedLocation,
-  reports = [],
+  reports: initialReports = [],
   selectedReportId,
   customSelectedIcon,
   onReportDetailsClick,
+  hideInfoButton = false,
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -101,6 +107,29 @@ export default function MapView({
   const [hasTileError, setHasTileError] = useState(false);
   const [turinData, setTurinData] = useState<any | null>(null);
   const [showBoundaryAlert, setShowBoundaryAlert] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [reports, setReports] = useState<Report[]>(initialReports);
+  // Polling per aggiornare i report ogni 10 secondi
+  useEffect(() => {
+    let polling = true;
+    const fetchReports = async () => {
+      try {
+        const data = await getReports();
+        // Filtra solo i report non risolti
+        setReports(data.filter((r) => r.status.toLowerCase() !== "resolved"));
+      } catch (err) {
+        // Puoi gestire errori qui se vuoi
+      }
+    };
+    fetchReports();
+    const interval = setInterval(() => {
+      if (polling) fetchReports();
+    }, 10000);
+    return () => {
+      polling = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     fetch("/turin-boundary3.geojson")
@@ -239,13 +268,17 @@ export default function MapView({
         <div class="report-popup-body">
           <div class="report-popup-location">${report.address}</div>
           <div class="report-popup-description">${report.description}</div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-            <span style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">${
-              report.category
-            }</span>
-            <span style="color: ${getStatusColor(
-              report.status
-            )}; font-weight: bold; font-size: 12px;">${report.status}</span>
+          <div style="margin-top: 0.5rem;">
+            <div>
+              <span style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 12px; display: inline-block; max-width: 100%;">${
+                report.category
+              }</span>
+            </div>
+            <div style="margin-top: 6px;">
+              <span class="report-status-pill" style="background:${getStatusColor(
+                report.status
+              )};">${report.status}</span>
+            </div>
           </div>
           <div style="margin-top:0.5rem;font-size:12px;">Reported by: <b>${
             report.isAnonymous
@@ -254,18 +287,19 @@ export default function MapView({
               ? `${report.user.firstName} ${report.user.lastName}`
               : "user"
           }</b></div>
+          <div style="margin-top:0.75rem;">
+            <button class="btn btn-sm btn-primary mt-2 view-details-btn" style="width:100%;">View Details</button>
+          </div>
         </div>
       `;
-      // Pulsante View Details
-      const detailsBtn = document.createElement("button");
-      detailsBtn.textContent = "View Details";
-      detailsBtn.className = "btn btn-sm btn-primary mt-2";
-      detailsBtn.style.width = "100%";
-      detailsBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (onReportDetailsClick) onReportDetailsClick(report.id);
-      };
-      popupContent.appendChild(detailsBtn);
+      // Attach handler to the embedded button
+      const detailsBtn = popupContent.querySelector('.view-details-btn') as HTMLButtonElement | null;
+      if (detailsBtn) {
+        detailsBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (onReportDetailsClick) onReportDetailsClick(report.id);
+        });
+      }
       marker.bindPopup(popupContent);
       reportMarkersRef.current.push(marker);
       markerCluster.addLayer(marker);
@@ -327,13 +361,17 @@ export default function MapView({
         <div class="report-popup-body">
           <div class="report-popup-location">${report.address}</div>
           <div class="report-popup-description">${report.description}</div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-            <span style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 12px;">${
-              report.category
-            }</span>
-            <span style="color: ${getStatusColor(
-              report.status
-            )}; font-weight: bold; font-size: 12px;">${report.status}</span>
+          <div style="margin-top: 0.5rem;">
+            <div>
+              <span style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 12px; display: inline-block; max-width: 100%;">${
+                report.category
+              }</span>
+            </div>
+            <div style="margin-top: 6px;">
+              <span class="report-status-pill" style="background:${getStatusColor(
+                report.status
+              )};">${report.status}</span>
+            </div>
           </div>
           <div style="margin-top:0.5rem;font-size:12px;">Reported by: <b>${
             report.isAnonymous
@@ -342,18 +380,21 @@ export default function MapView({
               ? `${report.user.firstName} ${report.user.lastName}`
               : "user"
           }</b></div>
+          <div style="margin-top:0.75rem;">
+            <button class="btn btn-sm btn-primary mt-2 view-details-btn" style="width:100%;">View Details</button>
+          </div>
         </div>
       `;
-      // Pulsante View Details
-      const detailsBtn = document.createElement("button");
-      detailsBtn.textContent = "View Details";
-      detailsBtn.className = "btn btn-sm btn-primary mt-2";
-      detailsBtn.style.width = "100%";
-      detailsBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (onReportDetailsClick) onReportDetailsClick(report.id);
-      };
-      popupContent.appendChild(detailsBtn);
+      // Attach handler to embedded button
+      const detailsBtn = popupContent.querySelector(
+        ".view-details-btn"
+      ) as HTMLButtonElement | null;
+      if (detailsBtn) {
+        detailsBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (onReportDetailsClick) onReportDetailsClick(report.id);
+        });
+      }
       marker.bindPopup(popupContent);
       reportMarkersRef.current.push(marker);
       markerCluster.addLayer(marker);
@@ -416,6 +457,19 @@ export default function MapView({
 
   return (
     <div style={{ position: "relative", height: "100%", width: "100%" }}>
+      {/* Info button in the top-right corner of the map */}
+      {!hideInfoButton && (
+        <button
+          className="map-info-button"
+          aria-label="Map information"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowInfoModal(true);
+          }}
+        >
+          i
+        </button>
+      )}
       {/*alert bootstrap cudtom*/}
       {showBoundaryAlert && (
         <div
@@ -449,6 +503,8 @@ export default function MapView({
         </div>
       )}
       <div ref={mapRef} className="leaflet-map" />
+
+      <InfoModal open={showInfoModal} onClose={() => setShowInfoModal(false)} />
     </div>
   );
 }
