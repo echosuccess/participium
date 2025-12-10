@@ -8,7 +8,6 @@ import { authenticate, getSession } from "../../../src/services/authService";
 import { BadRequestError, UnauthorizedError } from "../../../src/utils";
 import type { UserDTO } from "../../../src/interfaces/UserDTO";
 
-
 jest.mock("../../../src/services/authService");
 const mockAuthenticate = authenticate as jest.MockedFunction<
   typeof authenticate
@@ -33,7 +32,7 @@ describe("authController", () => {
       send: jest.fn(),
     };
     jest.clearAllMocks();
-    });
+  });
 
   describe("login", () => {
     it("should return error if already authenticated", async () => {
@@ -50,7 +49,7 @@ describe("authController", () => {
         firstName: "Test",
         lastName: "User",
         email: "test@example.com",
-        role: "CITIZEN",
+        role: require("../../../shared/RoleTypes").Role.CITIZEN,
         telegramUsername: null,
         emailNotificationsEnabled: true,
       };
@@ -91,9 +90,9 @@ describe("authController", () => {
         firstName: "Test",
         lastName: "User",
         email: "test@example.com",
-        role: "CITIZEN",
-        telegramUsername: null,
-        emailNotificationsEnabled: true,
+        role: require("../../../shared/RoleTypes").Role.CITIZEN,
+        telegramUsername: "testuser",
+        emailNotificationsEnabled: false,
       };
       mockReq.isAuthenticated.mockReturnValue(false);
       mockAuthenticate.mockResolvedValue(mockUser);
@@ -117,28 +116,35 @@ describe("authController", () => {
     });
 
     it("should proceed with login if isAuthenticated is undefined", async () => {
-      const mockUser: UserDTO = { 
+      const mockUser: UserDTO = {
         id: 1,
-        firstName: "Test", 
-        lastName: "User", 
-        email: "test@example.com", 
-        role: "CITIZEN",
+        firstName: "Test",
+        lastName: "User",
+        email: "test@example.com",
+        role: require("../../../shared/RoleTypes").Role.CITIZEN,
         telegramUsername: null,
-        emailNotificationsEnabled: true
+        emailNotificationsEnabled: true,
       };
       mockReq.isAuthenticated = undefined;
       mockReq.body = { email: "test@example.com", password: "password123" };
       mockAuthenticate.mockResolvedValue(mockUser);
-      mockReq.logIn.mockImplementation((user: any, callback: any) => callback(null));
+      mockReq.logIn.mockImplementation((user: any, callback: any) =>
+        callback(null)
+      );
 
       await login(mockReq as Request, mockRes as Response);
 
       expect(mockAuthenticate).toHaveBeenCalledWith(mockReq);
-      expect(mockReq.logIn).toHaveBeenCalledWith(mockUser, expect.any(Function));
-      expect(mockRes.json).toHaveBeenCalledWith({ message: "Login successful", user: mockUser });
+      expect(mockReq.logIn).toHaveBeenCalledWith(
+        mockUser,
+        expect.any(Function)
+      );
+      expect(mockRes.json).toHaveBeenCalledWith({
+        message: "Login successful",
+        user: mockUser,
+      });
     });
   });
-
 
   describe("logout", () => {
     it("should return error if not authenticated", async () => {
@@ -163,9 +169,7 @@ describe("authController", () => {
       mockReq.session = {
         destroy: jest.fn((callback) => callback(null)),
       } as any;
-      mockReq.logout.mockImplementation((callback: any) =>
-        callback(null)
-      );
+      mockReq.logout.mockImplementation((callback: any) => callback(null));
 
       await logout(mockReq as Request, mockRes as Response);
 
@@ -178,9 +182,7 @@ describe("authController", () => {
       mockReq.isAuthenticated.mockReturnValue(true);
       mockReq.session = { destroy: jest.fn() } as any;
       const error = new Error("Logout failed");
-      mockReq.logout.mockImplementation((callback: any) =>
-        callback(error)
-      );
+      mockReq.logout.mockImplementation((callback: any) => callback(error));
 
       await expect(
         logout(mockReq as Request, mockRes as Response)
@@ -193,9 +195,7 @@ describe("authController", () => {
       mockReq.session = {
         destroy: jest.fn((callback) => callback(error)),
       } as any;
-      mockReq.logout.mockImplementation((callback: any) =>
-        callback(null)
-      );
+      mockReq.logout.mockImplementation((callback: any) => callback(null));
 
       await expect(
         logout(mockReq as Request, mockRes as Response)
@@ -204,7 +204,9 @@ describe("authController", () => {
 
     it("should return error if isAuthenticated is undefined", async () => {
       mockReq.isAuthenticated = undefined;
-      mockReq.session = { destroy: jest.fn((callback) => callback(null)) } as any;
+      mockReq.session = {
+        destroy: jest.fn((callback) => callback(null)),
+      } as any;
 
       await expect(
         logout(mockReq as Request, mockRes as Response)
@@ -228,7 +230,7 @@ describe("authController", () => {
         firstName: "Test",
         lastName: "User",
         email: "test@example.com",
-        role: "CITIZEN",
+        role: require("../../../shared/RoleTypes").Role.CITIZEN,
         telegramUsername: null,
         emailNotificationsEnabled: true,
       };

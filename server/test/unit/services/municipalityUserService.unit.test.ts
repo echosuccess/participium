@@ -1,3 +1,15 @@
+// Mock UserRepository
+const mockUserRepository = {
+  countByRole: jest.fn(),
+};
+
+jest.mock("../../../src/repositories/UserRepository", () => ({
+  UserRepository: jest.fn().mockImplementation(() => mockUserRepository),
+}));
+
+// Mock userService
+jest.mock("../../../src/services/userService");
+
 import {
   createMunicipalityUser,
   getAllMunicipalityUsers,
@@ -9,43 +21,10 @@ import {
 import { Roles } from "../../../src/interfaces/UserDTO";
 import { BadRequestError } from "../../../src/utils";
 import * as userService from "../../../src/services/userService";
-import { PrismaClient } from "@prisma/client";
 
-// Mock userService
-jest.mock("../../../src/services/userService");
 const mockUserService = userService as jest.Mocked<typeof userService>;
 
-// CORRECTION: Mock UserDTO to ensure ADMINISTRATOR is considered a municipality role
-// This ensures getMunicipalityUserById returns the user instead of null during tests
-jest.mock("../../../src/interfaces/UserDTO", () => {
-  const original = jest.requireActual("../../../src/interfaces/UserDTO");
-  return {
-    ...original,
-    MUNICIPALITY_ROLES: [
-      "ADMINISTRATOR",
-      "PUBLIC_RELATIONS",
-      "MUNICIPAL_BUILDING_MAINTENANCE",
-      // Include other roles if needed
-    ],
-  };
-});
-
-// Mock @prisma/client locally for countAdministrators
-jest.mock("@prisma/client", () => {
-  const mCount = jest.fn();
-  return {
-    PrismaClient: jest.fn().mockImplementation(() => ({
-      user: {
-        count: mCount,
-      },
-    })),
-  };
-});
-
 describe("municipalityUserService", () => {
-  const prismaMock = new PrismaClient();
-  const mockCount = prismaMock.user.count as jest.Mock;
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -138,7 +117,7 @@ describe("municipalityUserService", () => {
         id: 1,
         role: Roles.ADMINISTRATOR,
       } as any);
-      mockCount.mockResolvedValue(1); 
+      mockUserRepository.countByRole.mockResolvedValue(1);
 
       await expect(deleteMunicipalityUser(1)).rejects.toThrow(BadRequestError);
     });
@@ -148,7 +127,7 @@ describe("municipalityUserService", () => {
         id: 1,
         role: Roles.ADMINISTRATOR,
       } as any);
-      mockCount.mockResolvedValue(2); 
+      mockUserRepository.countByRole.mockResolvedValue(2);
       mockUserService.deleteUser.mockResolvedValue(true);
 
       const res = await deleteMunicipalityUser(1);
@@ -163,7 +142,7 @@ describe("municipalityUserService", () => {
       mockUserService.deleteUser.mockResolvedValue(true);
 
       await deleteMunicipalityUser(1);
-      expect(mockCount).not.toHaveBeenCalled();
+      expect(mockUserRepository.countByRole).not.toHaveBeenCalled();
       expect(mockUserService.deleteUser).toHaveBeenCalledWith(1);
     });
   });

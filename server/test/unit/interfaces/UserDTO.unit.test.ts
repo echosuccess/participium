@@ -66,7 +66,15 @@ describe("UserDTO", () => {
         role: "CITIZEN" as any,
         telegram_username: "telegram",
         email_notifications_enabled: false,
-      };
+        reports: [],
+        messages: [],
+        assignedReports: [],
+        notifications: [],
+        internalNotes: [],
+        photo: undefined,
+        externalCompanyId: null,
+        externalCompany: null,
+      } as any;
 
       const result = toUserDTO(prismaUser);
 
@@ -92,7 +100,15 @@ describe("UserDTO", () => {
         role: "CITIZEN" as any,
         telegram_username: null,
         email_notifications_enabled: true,
-      };
+        reports: [],
+        messages: [],
+        assignedReports: [],
+        notifications: [],
+        internalNotes: [],
+        photo: undefined,
+        externalCompanyId: null,
+        externalCompany: null,
+      } as any;
 
       const result = toUserDTO(prismaUser);
 
@@ -110,7 +126,15 @@ describe("UserDTO", () => {
         role: "CITIZEN" as any,
         telegram_username: "telegram",
         email_notifications_enabled: null as any,
-      };
+        reports: [],
+        messages: [],
+        assignedReports: [],
+        notifications: [],
+        internalNotes: [],
+        photo: undefined,
+        externalCompanyId: null,
+        externalCompany: null,
+      } as any;
 
       const result = toUserDTO(prismaUser);
 
@@ -155,7 +179,23 @@ describe("UserDTO", () => {
 
     it("should handle edge cases with empty strings", () => {
       const prismaUser = {
-        id: 2,
+        id: 1,
+        email: "test@example.com",
+        first_name: "Test",
+        last_name: "User",
+        password: "hashed",
+        salt: "salt",
+        role: Roles.CITIZEN,
+        telegram_username: null,
+        email_notifications_enabled: true,
+        reports: [],
+        messages: [],
+        assignedReports: [],
+        notifications: [],
+        internalNotes: [],
+        photo: null,
+        externalCompanyId: null,
+        externalCompany: null,
         email: "",
         first_name: "",
         last_name: "",
@@ -193,7 +233,15 @@ describe("UserDTO", () => {
           role: role as any,
           telegram_username: null,
           email_notifications_enabled: true,
-        };
+          reports: [],
+          messages: [],
+          assignedReports: [],
+          notifications: [],
+          internalNotes: [],
+          photo: undefined,
+          externalCompanyId: null,
+          externalCompany: null,
+        } as any;
 
         const result = toUserDTO(prismaUser);
         expect(result.role).toBe(role);
