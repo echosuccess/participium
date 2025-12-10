@@ -109,15 +109,17 @@ export default function TechPanel() {
         setPendingReports(pendingNormalized);
         setOtherReports(otherNormalized);
       } else if (isExternalMaintainer) {
-        // External maintainer: only show EXTERNAL_ASSIGNED reports as "Assigned to me"
+        // External maintainer: show reports assigned to this external maintainer
         const assignedData = (await getAssignedReports()) as AppReport[];
 
         const pendingNormalized = (assignedData || [])
-          .filter(
-            (r: any) =>
-              r.status === ReportStatus.EXTERNAL_ASSIGNED.toString() ||
-              TECHNICAL_ALLOWED_STATUSES.map((s) => s.value).includes(r.status)
-          )
+          .filter((r: any) => {
+            const handlerUserId =
+              r.externalHandler && r.externalHandler.user && "id" in r.externalHandler.user
+                ? r.externalHandler.user.id
+                : undefined;
+            return Boolean(handlerUserId && user && (user as any).id != null && handlerUserId === (user as any).id);
+          })
           .map((r: any) => ({
             ...r,
             latitude: Number(r.latitude),
@@ -134,8 +136,9 @@ export default function TechPanel() {
         const pendingNormalized = (assignedData || [])
           .filter(
             (r: any) =>
-              r.status === ReportStatus.ASSIGNED.toString() ||
-              TECHNICAL_ALLOWED_STATUSES.map((s) => s.value).includes(r.status)
+              (r.status === ReportStatus.ASSIGNED.toString() ||
+                TECHNICAL_ALLOWED_STATUSES.map((s) => s.value).includes(r.status)) &&
+              !Boolean(r.externalHandler)
           )
           .map((r: any) => ({
             ...r,
@@ -144,7 +147,7 @@ export default function TechPanel() {
           }));
 
         const otherNormalized = (assignedData || [])
-          .filter((r: any) => r.status === ReportStatus.EXTERNAL_ASSIGNED.toString())
+          .filter((r: any) => Boolean(r.externalHandler))
           .map((r: any) => ({
             ...r,
             latitude: Number(r.latitude),
@@ -301,6 +304,15 @@ export default function TechPanel() {
 
   const handleStatusConfirm = async () => {
     if (!selectedReportId || !targetStatus) return;
+
+    // Prevent updating to the same status
+    const currentReport = [...pendingReports, ...otherReports].find(
+      (r) => r.id === selectedReportId
+    );
+    if (currentReport && currentReport.status === targetStatus) {
+      alert("The selected status is the same as the current status.");
+      return;
+    }
 
     try {
       setProcessingId(selectedReportId);
@@ -553,7 +565,7 @@ export default function TechPanel() {
           {/* Show 'Assigned to External' only for technical office */}
           {!isExternalMaintainer && (
             <div className="mt-5">
-              <h4>Assigned to External</h4>
+              <h4>Assigned by me to External</h4>
               {otherReports.length === 0 ? (
                 <p className="text-muted">
                   No reports assigned to externals yet.
@@ -766,11 +778,16 @@ export default function TechPanel() {
               onChange={(e) => setTargetStatus(e.target.value)}
             >
               <option value="">-- Select Status --</option>
-              {TECHNICAL_ALLOWED_STATUSES.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
+                {(() => {
+                  const currentStatus = [...pendingReports, ...otherReports].find((r) => r.id === selectedReportId)?.status;
+                  return TECHNICAL_ALLOWED_STATUSES
+                    .filter((s) => s.value !== currentStatus)
+                    .map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    ));
+                })()}
             </Form.Select>
           </Form.Group>
         </Modal.Body>

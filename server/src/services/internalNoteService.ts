@@ -4,8 +4,7 @@ import { UserRepository } from "../repositories/UserRepository";
 import { NotFoundError, ForbiddenError, BadRequestError } from "../utils/errors";
 import { Role } from "../../../shared/RoleTypes";
 import { InternalNoteDTO, toInternalNoteDTO } from "../interfaces/InternalNoteDTO";
-import { createNotification } from "./notificationService";
-import { NotificationType } from "../../../shared/ReportTypes";
+import { notifyInternalNoteAdded } from "./notificationService";
 
 const internalNoteRepository = new InternalNoteRepository();
 const reportRepository = new ReportRepository();
@@ -53,16 +52,15 @@ export async function createInternalNote(
 
   // Notifica l'altro utente assegnato al report (internal o external)
   const recipientId = isExternalAssigned 
-    ? report.externalMaintainerId 
-    : report.assignedOfficerId;
+    ? report.assignedOfficerId 
+    : report.externalMaintainerId;
 
   if (recipientId) {
-    await createNotification(
+    await notifyInternalNoteAdded(
+      reportId,
       recipientId,
-      NotificationType.INTERNAL_NOTE_RECEIVED,
-      "New Internal Note",
-      `${author.first_name} ${author.last_name} added a note to report #${reportId}`,
-      reportId
+      author.first_name,
+      author.last_name
     );
   }
 
