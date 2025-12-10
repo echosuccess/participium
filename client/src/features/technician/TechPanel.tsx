@@ -658,10 +658,10 @@ export default function TechPanel() {
           {/* Technical office: select company and optionally technician */}
           {!isPublicRelations && user && (
             <>
-              <p>Seleziona una compagnia esterna:</p>
+              <p>Select an external company:</p>
               {assignableExternals.length === 0 ? (
                 <div className="text-muted">
-                  Non ci sono compagnie esterne per questa categoria.
+                  No external companies available for this category.
                 </div>
               ) : (
                 <Form.Group className="mb-3">
@@ -673,7 +673,7 @@ export default function TechPanel() {
                       setSelectedTechnicalId(null);
                     }}
                   >
-                    <option value="">-- Seleziona compagnia --</option>
+                    <option value="">-- Select company --</option>
                     {assignableExternals.map((ext) => (
                       <option key={ext.id} value={ext.id}>
                         {ext.name || ext.first_name + " " + ext.last_name}
@@ -698,7 +698,7 @@ export default function TechPanel() {
                   return (
                     <Form.Group className="mb-3">
                       <Form.Label>
-                        Seleziona un tecnico della compagnia:
+                        Select a company technician:
                       </Form.Label>
                       <Form.Select
                         value={selectedTechnicalId ?? ""}
