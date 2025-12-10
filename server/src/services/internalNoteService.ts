@@ -30,7 +30,7 @@ export async function createInternalNote(
   if (!report) {
     throw new NotFoundError("Report not found");
   }
-  
+    
   const isInternalAssigned = report.assignedOfficerId === authorId;
   const isExternalAssigned = report.externalMaintainerId === authorId;
 
