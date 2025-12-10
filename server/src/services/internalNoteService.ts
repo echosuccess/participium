@@ -22,7 +22,7 @@ export async function createInternalNote(
     throw new BadRequestError("Content cannot exceed 2000 characters");
   }
 
-  const report = await reportRepository.findById(reportId);
+  const report = await reportRepository.findByIdWithRelations(reportId);
   if (!report) {
     throw new NotFoundError("Report not found");
   }
@@ -73,7 +73,7 @@ export async function createInternalNote(
 }
 
 export async function getInternalNotes(reportId: number, userId: number): Promise<InternalNoteDTO[]> {
-  const report = await reportRepository.findById(reportId);
+  const report = await reportRepository.findByIdWithRelations(reportId);
  
   if (!report) {
     throw new NotFoundError("Report not found");
