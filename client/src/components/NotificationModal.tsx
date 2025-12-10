@@ -1,5 +1,6 @@
 import { Modal, Button, Badge } from "react-bootstrap";
 import { BellFill } from "react-bootstrap-icons";
+import "./NotificationModal.css";
 
 interface Notification {
   id: number;
@@ -23,16 +24,16 @@ export default function NotificationModal({
 }: Props) {
   return (
     <Modal show={show} onHide={onHide} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>
-          <BellFill style={{ marginRight: 8 }} /> Notifications
+      <Modal.Header closeButton className="notification-modal-header">
+        <Modal.Title style={{ color: "var(--primary)" }}>
+          <BellFill style={{ marginRight: 8, color: "var(--primary)" }} /> Notifications
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {notifications.length === 0 ? (
           <div style={{ color: "#888" }}>No notifications yet.</div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="notification-list">
             {notifications.map((n) => (
               <div
                 key={n.id}

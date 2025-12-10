@@ -1,7 +1,8 @@
-import { Modal, Button, Badge, Carousel } from "react-bootstrap";
+import { Modal, Badge, Carousel } from "react-bootstrap";
 import { useEffect, useState, useRef } from "react";
 import { ReportStatus } from "../../../../shared/ReportTypes";
 import type { Report } from "../../types/report.types";
+import ReportChat from "./ReportChat";
 
 interface Props {
   show: boolean;
@@ -47,8 +48,6 @@ export default function ReportDetailsModal({
 
   // Stato per la visibilità della chat
   const [canSeeChat, setCanSeeChat] = useState(false);
-  // Stato per la visibilità del box di update status
-  const [canUpdateStatus, setCanUpdateStatus] = useState(false);
 
   // Scroll automatico in fondo ogni volta che arrivano nuovi messaggi
   useEffect(() => {
@@ -152,14 +151,12 @@ export default function ReportDetailsModal({
     if (!messageText.trim()) return;
     setMessageLoading(true);
     setMessageError("");
-    setMessageSuccess("");
     try {
       // @ts-ignore
       await import("../../api/api").then((api) =>
         api.sendReportMessage(display.id, messageText)
       );
       setMessageText("");
-      setMessageSuccess("Messaggio inviato!");
       // Ricarica messaggi
       setMessagesLoading(true);
       const msgs = await import("../../api/api").then((api) =>
@@ -183,24 +180,15 @@ export default function ReportDetailsModal({
     statusText &&
     String(statusText).toUpperCase() === ReportStatus.RESOLVED.toString();
 
-  // For status update
-  const [newStatus, setNewStatus] = useState<string>("");
-  const [statusLoading, setStatusLoading] = useState(false);
-  const [statusError, setStatusError] = useState<string>("");
-
   // For sending messages
   const [messageText, setMessageText] = useState("");
   const [messageLoading, setMessageLoading] = useState(false);
   const [messageError, setMessageError] = useState("");
-  const [messageSuccess, setMessageSuccess] = useState("");
 
   useEffect(() => {
     setDetailedReport(report as any);
-    setNewStatus("");
-    setStatusError("");
     setMessageText("");
     setMessageError("");
-    setMessageSuccess("");
   }, [report?.id]);
 
   useEffect(() => {
@@ -220,7 +208,6 @@ export default function ReportDetailsModal({
           user.role === "CITIZEN"
         ) {
           setCanSeeChat(true);
-          setCanUpdateStatus(false);
           return;
         }
         // External maintainer assegnato (usa externalHandler.user.id)
@@ -236,7 +223,6 @@ export default function ReportDetailsModal({
           user.role === "EXTERNAL_MAINTAINER"
         ) {
           setCanSeeChat(true);
-          setCanUpdateStatus(true);
           return;
         }
         // Technical staff assegnato
@@ -249,15 +235,12 @@ export default function ReportDetailsModal({
           user.role.startsWith("MUNICIPAL")
         ) {
           setCanSeeChat(true);
-          setCanUpdateStatus(true);
           return;
         }
         // Non loggato o non autorizzato
         setCanSeeChat(false);
-        setCanUpdateStatus(false);
       } catch {
         setCanSeeChat(false);
-        setCanUpdateStatus(false);
       }
     }
     checkAuth();
@@ -267,31 +250,6 @@ export default function ReportDetailsModal({
     display?.externalMaintainer?.id,
     display?.assignedOfficer?.id,
   ]);
-  const allowedStatuses = [
-    ReportStatus.IN_PROGRESS,
-    ReportStatus.SUSPENDED,
-    ReportStatus.RESOLVED,
-  ];
-
-  async function handleStatusUpdate() {
-    if (!newStatus) return;
-    setStatusLoading(true);
-    setStatusError("");
-    try {
-      // @ts-ignore
-      await import("../../api/api").then((api) =>
-        api.updateReportStatus(display.id, newStatus)
-      );
-      setDetailedReport({ ...display, status: newStatus });
-      setNewStatus("");
-    } catch (err: any) {
-      setStatusError(err?.message || "Failed to update status");
-    } finally {
-      setStatusLoading(false);
-    }
-  }
-
-  // Funzione duplicata rimossa
 
   // Resolve assignee: prefer full objects (assignedOfficer, externalMaintainer, externalCompany)
   function resolveAssignee(r: any) {
@@ -335,6 +293,7 @@ export default function ReportDetailsModal({
       size="lg"
       centered
       className="report-modal"
+      dialogClassName="report-modal-dialog"
     >
       <Modal.Header
         closeButton
@@ -352,8 +311,18 @@ export default function ReportDetailsModal({
       </Modal.Header>
 
       <Modal.Body style={{ padding: "1.5rem" }}>
+        {/* Fixed-size inner container with styled scrollbar */}
         <div
-          style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
+          className="report-modal-body reports-sidebar-scroll"
+          style={{
+            height: "calc(100vh - 200px)", // fits within viewport (header + footer ~200px)
+            maxHeight: "calc(100vh - 160px)",
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem",
+            paddingRight: 8,
+          }}
         >
           {/* Image Section */}
           <div style={{ width: "100%" }}>
@@ -584,244 +553,23 @@ export default function ReportDetailsModal({
               </span>
             </div>
           </div>
+
+          <ReportChat
+            canSeeChat={canSeeChat}
+            messages={messages}
+            messagesLoading={messagesLoading}
+            messagesError={messagesError}
+            currentUserId={currentUserId}
+            display={display}
+            messageText={messageText}
+            setMessageText={setMessageText}
+            messageLoading={messageLoading}
+            messageError={messageError}
+            onSend={handleSendMessage}
+          />
+          
         </div>
       </Modal.Body>
-
-      <Modal.Footer
-        style={{ flexDirection: "column", alignItems: "stretch", gap: "1rem" }}
-      >
-        {/* Status update per utenti autorizzati */}
-        {canUpdateStatus && (
-          <div
-            style={{
-              width: "100%",
-              marginBottom: "0.5rem",
-              background: "#f8fafc",
-              borderRadius: 8,
-              padding: "1rem",
-              border: "1px solid #e5e7eb",
-              boxSizing: "border-box",
-            }}
-          >
-            <label
-              htmlFor="status-select"
-              style={{ fontWeight: 600, marginRight: 8 }}
-            >
-              Update status:
-            </label>
-            <select
-              id="status-select"
-              value={newStatus}
-              onChange={(e) => setNewStatus(e.target.value)}
-              style={{
-                marginRight: 8,
-                padding: "0.3rem 0.7rem",
-                borderRadius: 4,
-              }}
-            >
-              <option value="">Select status</option>
-              {allowedStatuses.map((s) => (
-                <option key={s} value={s}>
-                  {s.replace("_", " ")}
-                </option>
-              ))}
-            </select>
-            <Button
-              variant="success"
-              disabled={!newStatus || statusLoading}
-              onClick={handleStatusUpdate}
-            >
-              {statusLoading ? "Updating..." : "Update Status"}
-            </Button>
-            {statusError && (
-              <span style={{ color: "red", marginLeft: 8 }}>{statusError}</span>
-            )}
-          </div>
-        )}
-
-        {/* Chat Section: mostra solo se autorizzato, sopra il box di invio messaggi */}
-        {canSeeChat && (
-          <div
-            style={{
-              width: "100%",
-              marginBottom: "0.5rem",
-              background: "#f8fafc",
-              borderRadius: 8,
-              padding: "1rem",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            <h6 style={{ fontWeight: 600, marginBottom: 8 }}>
-              {(() => {
-                if (
-                  display?.user &&
-                  currentUserId === display.user.id &&
-                  display.user.role === "CITIZEN"
-                ) {
-                  return "Chat with municipal officer";
-                }
-                return "Chat with citizen";
-              })()}
-            </h6>
-            {messagesLoading ? (
-              <div>Loading messages...</div>
-            ) : messagesError ? (
-              <div style={{ color: "red" }}>{messagesError}</div>
-            ) : messages.length === 0 ? (
-              <div style={{ color: "#888" }}>No messages yet.</div>
-            ) : (
-              <div
-                ref={chatRef}
-                style={{
-                  maxHeight: 220,
-                  overflowY: "auto",
-                  marginBottom: 8,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
-                {messages.map((msg, idx) => {
-                  // ...existing code...
-                  const senderId = msg.senderId ?? msg.sender?.id;
-                  const isMe =
-                    currentUserId != null &&
-                    senderId != null &&
-                    String(senderId) === String(currentUserId);
-                  return (
-                    <div
-                      key={msg.id || idx}
-                      style={{
-                        alignSelf: isMe ? "flex-end" : "flex-start",
-                        maxWidth: "75%",
-                        background: isMe ? "#d1fae5" : "#fff",
-                        color: isMe ? "#065f46" : "#222",
-                        borderRadius: 18,
-                        border: isMe
-                          ? "1.5px solid #34d399"
-                          : "1px solid #e5e7eb",
-                        boxShadow: isMe
-                          ? "0 1px 4px #b7f7d8"
-                          : "0 1px 2px #eee",
-                        marginBottom: 4,
-                        padding: "10px 16px 6px 16px",
-                        position: "relative",
-                        marginLeft: isMe ? "auto" : 0,
-                        marginRight: isMe ? 0 : "auto",
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {isMe ? (
-                        <div
-                          style={{
-                            fontWeight: 600,
-                            fontSize: "0.85rem",
-                            color: "#047857",
-                            marginBottom: 2,
-                          }}
-                        >
-                          Me:
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            fontWeight: 600,
-                            fontSize: "0.85rem",
-                            color: "#6366f1",
-                            marginBottom: 2,
-                          }}
-                        >
-                          {msg.senderRole
-                            ? msg.senderRole
-                            : msg.sender?.role
-                            ? msg.sender.role
-                            : "Unknown role"}
-                        </div>
-                      )}
-                      <div style={{ fontSize: "1rem", marginBottom: 2 }}>
-                        {msg.content}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.8rem",
-                          color: isMe ? "#047857" : "#666",
-                          marginTop: 2,
-                          textAlign: isMe ? "right" : "left",
-                        }}
-                      >
-                        {!isMe && (
-                          <span>
-                            {msg.sender?.firstName || ""}{" "}
-                            {msg.sender?.lastName || ""}
-                          </span>
-                        )}
-                        {msg.createdAt && (
-                          <span style={{ marginLeft: 8 }}>
-                            {new Date(msg.createdAt).toLocaleString("it-IT", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Message sending per utenti autorizzati */}
-        {canSeeChat && (
-          <div style={{ width: "100%", marginBottom: "0.5rem" }}>
-            <label
-              htmlFor="message-input"
-              style={{ fontWeight: 600, marginRight: 8 }}
-            >
-              Send message:
-            </label>
-            <input
-              id="message-input"
-              type="text"
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              style={{
-                width: "60%",
-                marginRight: 8,
-                padding: "0.3rem 0.7rem",
-                borderRadius: 4,
-              }}
-              placeholder="Type your message..."
-              disabled={messageLoading}
-            />
-            <Button
-              variant="info"
-              disabled={!messageText.trim() || messageLoading}
-              onClick={handleSendMessage}
-            >
-              {messageLoading ? "Sending..." : "Send"}
-            </Button>
-            {messageError && (
-              <span style={{ color: "red", marginLeft: 8 }}>
-                {messageError}
-              </span>
-            )}
-            {messageSuccess && (
-              <span style={{ color: "green", marginLeft: 8 }}>
-                {messageSuccess}
-              </span>
-            )}
-          </div>
-        )}
-
-        <Button variant="primary" onClick={onHide}>
-          Close
-        </Button>
-      </Modal.Footer>
     </Modal>
   );
 }

@@ -29,6 +29,8 @@ export function getRoleLabel(role: string) {
   switch (role) {
     case "ADMINISTRATOR":
       return "Administrator";
+    case "CITIZEN":
+      return "Citizen";
     case "PUBLIC_RELATIONS":
       return "Public Relations";
     case "CULTURE_EVENTS_TOURISM_SPORTS":

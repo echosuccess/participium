@@ -41,7 +41,7 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
 
   // Polling per le notifiche
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
+    let interval: ReturnType<typeof setInterval> | undefined;
     async function pollNotifications() {
       if (isAuthenticated && user?.role === "CITIZEN") {
         try {
@@ -63,8 +63,11 @@ export default function Header({ showBackToHome = false }: HeaderProps) {
     }
     pollNotifications();
     interval = setInterval(pollNotifications, 10000); // ogni 10s
-    return () => interval && clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isAuthenticated, user, readNotificationIds]);
+  
   const [showNotifications, setShowNotifications] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState<any>(null);
