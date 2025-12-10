@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Container, Row, Col, Modal, Form } from "react-bootstrap";
+import { Container, Row, Col, Modal, Form, Toast, ToastContainer, Alert } from "react-bootstrap";
 import { CheckCircle, XCircle, Tools, FileText } from "react-bootstrap-icons";
 import { useAuth } from "../../hooks";
 import Button from "../../components/ui/Button";
@@ -68,6 +68,12 @@ export default function TechPanel() {
   const isPublicRelations = user?.role === Role.PUBLIC_RELATIONS.toString();
   const isExternalMaintainer = user?.role === Role.EXTERNAL_MAINTAINER.toString();
 
+  const [noteModalError, setNoteModalError] = useState<string | null>(null);
+  const [toast, setToast] = useState({show: false, message: "", variant: "success" });
+  const showToastMessage = (message: string, variant = "success") => {
+    setToast({ show: true, message, variant });
+  };
+
   const TECHNICAL_ALLOWED_STATUSES = [
     { value: ReportStatus.IN_PROGRESS.toString(), label: "In Progress" },
     { value: ReportStatus.RESOLVED.toString(), label: "Resolved" },
@@ -83,8 +89,6 @@ export default function TechPanel() {
     }
     fetchReports();
   }, [isAuthenticated, user, navigate]);
-
-  console.log("user auth", user)
 
   const fetchReports = async () => {
     try {
@@ -375,6 +379,7 @@ export default function TechPanel() {
     setSelectedReportId(id);
     setInternalNoteContent("");
     setInternalNotes([]);
+    setNoteModalError(null);
     setShowInternalNoteModal(true);
 
     try {
@@ -383,6 +388,7 @@ export default function TechPanel() {
       setInternalNotes(notes);
     } catch (e) {
       console.error("Failed to fetch internal notes", e);
+      setNoteModalError("Failed to load internal notes.");
     } finally {
       setLoadingNotes(false);
     }
@@ -399,11 +405,11 @@ export default function TechPanel() {
         authorId: user!.id,
       });
 
-      alert("Internal note created successfully");
       setShowInternalNoteModal(false);
+      showToastMessage("Internal note created successfully", "success");
     }catch(e){
       console.error("Failed to create internal note", e);
-      alert("Failed to create internal note");
+      setNoteModalError("Failed to create internal note.");
     }finally{
       setProcessingId(null);
     }
@@ -826,6 +832,11 @@ export default function TechPanel() {
           <Modal.Title>Internal Notes</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          {noteModalError && (
+            <Alert variant="danger" onClose={() => setNoteModalError(null)} dismissible>
+              {noteModalError}
+            </Alert>
+          )}
           <div className="mb-4">
             <h6 className="mb-3">History</h6>
             {loadingNotes ? (
@@ -871,6 +882,19 @@ export default function TechPanel() {
           </Button>
         </Modal.Footer>
       </Modal>
+      <ToastContainer position="top-center" className="p-3" style={{ zIndex: 9999, position: 'fixed' }}>
+        <Toast 
+          onClose={() => setToast({ ...toast, show: false })} 
+          show={toast.show} 
+          delay={3000} 
+          autohide 
+          bg={toast.variant}
+        >
+          <Toast.Body className={toast.variant === 'dark' || toast.variant === 'danger' || toast.variant === 'success' ? 'text-white' : ''}>
+            {toast.message}
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
     </Container>
   );
 

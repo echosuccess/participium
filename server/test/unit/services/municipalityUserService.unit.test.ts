@@ -37,14 +37,14 @@ describe("municipalityUserService", () => {
         last_name: "l",
         password: "p",
         salt: "s",
-        role: Roles.PUBLIC_RELATIONS,
+        role: Role.PUBLIC_RELATIONS,
       };
-      mockUserService.createUser.mockResolvedValue({ id: 1 } as any);
+      mockCreateUser.mockResolvedValue({ id: 1 } as any);
       await createMunicipalityUser(data);
-      expect(mockUserService.createUser).toHaveBeenCalledWith(
+      expect(mockCreateUser).toHaveBeenCalledWith(
         expect.objectContaining({
           email: "e",
-          role: Roles.PUBLIC_RELATIONS,
+          role: Role.PUBLIC_RELATIONS,
           email_notifications_enabled: true,
         })
       );
@@ -53,30 +53,31 @@ describe("municipalityUserService", () => {
 
   describe("getAllMunicipalityUsers", () => {
     it("should delegate to findUsersByRoles", async () => {
+      mockFindUsersByRoles.mockResolvedValue([]);
       await getAllMunicipalityUsers();
-      expect(mockUserService.findUsersByRoles).toHaveBeenCalled();
+      expect(mockFindUsersByRoles).toHaveBeenCalled();
     });
   });
 
   describe("getMunicipalityUserById", () => {
     it("should return null if user not found", async () => {
-      mockUserService.findById.mockResolvedValue(null);
+      mockFindById.mockResolvedValue(null);
       const res = await getMunicipalityUserById(1);
       expect(res).toBeNull();
     });
 
     it("should return null if user role is not municipality", async () => {
-      mockUserService.findById.mockResolvedValue({
+      mockFindById.mockResolvedValue({
         id: 1,
-        role: Roles.CITIZEN,
+        role: Role.CITIZEN,
       } as any);
       const res = await getMunicipalityUserById(1);
       expect(res).toBeNull();
     });
 
     it("should return user if valid role", async () => {
-      const user = { id: 1, role: Roles.MUNICIPAL_BUILDING_MAINTENANCE } as any;
-      mockUserService.findById.mockResolvedValue(user);
+      const user = { id: 1, role: Role.MUNICIPAL_BUILDING_MAINTENANCE } as any;
+      mockFindById.mockResolvedValue(user);
       const res = await getMunicipalityUserById(1);
       expect(res).toEqual(user);
     });
@@ -84,21 +85,21 @@ describe("municipalityUserService", () => {
 
   describe("updateMunicipalityUser", () => {
     it("should return null if user validation fails", async () => {
-      mockUserService.findById.mockResolvedValue(null);
+      mockFindById.mockResolvedValue(null);
       const res = await updateMunicipalityUser(1, {});
       expect(res).toBeNull();
     });
 
     it("should call updateUser with mapped fields", async () => {
-      const user = { id: 1, role: Roles.PUBLIC_RELATIONS } as any;
-      mockUserService.findById.mockResolvedValue(user);
-      mockUserService.updateUser.mockResolvedValue({
+      const user = { id: 1, role: Role.PUBLIC_RELATIONS } as any;
+      mockFindById.mockResolvedValue(user);
+      mockUpdateUser.mockResolvedValue({
         ...user,
         first_name: "New",
       });
 
       const res = await updateMunicipalityUser(1, { first_name: "New" });
-      expect(mockUserService.updateUser).toHaveBeenCalledWith(1, {
+      expect(mockUpdateUser).toHaveBeenCalledWith(1, {
         first_name: "New",
       });
       expect(res).toEqual({ ...user, first_name: "New" });
@@ -107,15 +108,15 @@ describe("municipalityUserService", () => {
 
   describe("deleteMunicipalityUser", () => {
     it("should return false if user doesn't exist", async () => {
-      mockUserService.findById.mockResolvedValue(null);
+      mockFindById.mockResolvedValue(null);
       const res = await deleteMunicipalityUser(1);
       expect(res).toBe(false);
     });
 
     it("should throw BadRequestError if trying to delete the last administrator", async () => {
-      mockUserService.findById.mockResolvedValue({
+      mockFindById.mockResolvedValue({
         id: 1,
-        role: Roles.ADMINISTRATOR,
+        role: Role.ADMINISTRATOR,
       } as any);
       mockUserRepository.countByRole.mockResolvedValue(1);
 
@@ -123,9 +124,9 @@ describe("municipalityUserService", () => {
     });
 
     it("should allow deleting administrator if others exist", async () => {
-      mockUserService.findById.mockResolvedValue({
+      mockFindById.mockResolvedValue({
         id: 1,
-        role: Roles.ADMINISTRATOR,
+        role: Role.ADMINISTRATOR,
       } as any);
       mockUserRepository.countByRole.mockResolvedValue(2);
       mockUserService.deleteUser.mockResolvedValue(true);
@@ -135,11 +136,11 @@ describe("municipalityUserService", () => {
     });
 
     it("should delete normal municipality user without count check", async () => {
-      mockUserService.findById.mockResolvedValue({
+      mockFindById.mockResolvedValue({
         id: 1,
-        role: Roles.PUBLIC_RELATIONS,
+        role: Role.PUBLIC_RELATIONS,
       } as any);
-      mockUserService.deleteUser.mockResolvedValue(true);
+      mockDeleteUser.mockResolvedValue(true);
 
       await deleteMunicipalityUser(1);
       expect(mockUserRepository.countByRole).not.toHaveBeenCalled();
@@ -149,22 +150,22 @@ describe("municipalityUserService", () => {
 
   describe("findMunicipalityUserByEmail", () => {
     it("should return null if not found", async () => {
-      mockUserService.findByEmail.mockResolvedValue(null);
+      mockFindByEmail.mockResolvedValue(null);
       const res = await findMunicipalityUserByEmail("a");
       expect(res).toBeNull();
     });
 
     it("should return null if role invalid", async () => {
-      mockUserService.findByEmail.mockResolvedValue({
-        role: Roles.CITIZEN,
+      mockFindByEmail.mockResolvedValue({
+        role: Role.CITIZEN,
       } as any);
       const res = await findMunicipalityUserByEmail("a");
       expect(res).toBeNull();
     });
 
     it("should return user if valid", async () => {
-      const u = { role: Roles.PUBLIC_RELATIONS } as any;
-      mockUserService.findByEmail.mockResolvedValue(u);
+      const u = { role: Role.PUBLIC_RELATIONS } as any;
+      mockFindByEmail.mockResolvedValue(u);
       const res = await findMunicipalityUserByEmail("a");
       expect(res).toEqual(u);
     });

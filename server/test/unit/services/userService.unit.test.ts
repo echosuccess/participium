@@ -65,7 +65,7 @@ describe("userService", () => {
         last_name: "U",
         password: "p",
         salt: "s",
-        role: Roles.CITIZEN,
+        role: Role.CITIZEN,
         telegram_username: "tele",
         email_notifications_enabled: true,
       };
@@ -83,7 +83,7 @@ describe("userService", () => {
         last_name: "U",
         password: "p",
         salt: "s",
-        role: Roles.CITIZEN,
+        role: Role.CITIZEN,
       };
       mockUserRepository.create.mockResolvedValue({ id: 1, ...input });
 
@@ -113,7 +113,7 @@ describe("userService", () => {
         last_name: "L",
         password: "p",
         salt: "s",
-        role: Roles.ADMINISTRATOR,
+        role: Role.ADMINISTRATOR,
         telegram_username: "tg",
         email_notifications_enabled: false,
       };

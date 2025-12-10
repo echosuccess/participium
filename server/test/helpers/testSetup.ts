@@ -13,17 +13,19 @@ import { ExternalCompany } from '../../src/entities/ExternalCompany';
  */
 export async function cleanDatabase() {
   if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
+    await setupTestDatabase();
   }
   
   // Delete in order to respect foreign key constraints
-  // Use createQueryBuilder to delete all records (TypeORM doesn't allow empty criteria)
+  // Use createQueryBuilder to delete all records (TypeORM doesn't allow empty criteria with delete({}))
+  // Order: child tables first, then parent tables
+  await AppDataSource.getRepository(InternalNote).createQueryBuilder().delete().execute();
   await AppDataSource.getRepository(ReportMessage).createQueryBuilder().delete().execute();
   await AppDataSource.getRepository(ReportPhoto).createQueryBuilder().delete().execute();
   await AppDataSource.getRepository(InternalNote).createQueryBuilder().delete().execute();
   await AppDataSource.getRepository(Notification).createQueryBuilder().delete().execute();
-  await AppDataSource.getRepository(Report).createQueryBuilder().delete().execute();
   await AppDataSource.getRepository(CitizenPhoto).createQueryBuilder().delete().execute();
+  await AppDataSource.getRepository(Report).createQueryBuilder().delete().execute();
   await AppDataSource.getRepository(User).createQueryBuilder().delete().execute();
   await AppDataSource.getRepository(ExternalCompany).createQueryBuilder().delete().execute();
 }
@@ -36,14 +38,3 @@ export async function disconnectDatabase() {
     await AppDataSource.destroy();
   }
 }
-
-/**
- * Initialize test database - runs before tests start
- */
-export async function setupTestDatabase() {
-  if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
-  }
-  await cleanDatabase();
-}
-

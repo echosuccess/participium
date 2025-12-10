@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import {query} from 'express-validator';
 import { asyncHandler } from '../middlewares/errorMiddleware';
 import { requireCitizen, requirePublicRelations, requireTechnicalStaffOnly, requireTechnicalOrExternal, isLoggedIn, requireCitizenAuthorOrTechnicalOrExternal } from '../middlewares/routeProtection';
 import { validateTurinBoundaries } from '../middlewares/validateTurinBoundaries';

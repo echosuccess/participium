@@ -46,6 +46,10 @@ describe("citizenService", () => {
         first_name: "A",
         last_name: "B",
         email: "a@b.com",
+        role: "CITIZEN",
+        telegram_username: null,
+        email_notifications_enabled: true,
+        photo: null,
       };
       mockUserRepository.findWithPhoto.mockResolvedValue(mockUser);
       const spy = jest.spyOn(CitizenDTO, "toCitizenProfileDTO");
@@ -153,6 +157,12 @@ describe("citizenService", () => {
       mockCitizenPhotoRepository.findByUserId.mockResolvedValue(photo);
       const res = await getCitizenPhoto(1);
       expect(res).toBe(photo);
+    });
+
+    it("should return null if no photo exists", async () => {
+      mockFindByUserId.mockResolvedValue(null);
+      const res = await getCitizenPhoto(1);
+      expect(res).toBeNull();
     });
   });
 });
