@@ -1,10 +1,17 @@
 // Client-specific report types
 import type {
   CreateReportRequest,
+  CreateReportResponse,
   ReportCategory,
   ReportPhoto,
   ReportStatus,
 } from "../../../shared/ReportTypes";
+
+import type{
+  InternalNote,
+  CreateInternalNoteRequest,
+  CreateInternalNoteResponse
+}from "../../../shared/InternalNotes";
 
 // Extended Report interface with optional fields for client display
 export interface Report {
@@ -18,7 +25,6 @@ export interface Report {
   longitude: number;
   createdAt?: string;
   assignedOfficerId?: number;
-  assignedExternalMaintainerId?: number;
   photos?: ReportPhoto[];
   isAnonymous?: boolean;
   user?: {
@@ -28,7 +34,20 @@ export interface Report {
     email: string;
     role: string;
   };
+  externalHandler?: {
+    user:{
+      company:{
+        id: number;
+        name: string;
+      }
+      id: number;
+      firstName: string;
+      lastName: string;
+      email: string;
+      role: string;
+    }
+  };
 }
 
 // Re-export shared report types
-export type { CreateReportRequest, ReportCategory, ReportPhoto, ReportStatus };
+export type { CreateReportRequest, CreateReportResponse,InternalNote, CreateInternalNoteRequest, CreateInternalNoteResponse, ReportCategory, ReportPhoto, ReportStatus };

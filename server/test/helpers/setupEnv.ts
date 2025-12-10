@@ -8,4 +8,5 @@ process.env.MINIO_ACCESS_KEY = "minioadmin";
 process.env.MINIO_SECRET_KEY = "minioadmin";
 process.env.MINIO_BUCKET_NAME = "test-reports-photos";
 process.env.MINIO_USE_SSL = "false";
+process.env.TYPEORM_SYNCHRONIZE = "true";
 

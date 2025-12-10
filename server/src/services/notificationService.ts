@@ -92,6 +92,24 @@ export async function notifyNewMessage(
 }
 
 /**
+ * Helper per notificare la creazione di una Internal Note tra tecnico ed esterno
+ */
+export async function notifyInternalNoteAdded(
+  reportId: number,
+  recipientUserId: number,
+  authorFirstName: string,
+  authorLastName: string
+): Promise<void> {
+  await createNotification(
+    recipientUserId,
+    NotificationType.INTERNAL_NOTE_RECEIVED,
+    "New Internal Note",
+    `${authorFirstName} ${authorLastName} added a note to report #${reportId}`,
+    reportId
+  );
+}
+
+/**
  * Helper per creare una notifica quando un report viene assegnato
  */
 export async function notifyReportAssigned(

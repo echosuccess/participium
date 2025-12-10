@@ -1,3 +1,11 @@
+// Notification API
+export async function getNotifications(): Promise<any[]> {
+  const res = await fetch(`${API_PREFIX}/notifications`, {
+    method: "GET",
+    credentials: "include",
+  });
+  return handleResponse<any[]>(res);
+}
 import type { LoginResponse, SessionInfo } from "../../../shared/LoginTypes";
 import type {
   SignupFormData,
@@ -11,7 +19,6 @@ import type {
   MunicipalityUserResponse,
 } from "../../../shared/MunicipalityUserTypes";
 import type { CreateReportResponse } from "../../../shared/ReportTypes";
-import type { Report } from "../types/report.types";
 import type {
   AssignReportToExternalResponse,
   CreateExternalMaintainerData,
@@ -19,6 +26,13 @@ import type {
   ExternalCompanyResponse,
   ExternalMaintainerResponse,
 } from "../../../shared/ExternalTypes";
+import type { 
+  Report,
+  CreateReportResponse,
+  InternalNote,
+  CreateInternalNoteRequest,
+  CreateInternalNoteResponse
+} from "../types/report.types";
 
 export const API_PREFIX = import.meta.env.VITE_API_URL || "/api";
 
@@ -373,6 +387,60 @@ export async function getAssignedReports(): Promise<Report[]> {
   return handleResponse<Report[]>(res);
 }
 
+// Send message to citizen (external maintainer/technical)
+export async function sendReportMessage(
+  reportId: number,
+  content: string
+): Promise<void> {
+  const res = await fetch(`${API_PREFIX}/reports/${reportId}/messages`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.message || "Failed to send message");
+  }
+}
+
+// Get all messages for a report
+export async function getReportMessages(reportId: number): Promise<any[]> {
+  const res = await fetch(`${API_PREFIX}/reports/${reportId}/messages`, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.message || "Failed to fetch messages");
+  }
+  return await res.json();
+}
+// Internal Notes API
+export async function createInternalNote(
+  reportId: number,
+  data: CreateInternalNoteRequest
+): Promise<CreateInternalNoteResponse> {
+  const res = await fetch(`${API_PREFIX}/reports/${reportId}/internal-notes`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<CreateInternalNoteResponse>(res);
+}
+
+export async function getInternalNotes( 
+  reportId: number
+): Promise<InternalNote[]> {
+  const res = await fetch(`${API_PREFIX}/reports/${reportId}/internal-notes`, {
+    method: "GET",
+    credentials: "include",
+  });
+  return handleResponse<InternalNote[]>(res);
+} 
+
+
 export default {
   getSession,
   login,
@@ -391,4 +459,5 @@ export default {
   uploadCitizenPhoto,
   deleteCitizenPhoto,
   deleteMunicipalityUser,
+  getNotifications,
 };

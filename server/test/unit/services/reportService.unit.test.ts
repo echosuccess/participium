@@ -111,15 +111,17 @@ describe("reportService", () => {
         latitude: 1,
         longitude: 1,
         userId: 1,
-        photos: [{ 
-            id: 0, 
-            filename: "f.jpg", 
-            url: "http://u", 
-            size: 100, 
-            mimetype: "image/jpeg", 
-            originalname: "o", 
-            buffer: Buffer.from([]) 
-        }],
+        photos: [
+          {
+            id: 0,
+            filename: "f.jpg",
+            url: "http://u",
+            size: 100,
+            mimetype: "image/jpeg",
+            originalname: "o",
+            buffer: Buffer.from([]),
+          },
+        ],
         isAnonymous: false,
       };
 

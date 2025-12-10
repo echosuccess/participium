@@ -11,10 +11,7 @@ import { ReportMessageRepository } from "../repositories/ReportMessageRepository
 
 // Services and utilities
 import { notifyNewMessage } from "./notificationService";
-import {
-  NotFoundError,
-  ForbiddenError,
-} from "../utils/errors";
+import { NotFoundError, ForbiddenError } from "../utils/errors";
 
 // =========================
 // REPOSITORY INSTANCES
@@ -36,16 +33,23 @@ export async function sendMessageToCitizen(
   content: string
 ): Promise<ReportMessageDTO> {
   const report = await reportRepository.findByIdWithRelations(reportId);
-
   if (!report) {
     throw new NotFoundError("Report not found");
   }
-
   const isInternalTech = report.assignedOfficerId === technicalUserId;
   const isExternalTech = report.externalMaintainerId === technicalUserId;
 
-  // Verifica che il technical sia assegnato a questo report
-  if (!isInternalTech && !isExternalTech) {
+  // Permetti anche al cittadino autore del report di inviare messaggi
+  const isCitizenOwner = report.userId === technicalUserId;
+  const senderRole =
+    report.user && report.user.id === technicalUserId
+      ? report.user.role
+      : undefined;
+  if (
+    !isInternalTech &&
+    !isExternalTech &&
+    !(isCitizenOwner && senderRole === "CITIZEN")
+  ) {
     throw new ForbiddenError("You are not assigned to this report");
   }
 
@@ -55,16 +59,24 @@ export async function sendMessageToCitizen(
     senderId: technicalUserId,
   });
 
-  let senderName = "";
-  // Notifica il cittadino del nuovo messaggio
-  if (report.assignedOfficer){
-    senderName = `${report.assignedOfficer?.first_name} ${report.assignedOfficer?.last_name} (Technical)`;
-  } else if (report.externalMaintainer){
-    senderName = `${report.externalMaintainer?.first_name} ${report.externalMaintainer?.last_name} (External Maintainer)`;
+  // Inoltra la notifica al destinatario corretto in base al mittente
+  if (isCitizenOwner) {
+    // Mittente: cittadino -> notifica il tecnico assegnato o l'esterno assegnato
+    const recipientId = report.externalMaintainerId? report.externalMaintainerId : report.assignedOfficerId;
+    if (recipientId) {
+      const citizenName = `${report.user?.first_name ?? "Citizen"} ${report.user?.last_name ?? ""}`.trim();
+      await notifyNewMessage(report.id, recipientId, citizenName);
+    }
   } else {
-    senderName = "Technical Staff";
+    // Mittente: tecnico o esterno -> notifica il cittadino
+    let senderName = "Technical Staff";
+    if (isInternalTech && report.assignedOfficer) {
+      senderName = `${report.assignedOfficer.first_name} ${report.assignedOfficer.last_name} (Technical)`;
+    } else if (isExternalTech && report.externalMaintainer) {
+      senderName = `${report.externalMaintainer.first_name} ${report.externalMaintainer.last_name} (External Maintainer)`;
+    }
+    await notifyNewMessage(report.id, report.userId, senderName);
   }
-  await notifyNewMessage(report.id, report.userId, senderName);
 
   return {
     id: savedMessage.id,

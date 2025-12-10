@@ -1,8 +1,5 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 
-// Set NODE_ENV to development for tests (enables TypeORM synchronize)
-process.env.NODE_ENV = "development";
-
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",

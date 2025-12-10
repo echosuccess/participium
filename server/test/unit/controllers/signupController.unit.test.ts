@@ -5,7 +5,6 @@ import { hashPassword } from "../../../src/services/passwordService";
 import * as UserDTO from "../../../src/interfaces/UserDTO";
 import { BadRequestError, ConflictError } from "../../../src/utils";
 
-
 jest.mock("../../../src/services/userService");
 jest.mock("../../../src/services/passwordService");
 jest.mock("../../../src/services/citizenService");
@@ -82,7 +81,7 @@ describe("signupController", () => {
         salt: "salt",
       });
       mockCreateUser.mockResolvedValue(mockUser);
-      jest.spyOn(UserDTO, 'toUserDTO').mockReturnValue(mockUserDTO);
+      jest.spyOn(UserDTO, "toUserDTO").mockReturnValue(mockUserDTO);
 
       await signupHandler(mockReq as Request, mockRes as Response);
 
@@ -174,7 +173,7 @@ describe("signupController", () => {
       const existingUser = {
         id: 1,
         email: "test@example.com",
-        first_name: "Existing",
+        first_name: "Test",
         last_name: "User",
         password: "hashed",
         salt: "salt",
@@ -264,7 +263,7 @@ describe("signupController", () => {
     });
 
     it("should handle invalid role", async () => {
-      const invalidSignupHandler = signup('INVALID_ROLE' as any);
+      const invalidSignupHandler = signup("INVALID_ROLE" as any);
       mockReq.body = {
         firstName: "Test",
         lastName: "User",
