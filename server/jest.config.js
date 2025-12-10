@@ -8,7 +8,8 @@ module.exports = {
   testEnvironment: "node",
   roots: ["<rootDir>/test"],
   testMatch: ["**/*.test.ts"],
-  setupFiles: ["dotenv/config"],
+  maxWorkers: 1, // Run tests sequentially to avoid database conflicts
+  setupFiles: ["<rootDir>/test/helpers/setupEnv.ts"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   collectCoverageFrom: [
     "src/**/*.{ts,tsx}",
@@ -30,6 +31,4 @@ module.exports = {
   },
   // 设置测试超时时间
   testTimeout: 30000,
-  // 设置环境变量
-  setupFiles: ["<rootDir>/test/helpers/setupEnv.ts"],
 };

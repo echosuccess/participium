@@ -46,6 +46,7 @@
     "@types/yamljs": "^0.2.34",
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
+    "jest-silent-reporter": "^0.6.0",
     "nodemon": "^3.1.10",
     "supertest": "^6.3.4",
     "ts-jest": "^29.4.5",
@@ -62,12 +63,12 @@
     "db:migration:generate": "typeorm migration:generate -d src/utils/AppDataSource.ts",
     "db:migration:run": "typeorm migration:run -d src/utils/AppDataSource.ts",
     "generate:api": "openapi-generator-cli generate -i ../docs/swagger.yaml -g typescript-fetch -o ./src/generated",
-    "test": "cross-env NODE_ENV=test jest --testPathIgnorePatterns=e2e --testPathIgnorePatterns=integration",
-    "test:watch": "cross-env NODE_ENV=test jest --watch --testPathIgnorePatterns=e2e --testPathIgnorePatterns=integration",
-    "test:coverage": "cross-env NODE_ENV=test jest --coverage --testPathIgnorePatterns=e2e --testPathIgnorePatterns=integration",
-    "test:verbose": "cross-env NODE_ENV=test jest --verbose --testPathIgnorePatterns=e2e --testPathIgnorePatterns=integration",
-    "test:unit": "cross-env NODE_ENV=test jest --testPathPattern=unit",
-    "test:integration": "cross-env NODE_ENV=test jest --testPathPattern=integration",
-    "test:e2e": "cross-env NODE_ENV=test jest --testPathPattern=e2e"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
+    "test:unit": "jest --testPathPattern=unit",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:e2e": "jest --testPathPattern=e2e"
   }
 }
