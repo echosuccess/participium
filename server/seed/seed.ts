@@ -235,6 +235,16 @@ const seedDatabase = async () => {
     `✅ Created external company without platform access: IREN Ambiente`
   );
 
+  // Third company without platform access - different category
+  const amiatCompany = await AppDataSource.query(
+    'INSERT INTO "ExternalCompany" (name, categories, "platformAccess") VALUES ($1, $2, $3) RETURNING *',
+    ["AMIAT", JSON.stringify([ReportCategory.ROADS_URBAN_FURNISHINGS]), false]
+  );
+  const amiatId = amiatCompany[0].id;
+  console.log(
+    `✅ Created external company without platform access: AMIAT (Roads maintenance)`
+  );
+
   // Assign external maintainer to Enel X
   const externalMaintainer = createdUsers.find(
     (u) => u.email === "external@enelx.com"
@@ -319,7 +329,7 @@ const seedDatabase = async () => {
       description: "Metal safety barrier damaged and bent. Creates hazard for vehicles and pedestrians. Immediate replacement required.",
       category: ReportCategory.ROADS_URBAN_FURNISHINGS,
       preferredRole: Role.ROAD_MAINTENANCE,
-      status: ReportStatus.IN_PROGRESS,
+      status: ReportStatus.PENDING_APPROVAL,
       photos: ["report7.jpg"]
     },
     {
@@ -332,13 +342,22 @@ const seedDatabase = async () => {
       photos: ["report10.jpg"]
     },
     {
-      // Report 10: Faded crosswalk
+      // Report 9: Faded crosswalk
       title: "Faded crosswalk markings with potholes",
       description: "Pedestrian crossing almost invisible due to faded paint. Multiple potholes in the area. Safety hazard for pedestrians and drivers.",
       category: ReportCategory.ROAD_SIGNS_TRAFFIC_LIGHTS,
       preferredRole: Role.ROAD_MAINTENANCE,
       status: ReportStatus.RESOLVED,
       photos: ["report11.jpg"]
+    },
+    {
+      // Report 10: Damaged sidewalk - can be assigned to AMIAT
+      title: "Damaged sidewalk tiles creating trip hazard",
+      description: "Multiple broken and uneven sidewalk tiles on pedestrian path. Creates significant tripping hazard especially for elderly and children. Urgent repair needed.",
+      category: ReportCategory.ROADS_URBAN_FURNISHINGS,
+      preferredRole: Role.ROAD_MAINTENANCE,
+      status: ReportStatus.ASSIGNED,
+      photos: ["report6.jpg"]
     }
   ];
 
@@ -355,8 +374,9 @@ const seedDatabase = async () => {
     { lat: 45.0668, lng: 7.7012, address: "Via Roma 156, 10141 Torino" },                       // Report 6: Cit Turin - Road potholes
     { lat: 45.0755, lng: 7.6585, address: "Corso Francia 88, 10143 Torino" },                   // Report 7: Pozzo Strada - Damaged sidewalk
     { lat: 45.0925, lng: 7.7125, address: "Via Cigna 45, 10155 Torino" },                       // Report 8: Regio Parco - Broken barrier
-    { lat: 45.0645, lng: 7.6925, address: "Corso Vittorio Emanuele II 75, 10128 Torino" },      // Report 9: San Salvario - Traffic light
-    { lat: 45.0815, lng: 7.6655, address: "Corso Lecce 33, 10149 Torino" },                     // Report 10: Vallette - Faded crosswalk
+    { lat: 45.0645, lng: 7.6925, address: "Corso Vittorio Emanuele II 75, 10128 Torino" },      // Report 8: San Salvario - Traffic light
+    { lat: 45.0815, lng: 7.6655, address: "Corso Lecce 33, 10149 Torino" },                     // Report 9: Vallette - Faded crosswalk
+    { lat: 45.0588, lng: 7.6777, address: "Via San Francesco da Paola 15, 10123 Torino" },      // Report 10: Centro - Damaged sidewalk
   ];
 
   // Create reports with staggered creation dates (from 7 days ago to today)
@@ -375,9 +395,10 @@ const seedDatabase = async () => {
     daysAgo(5),  // Report 5: 5 days ago - Waste
     daysAgo(4),  // Report 6: 4 days ago - Road potholes
     daysAgo(3),  // Report 7: 3 days ago - Damaged sidewalk
-    daysAgo(2),  // Report 8: 2 days ago - Broken barrier
-    daysAgo(1),  // Report 9: 1 day ago - Traffic light
-    daysAgo(0),  // Report 10: Today - Faded crosswalk
+    daysAgo(2),  // Report 7: 2 days ago - Broken barrier
+    daysAgo(1),  // Report 8: 1 day ago - Traffic light
+    daysAgo(0),  // Report 9: Today - Faded crosswalk
+    daysAgo(1),  // Report 10: 1 day ago - Damaged sidewalk for AMIAT
   ];
 
   for (let i = 0; i < reportTemplates.length; i++) {
@@ -599,6 +620,17 @@ const seedDatabase = async () => {
     console.log(`   ✅ [PT24-IREN] Report ${wasteReport.id} (Waste): ASSIGNED to waste@participium.com - can assign to IREN (no platform access)`);
   }
 
+  // PT24 BONUS 2: Report 10 (Sidewalk) - ASSIGNED to ROAD_MAINTENANCE, ready to assign to AMIAT (no platform)
+  const sidewalkReport = allReports[9]; // Report 10: Damaged sidewalk
+  const roadManager = createdUsers.find((u) => u.role === Role.ROAD_MAINTENANCE);
+  if (sidewalkReport && roadManager) {
+    await AppDataSource.query(
+      'UPDATE "Report" SET status = $1, "assignedOfficerId" = $2 WHERE id = $3',
+      [ReportStatus.ASSIGNED, roadManager.id, sidewalkReport.id]
+    );
+    console.log(`   ✅ [PT24-AMIAT] Report ${sidewalkReport.id} (Sidewalk): ASSIGNED to road@participium.com - can assign to AMIAT (no platform access)`);
+  }
+
   console.log("\n✅ Reports adapted for PT24/PT25/PT26 demo!");
   console.log("=" .repeat(80));
   console.log("\n📋 Demo Test Plan:");
@@ -609,6 +641,7 @@ const seedDatabase = async () => {
   console.log(`      → Click "Assign to external" → Select "Enel X"`);
   console.log(`      → Report status changes to EXTERNAL_ASSIGNED`);
   console.log(`      → BONUS: Report #${wasteReport?.id || 'N/A'} (Waste) can be assigned to IREN (no platform)`);
+  console.log(`      → BONUS: Report #${sidewalkReport?.id || 'N/A'} (Sidewalk) can be assigned to AMIAT (no platform)`);
   console.log(`   PT25 - Update Status:`);
   console.log(`      → Login as external@enelx.com / externalpass`);
   console.log(`      → Navigate to "My Reports"`);
@@ -627,7 +660,7 @@ const seedDatabase = async () => {
   console.log("\n✅ Database seed completed successfully!");
   console.log(`\nCreated ${users.length} sample users with hashed passwords`);
   console.log(
-    `Created 2 external companies (1 with platform access, 1 without)`
+    `Created 3 external companies (1 with platform access: Enel X, 2 without: IREN Ambiente & AMIAT)`
   );
   console.log("\n📋 Test credentials:");
   users.forEach((u) => {
